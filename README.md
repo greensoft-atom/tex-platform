@@ -53,7 +53,7 @@ flowchart LR
 | Users at launch | Technology suppliers and buyers, supported by platform staff | [06 §1](06-implementation-design-v1.md) |
 | Deal types | All types in the data model; three implementation tiers (standardized, legal review, specialist-only) | [08 §3](08-china-operating-model.md) |
 | Money | Funds held and released only by a licensed bank or payment institution; the platform coordinates conditions and records verified events | [08 §1, §6](08-china-operating-model.md) |
-| Target runtime | **Node.js 12.4 + MongoDB 4.4 / 5.0** replica set ("4.5" is a development series); verified with real binaries | [11](11-target-runtime-node12-mongodb.md), [`verification/`](verification/node12-mongodb/README.md) |
+| Target runtime | **Node.js 12.4 + MongoDB 4.4 / 5.0** replica set ("4.5" is a development series); verified with real binaries | [11](11-target-runtime-node12-mongodb.md), [`verification/`](draft-implementation/README.md) |
 | Architecture | Express 4 modular monolith (TypeScript → ES2019), MongoDB through **Mongoose 5.13** models (with database validators, transactions and least-privilege roles), Meilisearch for Chinese search, transactional outbox, pre-rendered public pages | [06 §3–§6, §10](06-implementation-design-v1.md) |
 | Data access | **Mongoose 5.13** schemas, models and Document API; tenant-scope plugin on every tenant-owned model; database validators as a safety net; indexes from the schemas | [06 §4](06-implementation-design-v1.md), [11 §5.2](11-target-runtime-node12-mongodb.md) |
 | Hosting and team | Self-hosted: Nginx + systemd on the given servers; 1–4 developers | [06 §11, §13](06-implementation-design-v1.md), [11 §9](11-target-runtime-node12-mongodb.md) |
@@ -96,12 +96,12 @@ All diagrams are standard [Mermaid](https://mermaid.js.org/) code blocks (`flowc
   - `mongoose-long` silently truncates fractional amounts, so a strict `Int64` type was written;
   - Mongoose 5.13's `connection.transaction()` never ends its session;
   - Mongoose 5 has been end-of-life since 1 March 2024; Mongoose 6.13 is the next step with Node 12.22.12.
-- Docs 05, 06, 11, the README and the verification kit were updated.
+- Docs 05, 06, 11 and the README were updated, and the code folder was renamed to [`draft-implementation/`](draft-implementation/README.md).
 
 ### Revision 3 — target stack and strengthened requirements
 
 - Backend changed to **Node.js + MongoDB** on the given target servers (Node 12.4, MongoDB 4.4 / 5.0). Docs 05, 06 and 08 were updated; doc 11 added.
-- All schema definitions and code samples were **verified with real binaries** (Node 12.4.0; MongoDB 4.4.30 and 5.0.33; Meilisearch 1.11.3). The reproducible kit is in [`verification/node12-mongodb/`](verification/node12-mongodb/README.md).
+- All schema definitions and code samples were **verified with real binaries** (Node 12.4.0; MongoDB 4.4.30 and 5.0.33; Meilisearch 1.11.3). The checks can be re-run from [`draft-implementation/`](draft-implementation/README.md) (named `verification/node12-mongodb/` in revision 3).
 - Findings from the verification: MongoDB 4.4/5.0 cannot search Chinese text (Meilisearch adopted); Node 12 needs `full-icu` for Chinese dates and pinyin sorting; `bull@4` fails on Node 12.4 despite its declared engines; driver 3.x API differences are documented (superseded by the Mongoose rules in revision 4).
 - Docs 09 (real platform features) and 10 (numbered product requirements for users, clients and administrators) added.
 

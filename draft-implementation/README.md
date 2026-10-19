@@ -1,6 +1,8 @@
-# Verification kit: Node.js 12.4.0 + Mongoose 5.13 + MongoDB 4.4 / 5.0
+# Draft implementation: Node.js 12.4 + Mongoose 5.13 + MongoDB 4.4 / 5.0
 
-This kit proves, with real binaries, that the backend design in [doc 06](../../06-implementation-design-v1.md) and [doc 11](../../11-target-runtime-node12-mongodb.md) runs on the target server stack. Its `src/` folder uses the same layout as the application (`apps/api/src`), so the data layer can be copied into the project as starting code.
+A simple, working draft of the backend data layer described in [doc 06](../06-implementation-design-v1.md): Mongoose models for all core collections, plugins for tenant isolation and immutable history, a technology service built on the Document API, migrations and an index-sync release step. Its `src/` folder uses the same layout as the application (`apps/api/src`), so it can be copied into the project as starting code.
+
+`run.sh` builds it and proves, with real binaries, that it runs on the target server stack ([doc 11](../11-target-runtime-node12-mongodb.md)). HTTP routes are not part of the draft yet; the tests call the services directly.
 
 | Component | Version tested |
 | --- | --- |
@@ -72,7 +74,7 @@ Meilisearch    q=缺陷检测 -> ["t1"]
 | --- | --- |
 | `mongodb` ≥ 4.0, `mongoose` ≥ 6 | Driver 4 declares Node ≥ 12.9.0. A basic Mongoose 6.13.11 transaction test runs on 12.4.0, but outside the declared range; it is the planned step after upgrading to Node 12.22.12 |
 | `@casl/mongoose` ≥ 6 | Requires Mongoose 6 |
-| `mongoose-long` | Loads, but silently truncates `300000.5` to `300000`; the kit's strict `Int64` type is used instead |
+| `mongoose-long` | Loads, but silently truncates `300000.5` to `300000`; the strict `Int64` type in `src/core/db` is used instead |
 | `bull` 4.16.5 | Declares Node ≥ 12 but fails: `SyntaxError: Unexpected token ?` (optional chaining) |
 | `argon2` ≥ 0.28 | Requires Node ≥ 14 (use `bcryptjs`) |
 | `minio` ≥ 7.1 | Requires Node ≥ 16 (use `aws-sdk` v2 S3 client or `ali-oss`) |
@@ -81,8 +83,8 @@ Meilisearch    q=缺陷检测 -> ["t1"]
 
 > Declared `engines` ranges are not reliable on this old runtime in either direction (see `bull` 4.16.5 and Mongoose 6). Every new dependency must pass `tests/smoke.js` on `node:12.4.0` before it is added.
 
-`migrate-mongo` 8.2.3 bundles driver 4.17.2, which also declares Node ≥ 12.9. Its CLI runs on 12.4.0 in this kit, and it runs only in the release step; if that ever fails, run migrations from the build machine.
+`migrate-mongo` 8.2.3 bundles driver 4.17.2, which also declares Node ≥ 12.9. Its CLI runs on 12.4.0 in `run.sh`, and it runs only in the release step; if that ever fails, run migrations from the build machine.
 
-## What this kit does not prove
+## What these checks do not prove
 
 Performance and capacity, production MongoDB configuration (authentication, TLS, 3-member replica set, backups), Meilisearch production setup, and the security posture of end-of-life software (Node 12, MongoDB 4.4/5.0, Mongoose 5). See doc 11 §11 for the risk register and upgrade path.

@@ -1,8 +1,8 @@
 {
-  "name": "tex-verification-node12-mongodb",
+  "name": "tex-draft-implementation",
   "version": "1.0.0",
   "private": true,
-  "description": "Proves the backend stack (Express, Mongoose 5.13) runs on Node.js 12.4.0 with MongoDB 4.4 / 5.0 (see docs 06 and 11).",
+  "description": "Draft backend data layer (Mongoose 5.13 models and services) and its compatibility checks on Node.js 12.4.0 with MongoDB 4.4 / 5.0 (see docs 06 and 11).",
   "engines": {
     "node": "12.4.0",
     "npm": "6.x"

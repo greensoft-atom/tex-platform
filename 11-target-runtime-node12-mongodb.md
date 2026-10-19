@@ -4,7 +4,7 @@
 >
 > - **Purpose:** Define how the backend is built and operated on the target server stack (**Node.js 12.4** and **MongoDB "about 4.5"**), which libraries are approved, which coding rules apply, how search, SEO and deployment work on this stack, and what the risks and upgrade path are.
 > - **Audience:** Tech lead, backend engineers, DevOps and the product owner (for the risk decisions).
-> - **Status:** Binding engineering baseline. Every compatibility claim marked *verified* was tested with real binaries using the kit in [`verification/node12-mongodb/`](verification/node12-mongodb/README.md).
+> - **Status:** Binding engineering baseline. Every compatibility claim marked *verified* was tested with real binaries by the checks in [`draft-implementation/`](draft-implementation/README.md), the project's draft backend code.
 > - **Related:** [06 — Implementation design](06-implementation-design-v1.md) applies these rules to the data model, API and deployment.
 
 ---
@@ -58,7 +58,7 @@ All code in this repository uses only 4.4 features, so the team can move from 4.
 
 ## 2. Verification results
 
-The kit in [`verification/node12-mongodb/`](verification/node12-mongodb/README.md) reproduces these results with `./run.sh` (Docker only):
+[`draft-implementation/`](draft-implementation/README.md) reproduces these results with `./run.sh` (Docker only):
 
 | Check | Node 12.4.0 + MongoDB 4.4.30 | Node 12.4.0 + MongoDB 5.0.33 |
 | --- | --- | --- |
@@ -156,7 +156,7 @@ flowchart LR
 }
 ```
 
-- Use `@types/node@12`, so the compiler rejects Node APIs that do not exist at runtime. Mongoose 5.13 ships its own typings (they pull in `@types/mongodb@3.6`). They have small gaps, such as missing query hook names, `SchemaType.path` and `Aggregate.model()`; the kit shows the narrow casts used for each.
+- Use `@types/node@12`, so the compiler rejects Node APIs that do not exist at runtime. Mongoose 5.13 ships its own typings (they pull in `@types/mongodb@3.6`). They have small gaps, such as missing query hook names, `SchemaType.path` and `Aggregate.model()`; the draft implementation shows the narrow casts used for each.
 - 64-bit integers: `BigInt` exists in Node 12 but is ES2020, so the ES2019 lint rejects it. Use the driver's `Long` (`mongoose.mongo.Long`) through the `Int64` schema type.
 - TypeScript **down-levels syntax** (`?.`, `??`), but it does **not** add missing built-ins such as `Promise.allSettled`. Enforce this with ESLint `eslint-plugin-es-x` and its `plugin:es-x/restrict-to-es2019` config. CI also runs every unit test on `node:12.4.0`.
 - CommonJS only. ES modules are experimental in Node 12.
@@ -201,7 +201,7 @@ mongodb://tex_app:<password>@db1:27017,db2:27017,db3:27017/tex?replicaSet=rs0&au
 
 ### 5.2 Mongoose 5.13 rules
 
-Mongoose 5.13.23 is the newest Mongoose that runs on Node 12.4. It differs from current Mongoose (8.x) in ways that matter for correctness and security. Each rule below is applied in the kit and checked by its tests.
+Mongoose 5.13.23 is the newest Mongoose that runs on Node 12.4. It differs from current Mongoose (8.x) in ways that matter for correctness and security. Each rule below is applied in the draft implementation and checked by its tests.
 
 | Topic | Mongoose 5.13 (this project) | Current Mongoose (after the upgrade) |
 | --- | --- | --- |
@@ -217,11 +217,11 @@ Mongoose 5.13.23 is the newest Mongoose that runs on Node 12.4. It differs from 
 | Optimistic concurrency | `versionKey: 'rev'` + `optimisticConcurrency: true` (available since 5.10) | Same |
 | Index management | `Model.diffIndexes()` + `createIndexes()` at release; `autoIndex` off; **never** `syncIndexes()` in production | Same |
 | Callbacks, `remove()` | Use promises and `deleteOne()` / `deleteMany()` only | Callbacks and `remove()` removed in 7 |
-| Typings | Bundled, with gaps (narrow casts documented in the kit) | Much better inference (`HydratedDocument`, `InferSchemaType`) |
+| Typings | Bundled, with gaps (narrow casts shown in the draft implementation) | Much better inference (`HydratedDocument`, `InferSchemaType`) |
 
 ### 5.3 Features to avoid (not in 4.4)
 
-`$setWindowFields`, time-series collections, `$dateAdd` / `$dateDiff` / `$dateTrunc`, `$densify` / `$fill`, change-stream pre/post images, clustered collections, Queryable Encryption, and **MongoDB Search / Vector Search** (`$search` needs 8.2+). The kit fails if migrations use 5.0-only options.
+`$setWindowFields`, time-series collections, `$dateAdd` / `$dateDiff` / `$dateTrunc`, `$densify` / `$fill`, change-stream pre/post images, clustered collections, Queryable Encryption, and **MongoDB Search / Vector Search** (`$search` needs 8.2+). `run.sh` fails if migrations use 5.0-only options, because it also runs them on 4.4.
 
 ### 5.4 Validation, transactions and indexes
 
@@ -456,7 +456,7 @@ Migrations follow **expand-and-contract**: add fields and indexes first; remove 
 - [ ] `npm run db:indexes:check` reports no differences after each release; no deprecation warnings in the API log at start-up (a warning means a Mongoose setting is missing).
 - [ ] Meilisearch running with a master key; the API uses a search-only key; rebuild command tested.
 - [ ] Nightly `mongodump --oplog` copied off-server; monthly restore test scheduled.
-- [ ] CI runs `verification/node12-mongodb/run.sh` (or the project's own equivalent) on every dependency change.
+- [ ] CI runs `draft-implementation/run.sh` (or the project's own equivalent) on every dependency change.
 
 ---
 
@@ -487,7 +487,7 @@ flowchart LR
 
 - **Node:** 12.22.12 is a drop-in step. If the server allows Docker, run the API and worker in a container with a current LTS Node. The host's Node version then no longer matters.
 - **MongoDB:** upgrade one major version at a time, setting `featureCompatibilityVersion` after each step, and take a backup before each one.
-- **Mongoose:** Mongoose 6 is in limited maintenance (security patches) and its driver 4.17 declares Node ≥ 12.9, so it pairs with the Node 12.22.12 step. A basic test (connect, transaction, optimistic concurrency) passed with Mongoose 6.13.11 on Node 12.22.12; the full kit has not yet been ported. Expected changes: remove the four driver options from `mongoose-settings.ts`, set `strictQuery` explicitly (its default changed), `@casl/mongoose` 6+, and typing adjustments. Mongoose 7 removes callbacks and `remove()`, which the code already avoids. Because services use only models and the `inTransaction()` helper, never the driver, these changes stay inside `core/db` and the model typings.
+- **Mongoose:** Mongoose 6 is in limited maintenance (security patches) and its driver 4.17 declares Node ≥ 12.9, so it pairs with the Node 12.22.12 step. A basic test (connect, transaction, optimistic concurrency) passed with Mongoose 6.13.11 on Node 12.22.12; the draft implementation has not yet been ported. Expected changes: remove the four driver options from `mongoose-settings.ts`, set `strictQuery` explicitly (its default changed), `@casl/mongoose` 6+, and typing adjustments. Mongoose 7 removes callbacks and `remove()`, which the code already avoids. Because services use only models and the `inTransaction()` helper, never the driver, these changes stay inside `core/db` and the model typings.
 
 ---
 
@@ -502,4 +502,4 @@ flowchart LR
 - Mongoose version support (5.x end-of-life 1 March 2024; 6.x limited maintenance): <https://mongoosejs.com/docs/version-support.html>
 - Mongoose 5 guides: transactions <https://mongoosejs.com/docs/5.x/docs/transactions.html>, optimistic concurrency <https://mongoosejs.com/docs/5.x/docs/guide.html#optimisticConcurrency>, `strictQuery` <https://mongoosejs.com/docs/5.x/docs/guide.html#strictQuery>, update validators <https://mongoosejs.com/docs/5.x/docs/validation.html#update-validators>
 - CASL Mongoose integration: <https://casl.js.org/v5/en/package/casl-mongoose>
-- Verification kit and results: [`verification/node12-mongodb/`](verification/node12-mongodb/README.md)
+- Draft implementation and verification results: [`draft-implementation/`](draft-implementation/README.md)

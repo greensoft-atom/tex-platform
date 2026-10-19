@@ -453,7 +453,7 @@ Targets for the first production release on the target stack (Node 12.4, MongoDB
 | NFR-13 | Accessibility | WCAG 2.1 AA for public pages and core workflows (contrast, keyboard, labels) | Automated axe checks + manual review |
 | NFR-14 | Scalability (year 1) | 50,000 published technologies, 10,000 demands, 5,000 organizations, 200 concurrent users without architecture change | Load test with synthetic data |
 | NFR-15 | Observability | Structured logs with request IDs; metrics for latency, errors, queue (outbox) backlog, search lag; alerts to the on-call channel within 5 min | Alert test each release |
-| NFR-16 | Runtime compatibility | Every dependency passes the Node 12.4 smoke test; code uses only the MongoDB 4.4 feature set | `verification/node12-mongodb/run.sh` in CI |
+| NFR-16 | Runtime compatibility | Every dependency passes the Node 12.4 smoke test; code uses only the MongoDB 4.4 feature set | `draft-implementation/run.sh` in CI |
 | NFR-17 | Maintainability | Unit-test coverage ≥ 70% on services and policies; every state machine fully covered by transition tests | Coverage report in CI |
 
 ## 8. Integrations (China)

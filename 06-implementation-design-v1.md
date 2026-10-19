@@ -26,7 +26,7 @@ The platform brings technology suppliers and buyers together. It helps them disc
 
 For the first release, deliberately avoid microservices, a separate graph database, a custom payment wallet and a complex AI platform. They add operational work without being needed to prove the core business.
 
-The backend runs on the given target server: **Node.js 12.4 with MongoDB 4.4 / 5.0**. Every database definition and code sample in this document was **verified** on that stack (Node 12.4.0 with MongoDB 4.4.30 and 5.0.33) with the kit in [`verification/node12-mongodb/`](verification/node12-mongodb/README.md). Doc [11](11-target-runtime-node12-mongodb.md) lists the approved library versions and the risks of the end-of-life runtime.
+The backend runs on the given target server: **Node.js 12.4 with MongoDB 4.4 / 5.0**. Every database definition and code sample in this document was **verified** on that stack (Node 12.4.0 with MongoDB 4.4.30 and 5.0.33) with the checks in [`draft-implementation/`](draft-implementation/README.md). Doc [11](11-target-runtime-node12-mongodb.md) lists the approved library versions and the risks of the end-of-life runtime.
 
 ---
 
@@ -229,7 +229,7 @@ MongoDB is schemaless, but a technology exchange needs **auditable rights, versi
 - **Application layer: Mongoose 5.13.** One schema per collection defines types, enums, required fields, defaults, cross-field rules, indexes and plugins (tenant scope, immutability, optimistic concurrency). Services work with **models and documents**.
 - **Database layer.** `$jsonSchema` validators on every core collection, unique and TTL indexes, a least-privilege application role, and transactions for every multi-document business change. This layer still holds when a script, a shell session or a bug bypasses Mongoose.
 
-All schemas, plugins, migrations and services below are **verified** with Node 12.4.0 and Mongoose 5.13.23 on MongoDB 4.4.30 and 5.0.33: 90 database checks per MongoDB version (see [`verification/node12-mongodb/`](verification/node12-mongodb/README.md)). The kit's `src/` folder uses the same layout as the application (§11.4), so its files are the starting code.
+All schemas, plugins, migrations and services below are **verified** with Node 12.4.0 and Mongoose 5.13.23 on MongoDB 4.4.30 and 5.0.33: 90 database checks per MongoDB version (see [`draft-implementation/`](draft-implementation/README.md)). Its `src/` folder uses the same layout as the application (§11.4), so its files are the starting code.
 
 ### 4.1 Data model
 
@@ -371,7 +371,7 @@ Illustrative values (shell notation):
 
 ### 4.5 Mongoose schemas, validators and indexes
 
-Each module owns its models in `*.model.ts`: an interface for the stored fields, a schema with its indexes and plugins, and the compiled model. Services work with models and documents; no code outside the model files touches a raw collection. Verified models for all 24 collections are in [`verification/node12-mongodb/src/modules/`](verification/node12-mongodb/src/modules/technology/technology.model.ts).
+Each module owns its models in `*.model.ts`: an interface for the stored fields, a schema with its indexes and plugins, and the compiled model. Services work with models and documents; no code outside the model files touches a raw collection. Verified models for all 24 collections are in [`draft-implementation/src/modules/`](draft-implementation/src/modules/technology/technology.model.ts).
 
 #### Global settings
 
@@ -425,7 +425,7 @@ export function recordOptions(collection: string, createdAt = 'createdAt'): Sche
 }
 ```
 
-Mongoose 5 has no 64-bit integer type and stores JavaScript numbers above 2³¹ as doubles. `Int64` ([`int64.schema-type.ts`](verification/node12-mongodb/src/core/db/int64.schema-type.ts), about 40 lines) accepts a `Long`, a safe integer or an integer string, and rejects anything else. The community package `mongoose-long` was not adopted: it silently truncates `300000.5` to `300000`.
+Mongoose 5 has no 64-bit integer type and stores JavaScript numbers above 2³¹ as doubles. `Int64` ([`int64.schema-type.ts`](draft-implementation/src/core/db/int64.schema-type.ts), about 40 lines) accepts a `Long`, a safe integer or an integer string, and rejects anything else. The community package `mongoose-long` was not adopted: it silently truncates `300000.5` to `300000`.
 
 #### A model: technologies and their versions
 
@@ -507,7 +507,7 @@ export const TechnologyVersion = model<TechnologyVersionDoc>('TechnologyVersion'
 
 #### Database validators (migrations)
 
-Migrations create the core collections with `$jsonSchema` validators, define roles and fix data. They do not create indexes. The validators repeat the most important rules of the Mongoose schemas, so a write that bypasses Mongoose still cannot store an unknown state, money as a double, or a buyer that is also the supplier. The verified migration is [`001-core-schema.js`](verification/node12-mongodb/migrations/001-core-schema.js):
+Migrations create the core collections with `$jsonSchema` validators, define roles and fix data. They do not create indexes. The validators repeat the most important rules of the Mongoose schemas, so a write that bypasses Mongoose still cannot store an unknown state, money as a double, or a buyer that is also the supplier. The verified migration is [`001-core-schema.js`](draft-implementation/migrations/001-core-schema.js):
 
 ```javascript
 // migrations/001-core-schema.js (excerpt) — run by migrate-mongo as tex_migrator
@@ -564,7 +564,7 @@ npm run db:indexes          # create the indexes declared in the schemas that ar
 npm run db:indexes:check    # CI and pre-release: list differences, change nothing
 ```
 
-[`sync-indexes.ts`](verification/node12-mongodb/src/scripts/sync-indexes.ts) uses `Model.diffIndexes()` and `Model.createIndexes()`. It never calls `Model.syncIndexes()`, which drops every index that a schema does not declare. Removing an index is a deliberate migration.
+[`sync-indexes.ts`](draft-implementation/src/scripts/sync-indexes.ts) uses `Model.diffIndexes()` and `Model.createIndexes()`. It never calls `Model.syncIndexes()`, which drops every index that a schema does not declare. Removing an index is a deliberate migration.
 
 #### What the verification run proves, per layer
 
@@ -618,7 +618,7 @@ export async function inTransaction<T>(work: (session: ClientSession) => Promise
 }
 ```
 
-The submit use case, verified with the Document API ([`technology.service.ts`](verification/node12-mongodb/src/modules/technology/technology.service.ts) also has create, update, revise-after-publication, discard and list):
+The submit use case, verified with the Document API ([`technology.service.ts`](draft-implementation/src/modules/technology/technology.service.ts) also has create, update, revise-after-publication, discard and list):
 
 ```typescript
 // src/modules/technology/technology.service.ts (excerpt)
@@ -673,7 +673,7 @@ async function record(session: ClientSession, actor: Actor, tech: TechnologyDoc,
 }
 ```
 
-The kit uses a fixed five-day due date; production code computes it from `calendar_days` (§4.9).
+The draft implementation uses a fixed five-day due date; production code computes it from `calendar_days` (§4.9).
 
 **Document API patterns** used throughout the backend:
 
@@ -757,7 +757,7 @@ Controls around it:
 
 1. Document methods (`doc.save()`, `doc.deleteOne()`) are not queries and are not scoped by the plugin. They are safe because the document was loaded through a scoped query, and services only change documents they loaded. New documents take their owner from the actor's context, and the policy check on the unsaved document (`can('create', doc)`) rejects any other owner.
 2. Staff access uses `crossTenant: { reason }` with a case reference. The calling service writes an audit event with that reason; a lint rule allows `crossTenant` only in staff modules.
-3. Every list endpoint has an automated cross-tenant test (Organization A must never see Organization B's data). The kit checks every query type, including `updateMany`, `deleteMany`, `distinct` and `aggregate`.
+3. Every list endpoint has an automated cross-tenant test (Organization A must never see Organization B's data). The draft implementation's tests check every query type, including `updateMany`, `deleteMany`, `distinct` and `aggregate`.
 4. Highly sensitive fields (bank account numbers, ID-card numbers) use **explicit client-side field-level encryption** through the driver, or are stored only with the payment or identity provider. Automatic encryption needs MongoDB Enterprise.
 
 ### 4.9 Additional collections before launch
@@ -1687,11 +1687,11 @@ technology-exchange/
 │   ├── systemd/                   # tex-api@.service, tex-worker.service
 │   ├── scripts/                   # release.sh, rollback.sh, backup.sh, restore.sh, search-rebuild.sh
 │   └── env.example
-├── verification/node12-mongodb/   # compatibility kit (doc 11)
+├── compat/                       # Node 12 compatibility checks (from draft-implementation/run.sh, doc 11)
 └── docs/
 ```
 
-Each module folder contains `*.routes.ts` (HTTP and zod validation), `*.service.ts` (business rules and transactions, using the Document API), `*.model.ts` (Mongoose schemas and models: the only place that defines collections), `*.policy.ts` (CASL rules) and `*.test.ts`. Keep business logic out of route handlers, so it can be tested without HTTP. The kit's [`src/`](verification/node12-mongodb/src/models.ts) follows this layout.
+Each module folder contains `*.routes.ts` (HTTP and zod validation), `*.service.ts` (business rules and transactions, using the Document API), `*.model.ts` (Mongoose schemas and models: the only place that defines collections), `*.policy.ts` (CASL rules) and `*.test.ts`. Keep business logic out of route handlers, so it can be tested without HTTP. The [`src/`](draft-implementation/src/models.ts) folder of the draft implementation follows this layout.
 
 ### 11.5 Release and recovery process
 
@@ -1706,8 +1706,8 @@ Test business rules, not only whether endpoints return HTTP 200.
 | Layer | Tooling | Runs on |
 | --- | --- | --- |
 | Unit and service tests | `jest@27.5.1` | `node:12.4.0` container (the real runtime) |
-| Integration tests | jest + a **MongoDB 4.4 single-node replica set** container (transactions need a replica set) + Meilisearch container; migrations and `db:indexes` run first, as in the kit | CI |
-| Compatibility gate | `verification/node12-mongodb/run.sh` on every dependency change | CI |
+| Integration tests | jest + a **MongoDB 4.4 single-node replica set** container (transactions need a replica set) + Meilisearch container; migrations and `db:indexes` run first, as in `draft-implementation/run.sh` | CI |
+| Compatibility gate | `run.sh` (from `draft-implementation/`) on every dependency change | CI |
 | End-to-end tests | Playwright against a staging deployment | CI (modern Node) |
 
 ### 12.1 Critical end-to-end scenarios
@@ -1863,7 +1863,7 @@ Start with these concrete tasks rather than the full marketplace UI:
 | --- | --- | --- |
 | 1 | Establish repository, TypeScript ES2019 build and lint rules | Reproducible build; ESLint blocks ES2020+ APIs; CI runs tests on `node:12.4.0` |
 | 2 | Create deployment baseline | Staging server with the same Node 12.4 and MongoDB version, a replica set, Nginx and systemd units; release script works |
-| 3 | Add the data layer | Mongoose settings, connection, plugins and the core models (copied from the verification kit); `migrate-mongo` creates validators and roles and `db:indexes` creates indexes on an empty database; `db:indexes:check` runs in CI |
+| 3 | Add the data layer | Mongoose settings, connection, plugins and the core models (copied from `draft-implementation/`); `migrate-mongo` creates validators and roles and `db:indexes` creates indexes on an empty database; `db:indexes:check` runs in CI |
 | 4 | Implement authentication | Protected API routes and secure sessions work |
 | 5 | Implement organization membership | Role checks operate in the backend |
 | 6 | Implement audit events | Sensitive actions produce structured records |
