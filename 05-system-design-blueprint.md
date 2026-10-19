@@ -4,7 +4,7 @@
 >
 > - **Purpose:** The complete *target* design of the platform: business ecosystem, domain model, roles, user experience, end-to-end workflows, data, APIs, workflow engine, finance, AI, security, roadmap, testing, KPIs and deployment.
 > - **Audience:** Product owners, architects, engineering leads and operations leads.
-> - **Status:** Target-state blueprint. The *implementation-level* baseline for the first release is in [06](06-implementation-design-v1.md). The real-world role and money model is in [07](07-roles-workflows-and-money.md); the China operating model is in [08](08-china-operating-model.md).
+> - **Status:** Target-state blueprint. It explains *what* the platform does and *why* it is built this way. The *implementation-level* baseline for the first release is in [06](06-implementation-design-v1.md); the numbered requirements and the release plan are in [10](10-product-requirements.md); the runtime rules for Node.js 12.4 and MongoDB 4.4 / 5.0 are in [11](11-target-runtime-node12-mongodb.md). The real-world role and money model is in [07](07-roles-workflows-and-money.md); the China operating model is in [08](08-china-operating-model.md).
 > - **Previous:** [04 — Product strategy](04-product-strategy.md) · **Next:** [06 — Implementation design](06-implementation-design-v1.md)
 
 ---
@@ -38,9 +38,11 @@
 
 ## 1. Product vision and design principles
 
-The platform combines the strongest business concepts of the Shanghai Technology Exchange (STEX) and NETC/InnoMatch (see [01](01-shanghai-landscape.md)–[04](04-product-strategy.md)) with a modern, internationally scalable software architecture.
+The platform combines the strongest business concepts of the Shanghai Technology Exchange (STEX, 上海技术交易所) and NETC/InnoMatch (国家技术转移东部中心), with the China Technology Exchange (CTEX, 中国技术交易所) as a further reference (see [01](01-shanghai-landscape.md)–[04](04-product-strategy.md) and [09](09-reference-platform-features.md)). It launches in China, Shanghai first, on a modular software architecture that runs on the given servers.
 
 The goal is **not** just a website where universities upload patents and companies search for them. The goal is to move technologies from discovery and research into **licensing, acquisition, investment, pilot projects and commercial deployment**.
+
+**Positioning.** The platform is a demand-driven **matching and service platform** with managed transfer workflows. It is **not** a trading venue. Formal listing (挂牌), competitive bidding, auctions and tenders, third-party settlement and official certificates are **venue functions**. The platform performs them through a licensed venue (STEX or CTEX), acting as that venue's **registered practising agent** (执业类交易服务机构). Money is held and released only by a licensed bank or payment institution; the platform coordinates the conditions. §2.2 explains this boundary and how the architecture keeps it.
 
 ### 1.1 The three pillars
 
@@ -60,7 +62,7 @@ The goal is **not** just a website where universities upload patents and compani
 | 4 | **Human accountability** | AI recommends, summarizes and prioritizes. It never certifies ownership or approves regulated transactions. |
 | 5 | **Deal-centric workflows** | An inquiry becomes a traceable business process with an owner, state and history, not an email thread. |
 | 6 | **Multiple revenue streams** | Subscriptions, scouting, diligence, evaluation, managed services and transaction fees (see [03](03-business-models-and-revenue.md)). |
-| 7 | **Incremental implementation** | Start with a reliable marketplace and transfer workflow. Add regulated exchange and financial capabilities only when the legal and operational foundations exist. |
+| 7 | **Incremental implementation** | Start with a reliable marketplace and transfer workflow. Add venue-routed transactions and payment integrations only when the legal and partner foundations exist (§2.2). |
 
 ---
 
@@ -97,34 +99,44 @@ flowchart LR
         N3["Professional services<br/>legal, valuation, IP diligence"]
         N4["Commercialization<br/>prototypes, pilots, manufacturing"]
     end
+    subgraph LICENSED["Licensed partners"]
+        L1["Trading venue (STEX / CTEX)<br/>listing, bidding, certificates"]
+        L2["Bank or licensed payment institution<br/>holds and releases money"]
+    end
     SUPPLY --> PLATFORM
     PLATFORM --> DEMAND
     NETWORK <--> PLATFORM
+    PLATFORM -->|"agent submissions,<br/>payment instructions"| LICENSED
+    LICENSED -->|"results, certificates,<br/>confirmed payments"| PLATFORM
 ```
+
+The supporting network and the licensed partners are outside the platform. The platform records their work; it does not replace it.
 
 ### 2.1 One platform, three business layers
 
-| Layer | Responsibility | Business outcome |
-| --- | --- | --- |
-| **Discovery marketplace** | Publish, search and match technologies and demands | Qualified opportunities |
-| **Transfer management** | Confidentiality, diligence, negotiation, contracts, deal coordination | Completed technology deals |
-| **Exchange and commercialization** | Formal listings, auctions, transaction certification, settlement integrations, pilots | Trusted transactions and deployed technologies |
+| Layer | Responsibility | Business outcome | First release ([10 §9](10-product-requirements.md)) |
+| --- | --- | --- | --- |
+| **Discovery marketplace** | Publish, search and match technologies and demands; controlled introductions | Qualified opportunities | R1 |
+| **Transfer management** | Confidentiality, diligence, negotiation, contracts, deal coordination | Completed technology deals | R2 |
+| **Exchange and commercialization** | Venue-routed formal listing, bidding and certificates (as the venue's registered agent); payment-partner integration; pilots | Trusted transactions and deployed technologies | R3 |
 
 All three layers **share** one identity system, one technology registry, one organization model, one permissions framework and one deal record. They must not be built as three disconnected products.
 
 ### 2.2 The regulatory boundary
 
-An ordinary commercial marketplace may record agreements and coordinate transactions. Some exchange functions, however, are **regulated** and may require authorization, a licence or a licensed partner:
+An ordinary commercial marketplace may record agreements and coordinate transactions. Some exchange functions, however, are **regulated** and may require authorization, a licence or a licensed partner. In Shanghai, technology trading venues (技术交易场所) are governed by 《上海市技术交易场所管理细则》 (沪科规〔2025〕2号, in force 1 May 2025 – 30 April 2030), and new venues are approved under total-quantity control:
 
 | Function | Ordinary platform can… | Requires authorization or a licensed partner |
 | --- | --- | --- |
 | Rights | Record ownership *claims* and evidence | Issue legally recognized rights-registration certificates (in Shanghai, a licensed technology trading venue issues 技术权益登记凭证) |
-| Transactions | Record agreements and outcomes | Issue official transaction certificates (交易鉴证) |
-| Money | Show invoices and record provider-confirmed payments | Hold, pool, escrow or settle client funds (in China, only banks and licensed payment institutions; Shanghai rules require third-party settlement) |
+| Transactions | Record agreements and outcomes | Issue official transaction certificates (交易凭证; the venue function is called transaction certification, 交易鉴证) |
+| Money | Show invoices and record provider-confirmed payments | Hold, pool, escrow or settle client funds (in China, only banks and licensed payment institutions; the Shanghai rules require third-party settlement) |
 | Pricing | Support negotiation and prepare competitive processes | Formal listing, binding online bidding, tenders and auctions (auctions also need a licensed auction house); public listing of state-owned technology where law prescribes it |
-| Venue access | Act as a **registered practising agent** of a licensed venue: prepare and verify submissions, represent clients | Becoming a venue: municipal approval under total-quantity control (Shanghai rules Art. 6) |
+| Venue access | Act as a **registered practising agent** of a licensed venue: prepare and verify submissions, represent clients | Becoming a venue: municipal approval under total-quantity control (Shanghai rules, Art. 6) |
 
-The architecture keeps these functions in **separate modules with feature flags**, so they can be enabled only when the legal basis exists. The default route is the agent model: the platform prepares, submits and tracks; the venue (STEX or CTEX) performs the regulated steps and issues the certificates ([09 §1–§2](09-reference-platform-features.md), [10 §3.10](10-product-requirements.md)).
+To be a STEX practising agent, an organization must have been registered for at least 2 years, have registered capital of at least RMB 1 million and at least 2 practitioners recognised by STEX, and have a clean record for the last 24 months. The agent verifies the buyer materials it submits and bears **joint liability** for them ([09 §2.1](09-reference-platform-features.md)). Whether the platform becomes an agent itself or works with an existing one is open decision D-01 ([10 §12](10-product-requirements.md)).
+
+The architecture keeps the regulated functions in **separate modules behind feature flags** (the venue route: `venue_submissions`, `buyer_registrations`, `venue_certificates`, [06 §4.9](06-implementation-design-v1.md)), so they can be enabled only when the legal basis exists. The default route is the agent model: the platform prepares, submits and tracks; the venue (STEX or CTEX) performs the regulated steps and issues the certificates ([09 §1–§2](09-reference-platform-features.md), [10 §3.10](10-product-requirements.md)).
 
 ---
 
@@ -151,19 +163,19 @@ flowchart TB
         B8["Services and commercialization"]
     end
     subgraph C["C. Shared platform infrastructure"]
-        C1["Workflow engine"]
-        C2["Audit and policy engine"]
+        C1["Workflow: state machines,<br/>tasks, deadlines"]
+        C2["Audit and policies<br/>(CASL, tenant scope)"]
         C3["Document and evidence storage"]
-        C4["Notifications and integrations"]
-        C5["AI orchestration"]
+        C4["Notifications and integrations<br/>(via the outbox)"]
+        C5["AI orchestration (later)"]
         C6["Billing and accounting"]
     end
     subgraph D["D. Data and operations"]
-        D1["Relational database"]
-        D2["Search index"]
-        D3["Object storage"]
-        D4["Cache and event queue"]
-        D5["Analytics warehouse"]
+        D1["MongoDB replica set<br/>(system of record)"]
+        D2["Meilisearch<br/>(public snapshots only)"]
+        D3["File storage<br/>(encrypted volume or bucket)"]
+        D4["Outbox and job collections<br/>(in MongoDB)"]
+        D5["Reporting views<br/>(warehouse later)"]
         D6["Monitoring, backup and recovery"]
     end
     A --> B
@@ -171,46 +183,66 @@ flowchart TB
     C --> D
 ```
 
+How the layers map to running software:
+
+- **A** is a React single-page app (built on CI, served by Nginx) plus public technology pages that the worker pre-renders as static HTML.
+- **B** and **C** are modules of **one** Express application written in TypeScript. It runs as two API processes (`tex-api@3001`, `tex-api@3002`) and one background worker (`tex-worker`), all under systemd behind Nginx ([06 §3](06-implementation-design-v1.md), [11 §9](11-target-runtime-node12-mongodb.md)).
+- **D** is the data the modules own. MongoDB is the only source of truth; the search index and the public pages are copies that can be rebuilt from it.
+
 ### 3.1 Architecture style: modular monolith first
 
 For the first production release, use a **modular monolith with asynchronous background workers** instead of many microservices.
 
 | Benefit | Why it matters here |
 | --- | --- |
-| Transactional consistency | Deals, permissions and workflow state change together in one database transaction |
-| Simple deployment and debugging | One deployable backend, one log stream |
+| Transactional consistency | A state change, its history record, its outbox event and its audit event commit together in one MongoDB multi-document transaction |
+| Simple deployment and debugging | One build artifact, run as two API processes and one worker; one log format |
 | No distributed transactions | Avoids sagas and two-phase commits early on |
-| Lower cost | Fewer servers and less operational work |
+| Lower cost | Fewer servers and less operational work for a team of 1–4 developers |
 | Clear migration path | Modules can be extracted when real scale justifies it |
 
 Rules:
 
-- Each module owns its domain model and its data access.
-- Modules **never** manipulate another module's collections directly; they call that module's service interface or react to its events.
+- Each module owns its Mongoose models (`*.model.ts`) and is the only code that reads or writes their collections.
+- Modules **never** manipulate another module's collections directly; they call that module's service functions or react to its outbox events.
 - Candidates for later extraction: search, document processing, AI matching, notifications, analytics and payment integrations.
+
+**How one business change flows through the system** (the pattern every module follows; code in [06 §4.7](06-implementation-design-v1.md)):
+
+1. The Express route validates the input with a zod schema and loads the session user.
+2. The service opens a transaction, loads the document through its Mongoose model with the caller's **tenant scope**, and compares the client's `If-Match` value with the document's `rev`.
+3. A CASL policy decides whether this actor may perform this action on this document in its current state.
+4. The service changes the document and calls `save()`. Mongoose validates it and checks and increments `rev`.
+5. In the same transaction, the service appends a `workflow_transitions` record, an `outbox_events` record and an audit event (in the separate `tex_audit` database). Everything commits, or nothing does.
+6. After the commit, the worker reads the outbox and performs the side effects: search indexing, page rendering, notifications and calls to external providers. A failed side effect is retried; it never undoes the business change.
 
 ### 3.2 Technology stack
 
-The target servers run **Node.js 12.4** and **MongoDB 4.4 / 5.0**. The stack below is chosen for, and verified on, that runtime ([11](11-target-runtime-node12-mongodb.md) lists exact versions and the upgrade path):
+The target servers run **Node.js 12.4** and **MongoDB 4.4 / 5.0** (the "4.5" sometimes quoted is a development series, not a release). The stack below is chosen for, and verified on, that runtime with real binaries ([11](11-target-runtime-node12-mongodb.md) lists exact versions, the coding rules and the upgrade path):
 
 | Component | Choice | Reason |
 | --- | --- | --- |
-| Web frontend | React 18 + TypeScript + Ant Design 5, built with Vite on CI | Mature ecosystem for complex business portals; strong Chinese enterprise components |
-| Public pages | Pre-rendered static HTML on publication + sitemap | Search-engine indexing (Baidu) without a server-rendering framework |
-| Backend | Node.js + TypeScript (compiled to ES2019), Express 4, modular monolith | Runs on the given Node 12 runtime; one language across the stack |
-| Validation | zod schemas shared by API and frontend | One definition for input checks, forms and the OpenAPI document |
-| Primary database | MongoDB replica set (4.4 / 5.0) | Given target; multi-document transactions, validators, flexible technical attributes |
-| Data access | Mongoose 5.13 (driver 3.7): schemas, models and the Document API | Newest ODM for Node 12.4; one schema per collection for types, validation, defaults, indexes and plugins |
-| Search | Meilisearch | Chinese word segmentation, facets, typo tolerance; MongoDB 4.4/5.0 cannot search Chinese text |
+| Web frontend | React 18 + TypeScript + Ant Design 5, built with Vite on CI, served by Nginx | Mature ecosystem for complex business portals; strong Chinese enterprise components; independent of the server's Node version |
+| Public pages | Static HTML pre-rendered with EJS by the worker on publication + sitemap + Baidu push API | Search-engine indexing (Baidu) without a server-rendering framework, which would need a newer Node |
+| Backend | Node.js 12.4 runtime; TypeScript compiled on CI to ES2019 / CommonJS; Express 4.22 modular monolith | Runs on the given runtime; one language across the stack |
+| Validation | zod 3.22 schemas shared by API and frontend | One definition for input checks, forms and the OpenAPI document |
+| Primary database | MongoDB 4.4 / 5.0 **replica set** (`w=majority` set explicitly; it is not the default on 4.4) | Given target; a replica set is required for multi-document transactions; flexible technical attributes |
+| Data access | **Mongoose 5.13.23** (bundles driver 3.7.4): schemas, models, the Document API and plugins (`tenantScopePlugin`, `freezablePlugin`, `appendOnlyPlugin`); a strict `Int64` type for money | Newest Mongoose that runs on Node 12.4; one schema per collection defines types, validation, defaults, indexes and plugins |
+| Schema control | `$jsonSchema` validators and database roles through `migrate-mongo` 8.2.3 (safety net); indexes declared in the schemas and created by `npm run db:indexes` at release | Rules still hold when a script or bug bypasses Mongoose |
+| Authorization | CASL 5.4 policies (RBAC + ABAC); `@casl/mongoose` 5.0 turns them into query filters | One policy for API checks, list filters and UI hints |
+| Authentication | SMS code or password (`bcryptjs`); TOTP MFA (`otplib`) for staff; sessions in MongoDB (`express-session` + `connect-mongo` 3.2) | China-friendly login; no native modules |
+| Search | Meilisearch v1.11 (Chinese word segmentation, facets, typo tolerance), fed from the outbox; `full-icu` for Chinese dates and pinyin sorting | The MongoDB 4.4 / 5.0 text index cannot segment Chinese, so Chinese queries return nothing (verified) |
 | Vector search | Later phase: Meilisearch hybrid search, or MongoDB Vector Search after an upgrade to 8.2+ | Not needed to prove the core business |
 | File storage | Storage adapter: encrypted volume, S3-compatible store or Aliyun OSS | Large documents, versioning, retention, private files |
-| Background jobs | One worker process: transactional outbox + leased job collection in MongoDB | No extra queue infrastructure at launch |
-| Workflow | Explicit state machines persisted in MongoDB | Clear, auditable business transitions |
+| Background jobs | One worker process: transactional outbox + leased job collection in MongoDB; `node-cron` schedules | No Redis or queue server at launch (`bull` 3 + Redis is an option later) |
+| Workflow | Explicit state machines persisted in MongoDB (§13) | Clear, auditable business transitions |
 | Analytics | MongoDB aggregation reports first; warehouse later | Avoid premature infrastructure |
-| Deployment | systemd + Nginx on the target servers | Matches the existing server environment |
-| Observability | Structured logs (pino), metrics (Prometheus format), request IDs, error tracking | Diagnosis and reliability |
+| Deployment | systemd services behind Nginx on the target servers; nightly `mongodump --oplog` backups | Matches the existing server environment; no Docker Compose or Kubernetes |
+| Observability | Structured logs (pino), Prometheus metrics (prom-client), request IDs, error tracking | Diagnosis and reliability |
 
-Do **not** introduce Kubernetes, Kafka, Redis, a graph database and several AI services on day one unless scale or deployment constraints really require them.
+**Considered and rejected:** NestJS 8 (end-of-life, and it pins an older Express with known vulnerabilities), and a Python + PostgreSQL stack (not what the given servers run). **Known risk:** Node.js 12, MongoDB 4.4 / 5.0 and Mongoose 5 are all end-of-life. The first upgrade step (Node 12.22.12 with Mongoose 6.13) is open decision D-08 ([10 §12](10-product-requirements.md), [11 §11](11-target-runtime-node12-mongodb.md)).
+
+Do **not** introduce Kubernetes, Kafka, Redis, a graph database or several AI services on day one unless scale or deployment constraints really require them.
 
 ---
 
@@ -227,11 +259,13 @@ erDiagram
     ORGANIZATION ||--o{ TECHNOLOGY : owns_or_controls
     ORGANIZATION ||--o{ DEMAND : submits
     TECHNOLOGY ||--|{ TECHNOLOGY_VERSION : has
+    TECHNOLOGY ||--o| TECHNOLOGY_PUBLICATION : "live public snapshot"
     TECHNOLOGY_VERSION }o--o{ IP_ASSET : references
     TECHNOLOGY ||--o{ TECHNOLOGY_OFFER : "offered as"
     TECHNOLOGY ||--o{ VERIFICATION_CASE : undergoes
     ORGANIZATION ||--o{ VERIFICATION_CASE : undergoes
-    DEMAND ||--o{ MATCH : receives
+    DEMAND ||--|{ DEMAND_VERSION : has
+    DEMAND_VERSION ||--o{ MATCH : produces
     TECHNOLOGY_OFFER ||--o{ MATCH : candidate_for
     USER ||--o{ AUDIT_EVENT : performs
 ```
@@ -240,7 +274,8 @@ erDiagram
 
 ```mermaid
 erDiagram
-    MATCH ||--o| DEAL : originates
+    MATCH ||--o{ INTRODUCTION_REQUEST : initiates
+    INTRODUCTION_REQUEST ||--o| DEAL : "converts to"
     TECHNOLOGY ||--o{ DEAL : subject_of
     DEAL ||--|{ DEAL_PARTY : includes
     DEAL ||--o{ NDA : "protected by"
@@ -252,9 +287,10 @@ erDiagram
     TRANSACTION_RECORD ||--o{ PAYMENT_RECORD : settles
     DEAL ||--o{ SERVICE_ENGAGEMENT : requires
     DEAL ||--o{ DISPUTE_CASE : "may raise"
+    DEAL ||--o{ VENUE_SUBMISSION : "routed through venue"
 ```
 
-The diagrams show logical relationships, not every physical collection (06 §4 has the collection catalogue).
+The diagrams show logical relationships, not every physical collection. For example, deal parties are embedded in the deal document, and most entities in §4.2 arrive in R2 or R3. [06 §4](06-implementation-design-v1.md) has the collection catalogue.
 
 ### 4.3 Entity catalogue
 
@@ -263,14 +299,17 @@ The diagrams show logical relationships, not every physical collection (06 §4 h
 | User | An individual identity and its authentication |
 | Organization | University, company, research institute, agency or service provider |
 | OrganizationMembership | A user's relationship, role and access rights within an organization |
-| Technology | The stable identity of a technology opportunity |
-| TechnologyVersion | A versioned technical description and published snapshot |
+| Technology | The stable identity and lifecycle status of a technology (the asset) |
+| TechnologyVersion | An immutable revision of the technical description; frozen when submitted for review |
+| TechnologyPublication | The **technology publication snapshot**: the reviewer-approved public fields of one version. The only technology data that search and public pages ever see |
 | IPAsset | A patent, application, software right, know-how or other claimed right |
-| TechnologyOffer | Available licensing, assignment, acquisition or collaboration terms |
-| Demand | A structured business problem or technology requirement |
-| Match | A relationship between a demand and an offer, with evidence and scores |
-| VerificationCase | An identity, ownership, IP or technical review process |
-| Deal | A negotiation and transfer case |
+| TechnologyOffer | A specific commercial opportunity for a technology: licence, assignment, equity contribution, joint development, service or pilot, with its own territory, field of use and terms. Matching happens at offer level |
+| Demand | A buyer's structured business problem or technology requirement |
+| DemandVersion | An immutable revision of a demand; matches refer to the exact version |
+| Match | A scored, explained pairing of one demand version with one offer, under one ranking version |
+| IntroductionRequest | A consent-based request to put a buyer and a supplier in contact. The supplier must approve it (unless a documented policy or agreement says otherwise); contact details stay masked until then |
+| VerificationCase | An identity, ownership, IP or technical review process (a review case in 06) |
+| Deal | A managed negotiation and transfer case, usually opened from an approved introduction |
 | DealParty | Buyer, seller, intermediary, beneficiary or other party |
 | NDA | A confidentiality agreement and its execution status |
 | DataRoom | Restricted document access for a specific deal |
@@ -282,8 +321,9 @@ The diagrams show logical relationships, not every physical collection (06 §4 h
 | ServiceEngagement | Paid or contracted professional work |
 | AuditEvent | An append-only record of an important action |
 | DisputeCase | A complaint, contested right, or contractual or transaction dispute |
+| VenueSubmission | A listing, buyer registration or notice that the platform prepares as registered agent and submits to a licensed venue, with the venue's results and certificate numbers (R3) |
 
-**Modeling rule:** technology, offer, demand, deal, contract and payment are **different entities**. Never merge their fields into one large `technology` document.
+**Modeling rule:** technology, offer, demand, match, introduction, deal, contract and payment are **different entities**. Never merge their fields into one large `technology` document.
 
 - A technology can have several offers, many interested buyers, several matching demands and a history of deals.
 - An offer can change without rewriting the technology's identity.
@@ -343,12 +383,16 @@ Do **not** implement permissions as a single `role` column on the user. One pers
 | Technology supplier | Publish authorized offers and manage buyer relationships |
 | Corporate buyer | Create demands, discover technologies, manage evaluation and procurement |
 | R&D manager | Define requirements and assess technical fit |
-| Technology broker / manager | Manage assigned matching and transfer cases |
+| Technology manager (技术经理人, broker) | Manage assigned demands, matching and transfer cases |
 | Technical expert | Review assigned evidence and submit assessments |
 | IP / legal professional | Conduct scoped legal and rights diligence |
 | Investor | Discover opportunities and review authorized investment information |
 | Service provider | Offer evaluation, prototyping, regulatory or commercialization services |
 | Enterprise administrator | Manage the organization's users, policies, subscriptions and permissions |
+
+> **Naming:** in Chinese practice a *technology manager* (技术经理人) is a professional broker. Inside a supplier organization, the role code `technology_manager` ([06 §8.2](06-implementation-design-v1.md)) means the member who maintains that organization's listings. They are different people with different permissions, so the UI must give them different labels.
+
+The first-release role codes and permission matrix are in [06 §8](06-implementation-design-v1.md).
 
 ### 5.2 Internal (platform staff) roles
 
@@ -386,6 +430,8 @@ flowchart TD
 
 Sensitive actions require explicit permission checks **on the backend**. Hiding a button in React is not an authorization control.
 
+In the implementation, two independent mechanisms enforce this ([06 §4.8, §8.4](06-implementation-design-v1.md)). **CASL policies** decide *what* an actor may do: role rules plus attribute conditions such as organization, deal assignment and current state. The Mongoose **tenant-scope plugin** decides *which documents can be loaded at all*: every query on a tenant-owned model must state whose data it may touch, or it throws. MongoDB has no row-level security, so both are required.
+
 ---
 
 ## 6. User experience and information architecture
@@ -406,20 +452,30 @@ The product should not feel like one giant admin dashboard. Each audience enters
 
 This is the heart of the system. Every workflow defines an **owner, input, states, authorized transitions, output, failure paths and audit record**.
 
+| Workflow | Starts in ([10](10-product-requirements.md)) | Stored state machine |
+| --- | --- | --- |
+| A. Technology registration and publication | R1 | `technologies.lifecycleStatus` ([06 §6.1](06-implementation-design-v1.md)) |
+| B. Corporate technology demand | R1 | `demands.status` ([06 §6.2](06-implementation-design-v1.md)) |
+| C. Matching and recommendation | R1 (technology-manager network R2) | None: matches are versioned records |
+| D. Inquiry, introduction, NDA and disclosure | R1 (inquiries, introductions); R2 (NDA, data rooms) | `introduction_requests.status` ([06 §6.3](06-implementation-design-v1.md)) |
+| E. Deal negotiation and transaction | R2 (venue route R3) | `deals.status` ([06 §6.4](06-implementation-design-v1.md), §13 below) |
+| F. Managed technology scouting | R2 | Service order |
+| G. Disputes | R1 (basic); R2 (mediation) | Dispute case ([08 §8](08-china-operating-model.md)) |
+
 ### 7.1 Workflow A: technology registration and publication
 
 | Item | Definition |
 | --- | --- |
 | Objective | Let a legitimate rights holder publish a discoverable technology without accidentally disclosing confidential information |
-| Actors | Supplier (technology manager), organization admin, technology reviewer, IP specialist, system |
+| Actors | Supplier user (organization role `technology_manager`, admin or owner), technology reviewer, IP specialist, system |
 | Trigger | Supplier clicks "Publish Technology" |
-| Preconditions | Verified email; membership in an organization with the `technology_manager` permission |
-| Output | A published, versioned public snapshot, indexed and matched against open demands |
-| Service level | First review within 5 business days (see [06 §14](06-implementation-design-v1.md)) |
+| Preconditions | Verified mobile number (or e-mail); active membership of an organization with the role `technology_manager`, `org_admin` or `org_owner` |
+| Output | A technology publication snapshot, indexed in Meilisearch, pre-rendered as a public page and matched against open demands |
+| Service level | First review within 5 working days (FR-TEC-11; [06 §14](06-implementation-design-v1.md)) |
 
 ```mermaid
 flowchart TD
-    A["Supplier creates account"] --> B["Verify email and identity"]
+    A["Supplier creates account"] --> B["Verify mobile number<br/>(or e-mail) and identity"]
     B --> C["Create or join organization"]
     C --> D["Verify organization and authority"]
     D --> E["Create technology draft"]
@@ -434,8 +490,8 @@ flowchart TD
     J -->|"Rejected"| R["Rejected with reason<br/>(appeal possible)"]
     J -->|"Acceptable"| L["Review publication scope<br/>field by field"]
     L --> M["Approve publication"]
-    M --> N["Publish approved public fields"]
-    N --> O["Index and generate matches"]
+    M --> N["Create technology publication snapshot<br/>(approved fields only)"]
+    N --> O["Worker indexes it, pre-renders the page<br/>and matches open demands"]
     O --> P["Notify supplier of qualified opportunities"]
 ```
 
@@ -444,7 +500,7 @@ flowchart TD
 | # | Actor | Action | System behaviour / output |
 | --- | --- | --- | --- |
 | 1 | Supplier | Creates an account and accepts the platform terms | Account in `pending` status; terms version recorded |
-| 2 | Supplier | Creates an organization profile or requests membership of an existing one | Duplicate check on registration number; membership request routed to that organization's admin |
+| 2 | Supplier | Creates an organization profile or requests membership of an existing one | Duplicate check on the unified social credit code (统一社会信用代码); membership request routed to that organization's admin |
 | 3 | Verification officer | Verifies identity, organizational existence and the user's authority to act | Verification case with evidence and expiry date |
 | 4 | Supplier | Creates a draft: technology type, applications, maturity, intended transaction model | Draft saved automatically; version 1 created |
 | 5 | System | Requests the relevant IP records, technical evidence and rights declarations for the technology type | Checklist generated per technology type |
@@ -452,9 +508,9 @@ flowchart TD
 | 7 | Supplier | Submits the record to the review queue | Version frozen; review case created **once**, even if the request is retried |
 | 8 | Reviewer | Evaluates completeness, evidence quality, publication permissions and restrictions | Checklist completed; conflict-of-interest declaration recorded |
 | 9 | Reviewer | Approves, rejects or requests corrections | Decision with reason and evidence; supplier notified |
-| 10 | System | Generates a versioned publication snapshot containing **only approved fields** | Immutable snapshot ID |
-| 11 | System | Indexes the snapshot; matching engine evaluates open demands | Index status recorded; retries and alerts on failure |
-| 12 | Supplier | Updates the record later | Material changes create a new version that needs review; the old snapshot stays live until approval |
+| 10 | System | Publishes the approved version: writes the technology publication snapshot containing **only approved fields**, the `approved → published` transition and an outbox event `technology.published`, in one transaction | Snapshot in `technology_publications` (status `live`) |
+| 11 | Worker | Relays the outbox event: indexes the snapshot in Meilisearch, pre-renders the public page, updates the sitemap; matching evaluates open demands | Index status recorded; retries and alerts on failure; target ≤ 5 minutes (FR-TEC-12) |
+| 12 | Supplier | Updates the record later | Material changes create a new version that needs review (`update_pending`); the old snapshot stays live until the new one is approved |
 
 **Publication states**
 
@@ -469,16 +525,18 @@ stateDiagram-v2
     InReview --> Rejected : Reject
     Approved --> Published : Publish approved snapshot
     Published --> UpdatePending : Submit material revision
-    UpdatePending --> Published : Revision approved or rejected
+    UpdatePending --> Published : Revision decided
     Published --> Suspended : Rights or safety concern
     Suspended --> Published : Reinstatement approved
     Published --> Archived : Withdraw or retire
-    Suspended --> Archived : Permanent removal
+    Suspended --> Archived : Withdraw or retire
     Rejected --> [*]
     Archived --> [*]
 ```
 
-A published technology can be **suspended without deleting its history**, for example because of an ownership dispute, an expired offer, a changed patent status or a security concern.
+The stored values are `draft`, `submitted`, `in_review`, `changes_requested`, `approved`, `rejected`, `published`, `update_pending`, `suspended` and `archived` ([06 §6.1](06-implementation-design-v1.md) has the transition table). While a revision is in `update_pending`, the old snapshot stays public. If the revision is approved, a new snapshot replaces the old one; if it is rejected, the old snapshot simply stays.
+
+A published technology can be **suspended without deleting its history**, for example because of an ownership dispute, an expired offer, a changed patent status or a security concern. Suspension removes it from search and the public pages within minutes and blocks new introductions.
 
 > **Critical detail:** *publication state* and *rights-verification state* are separate. A listing may be publishable as an "unverified opportunity" while only some of its claims are independently verified. The UI must make that distinction obvious.
 
@@ -497,7 +555,7 @@ A published technology can be **suspended without deleting its history**, for ex
 | Item | Definition |
 | --- | --- |
 | Objective | Turn a vague industrial problem into a structured requirement that can be matched, evaluated and fulfilled |
-| Actors | Buyer (R&D manager / demand manager), technology manager, demand reviewer, system |
+| Actors | Buyer (R&D manager / demand manager), technology manager (技术经理人) who helps rewrite the demand, demand reviewer, system |
 | Trigger | Buyer clicks "Post a Technology Need", or a scouting engagement creates the demand |
 | Output | An approved, versioned demand with hard constraints and preferences, ready for matching |
 
@@ -513,13 +571,13 @@ Example: a manufacturer needs a faster, more reliable inspection process. The de
 | Rights | Target geography and rights requirements (exclusive? territory?) | Yes |
 | Budget | Indicative budget and procurement authority | No (can be private) |
 | Timing | Desired delivery timeline | No |
-| Route | License, acquisition, development partnership, supplier engagement or investment | Yes |
+| Route | Licence, acquisition, development partnership, supplier engagement or investment | Yes |
 
 The system separates **minimum matching requirements** from **optional refinements**, and **hard constraints** ("TRL 7 is mandatory") from **preferences** ("TRL 5 is acceptable with a funded development plan").
 
 ```mermaid
 flowchart TD
-    A["Buyer describes the problem<br/>(free text or wizard)"] --> B["AI-assisted structuring<br/>into fields and constraints"]
+    A["Buyer describes the problem<br/>(free text or wizard)"] --> B["AI-assisted structuring into<br/>fields and constraints (from R2)"]
     B --> C["Buyer confirms constraints<br/>and disclosure level"]
     C --> D{"Disclosure level"}
     D -->|"Public summary"| E["Anonymous public demand"]
@@ -532,6 +590,8 @@ flowchart TD
     H -->|"Approved"| I["Matching (Workflow C)"]
 ```
 
+For public demands, a technology manager or expert writes a demand analysis and an anonymized public version; the buyer approves it before publication (FR-DEM-04). The buyer's identity and budget are never public by default.
+
 **Demand lifecycle**
 
 ```mermaid
@@ -540,22 +600,31 @@ stateDiagram-v2
     Draft --> Submitted : Submit
     Submitted --> Clarification : Questions raised
     Clarification --> Submitted : Buyer answers
-    Submitted --> Review : Reviewer assigned
-    Review --> Approved : Approve
-    Review --> Rejected : Reject
-    Approved --> Matching : Start matching
-    Matching --> Shortlisting : Candidates found
-    Matching --> Closed : No suitable candidate
-    Shortlisting --> Evaluation : Candidates selected
-    Evaluation --> Negotiation : Preferred candidate
-    Evaluation --> Matching : All candidates rejected
-    Negotiation --> Deal : Deal opened
-    Deal --> Closed : Fulfilled
-    Closed --> [*]
+    Submitted --> Approved : Approve
+    Submitted --> Rejected : Reject
+    Approved --> Matching : Run matching
+    Matching --> Shortlisted : Candidates accepted
+    Matching --> NoCandidates : Nothing suitable
+    NoCandidates --> Matching : Refine criteria
+    NoCandidates --> Withdrawn : Buyer stops
+    Shortlisted --> Introduction : Introduction requested
+    Introduction --> InEvaluation : Introduced
+    InEvaluation --> Negotiation : Preferred candidate
+    InEvaluation --> Shortlisted : Candidate dropped
+    Negotiation --> Fulfilled : Deal completed
+    Negotiation --> Shortlisted : Talks failed
+    Shortlisted --> Withdrawn : Buyer stops
+    Matching --> Expired : Target date passed
+    Shortlisted --> Expired : Target date passed
+    Fulfilled --> [*]
+    Withdrawn --> [*]
     Rejected --> [*]
+    Expired --> [*]
 ```
 
-Every closure records a **reason**: fulfilled, withdrawn, expired, no suitable technology, budget unavailable, or transferred to an external procurement process.
+The stored values (`demands.status`) are `draft`, `submitted`, `clarification`, `approved`, `rejected`, `matching`, `shortlisted`, `no_candidates`, `introduction`, `in_evaluation`, `negotiation`, `fulfilled`, `withdrawn` and `expired`. A scheduled job moves open demands past their target date to `expired` ([06 §6.2](06-implementation-design-v1.md)).
+
+Every closure records a **reason** (`closureReason`): fulfilled, withdrawn, expired, no suitable technology, budget unavailable, or transferred to an external procurement process.
 
 > **Important rule:** do not force every demand into a technology purchase. A demand may be best fulfilled by a new research collaboration, a custom development contract, a group of complementary technologies, a consulting engagement, a pilot or proof of concept, or an investment or joint venture. The domain model must support those routes **without inventing a fake technology listing**.
 
@@ -573,11 +642,13 @@ flowchart LR
 
 | Stage | What happens | Output |
 | --- | --- | --- |
-| 1. Eligibility filters | Rights availability, geography, required TRL, prohibited sectors, budget range, mandatory technical constraints | Eligible offers only |
-| 2. Candidate retrieval | Structured filters, keyword search, multilingual search, semantic retrieval, taxonomy relationships | Candidate list |
-| 3. Ranking and evidence | Technical fit, maturity, deployment constraints, rights compatibility, evidence quality, commercial terms | Ranked list with explanations |
+| 1. Eligibility filters | Rights availability, geography, required TRL, prohibited sectors, budget range, mandatory technical constraints. Runs as a MongoDB query on offers | Eligible offers only |
+| 2. Candidate retrieval | Chinese and English keyword search with synonyms in Meilisearch, restricted to the eligible offers; taxonomy relationships; semantic retrieval in a later phase | Candidate list |
+| 3. Ranking and evidence | Technical fit, maturity, deployment constraints, rights compatibility, evidence quality, commercial terms. Scored in the worker | Ranked list with explanations, stored as matches |
 | 4. Human review | A broker or specialist reviews top candidates, rejects false positives and identifies missing information | Approved shortlist |
 | 5. Controlled introduction | The system asks for approval before disclosing confidential details or introducing the parties | Introduction request (Workflow D) |
+
+Matching runs as a background job per demand version; [06 §10](06-implementation-design-v1.md) has the implementation.
 
 **Initial scoring model**
 
@@ -596,7 +667,7 @@ S = 0.35·T + 0.20·M + 0.15·C + 0.15·R + 0.10·E + 0.05·G
 
 Rules:
 
-- The weights are **starting assumptions, not validated data**. Make them configurable and sector-specific, and test them against expert judgments and completed deals.
+- The weights are **starting assumptions, not validated data**. Make them configurable and sector-specific, store each set under a `rankingVersion`, and test them against expert judgments and completed deals.
 - **Hard constraints are filters, not score components.** A technology lacking a legally necessary right is ineligible however high its technical score.
 - Show **why** a technology was recommended, which evidence supports it and which gaps remain.
 - Never present a match score as a probability of commercial success.
@@ -604,7 +675,7 @@ Rules:
 
 ### 7.4 Workflow D: inquiry, NDA and confidential disclosure
 
-This workflow protects both sides and prevents accidental disclosure.
+This workflow protects both sides and prevents accidental disclosure. It has two steps: an **introduction** (consent to make contact) and, later, **confidential disclosure** (access to specific documents under an NDA).
 
 ```mermaid
 sequenceDiagram
@@ -612,25 +683,30 @@ sequenceDiagram
     participant UI as Platform web app
     participant API as Backend API
     participant POL as Policy engine
+    actor Broker
     actor Supplier
     participant DR as Data room service
-    Buyer->>UI: Request technology information
-    UI->>API: Inquiry request
+    Buyer->>UI: Request an introduction for an offer
+    UI->>API: Introduction request
     API->>POL: Check listing and buyer permissions
     POL-->>API: Allowed fields and disclosure rules
-    API->>Supplier: Send inquiry for approval
-    Supplier-->>API: Approve, reject or request clarification
-    API-->>Buyer: Show response
+    API->>Broker: Queue for review (where policy requires it)
+    Broker-->>API: Forward to supplier or reject
+    API->>Supplier: Ask for consent
+    Supplier-->>API: Approve, reject or ask for clarification
+    API-->>Buyer: Show response, share contact cards if approved
     Buyer->>API: Request confidential access
     API->>Supplier: Request NDA or disclosure approval
     Supplier-->>API: Approve disclosure terms and documents
     Note over Buyer,Supplier: NDA executed through the configured signing process and verified
-    API->>DR: Create restricted data-room access
+    API->>DR: Create per-document access grants
     Buyer->>DR: Open document
     DR->>POL: Evaluate every document request
     POL-->>DR: Permit only authorized resources
     DR-->>Buyer: Deliver permitted document (watermarked, logged)
 ```
+
+The introduction request has its own states ([06 §6.3](06-implementation-design-v1.md)): `requested` → `under_review` → `supplier_pending` → `approved` → `introduced` → `converted_to_deal`, or `rejected` / `withdrawn`. Until it is approved, messages between the parties have phone numbers, e-mail addresses, WeChat IDs and URLs masked (FR-INT-02). A unique index allows only one deal per introduction, so a retried "create deal" never creates a second one.
 
 **Access classes**
 
@@ -652,7 +728,7 @@ Rules:
 
 ### 7.5 Workflow E: deal negotiation and transaction
 
-A deal has its own state machine and an assigned owner.
+A deal has its own state machine and an assigned owner (the deal manager).
 
 ```mermaid
 stateDiagram-v2
@@ -670,27 +746,51 @@ stateDiagram-v2
     Approval --> ContractDraft : Changes required
     Approval --> Signed : All signatures verified
     Signed --> ConditionsPending : Conditions outstanding
+    Signed --> ReadyToComplete : No conditions outstanding
     ConditionsPending --> ReadyToComplete : All conditions met
     ReadyToComplete --> Completed : Completion confirmed
     Signed --> Disputed : Dispute opened
     ConditionsPending --> Disputed : Dispute opened
+    ReadyToComplete --> Disputed : Dispute opened
     Disputed --> ConditionsPending : Resolved, continue
     Disputed --> Lost : Terminated
     Completed --> [*]
     Lost --> [*]
 ```
 
+| State (`deals.status`) | Meaning |
+| --- | --- |
+| `opportunity` | A possible deal, usually created from an approved introduction |
+| `qualified` | Both parties identified and the deal is worth pursuing |
+| `due_diligence` | Technical, IP and commercial evaluation, under an NDA where confidential data is needed |
+| `negotiation` | Versioned proposals and counter-proposals |
+| `on_hold` | Negotiation paused, with a reason |
+| `contract_draft` | All parties accepted the same proposal version; the contract is being drafted |
+| `approval` | Each party's internal approvals and authorized signatories |
+| `signed` | Signatures verified; the contract is executed |
+| `conditions_pending` | Completion conditions outstanding: payment, registration, delivery or approvals |
+| `ready_to_complete` | Every condition is met; the final completion check runs as its own audited step |
+| `completed` | Completion confirmed for the deal type (see below) |
+| `lost` | Ended without completion, with a loss reason |
+| `disputed` | A dispute is open; the deal cannot complete through the normal path |
+
+`ready_to_complete` is the last step before `completed`, in this blueprint, in [06 §6.4](06-implementation-design-v1.md) and in the stored enum. It separates "all conditions are met" from "completion confirmed", so the deal-type completion check is explicit and a dispute can still stop the deal. Disputes can be opened only after signature. Before that, a party that disagrees ends the talks (`lost`) or pauses them (`on_hold`), and complaints go through the complaints process (FR-CMP-04).
+
 `Completed` needs a precise business definition **for each transaction type**. A signed contract, a paid licence fee, delivery of source code and transfer of legal title are different events:
 
-| Deal type | Completion requires (configurable) |
+| Deal type (`dealType`) | Completion requires (configurable) |
 | --- | --- |
-| Licence | Licence effective + required conditions met + initial payment confirmed |
-| Assignment | Executed assignment + registration or recordal at the relevant IP office (where required) + consideration paid |
-| Development partnership | Contract executed; the deal stays **active** through milestones for months |
-| Technical service | Deliverables accepted under the agreed acceptance criteria |
-| Investment | Closing conditions satisfied + shares or rights issued |
+| Licence (`ip_license`) | Licence effective + required conditions met + initial payment confirmed |
+| Assignment (`ip_assignment`) | Executed assignment + registration or recordal at the relevant IP office (where required) + consideration paid |
+| Development partnership (`rnd_collaboration`) | Contract executed; the deal stays **active** through milestones for months |
+| Technical service (`technical_service`) | Deliverables accepted under the agreed acceptance criteria |
+| Investment (`investment`) | Closing conditions satisfied + shares or rights issued |
 
-The platform therefore supports **configurable completion criteria per deal type** (see [07 §7](07-roles-workflows-and-money.md) and [08 §3](08-china-operating-model.md)).
+The platform therefore supports **configurable completion criteria per deal type** (see [07 §7](07-roles-workflows-and-money.md) and [08 §3](08-china-operating-model.md)). The deal stage is only one dimension: contract, payment, milestone and dispute statuses are separate records with their own state machines ([07 §8.1](07-roles-workflows-and-money.md)).
+
+**Venue-routed deals (R3).** When a transfer must be sold through formal listing, bidding, auction or tender, the platform does not run the binding steps itself. As the venue's registered agent, it prepares the submission (`venue_submissions`), registers buyers on behalf of clients and tracks the venue's timeline (for example, disclosure for at least 5 working days on STEX). The venue runs the competitive method and third-party settlement and issues the certificates; the platform records the results and certificate numbers on the deal ([10 §3.10](10-product-requirements.md)).
+
+**Deal status on the venue route.** The deal stays `negotiation` while the venue lists and discloses the technology and runs buyer registration and price discovery. It moves to `contract_draft` when the venue confirms the buyer and price, then through `approval` to `signed` (contract within 5 WD), and stays `conditions_pending` until venue settlement is confirmed and the transaction certificate (交易凭证) is recorded: both are completion conditions of a venue-routed deal. The venue's own steps are tracked on `venue_submissions`, not as extra deal statuses.
 
 ### 7.6 Workflow F: managed technology scouting (service engagement)
 
@@ -712,13 +812,13 @@ The platform therefore supports **configurable completion criteria per deal type
 
 ### 7.7 Workflow G: disputes (summary)
 
-Any deal party can open a dispute about delivery, acceptance, IP, confidentiality or payment. The dispute workflow records the issue, the remedy sought and the evidence, notifies the other party with a response deadline, and applies the contract's and payment provider's rules. Disputed deals cannot be completed through the normal path. The full dispute and funds-hold design is in [08 §8](08-china-operating-model.md).
+Any party to a signed deal can open a dispute about delivery, acceptance, IP, confidentiality or payment. The dispute workflow records the issue, the remedy sought and the evidence, notifies the other party with a response deadline, and applies the contract's and payment provider's rules. Disputed deals cannot be completed through the normal path. Complaints before signature use the same ticket and evidence process without changing the deal state (FR-CMP-04). The full dispute and funds-hold design is in [08 §8](08-china-operating-model.md).
 
 ---
 
 ## 8. Core sequence diagrams
 
-These diagrams show how the system components cooperate internally, not just what the user sees.
+These diagrams show how the system components cooperate internally, not just what the user sees. "API" is one of the `tex-api` processes; the identity, technology, workflow and document modules run inside it. "Worker" is `tex-worker`.
 
 ### 8.1 Publish a technology
 
@@ -726,31 +826,25 @@ These diagrams show how the system components cooperate internally, not just wha
 sequenceDiagram
     actor Supplier
     participant API as Backend API
-    participant IAM as Identity and access
-    participant DOC as Document service
     participant DB as MongoDB
-    participant WF as Workflow service
     actor Reviewer
-    participant IDX as Indexing worker
-    participant SE as Search index
-    Supplier->>API: Submit technology draft (Idempotency-Key)
-    API->>IAM: Verify membership and permission
-    IAM-->>API: Authorized
-    API->>DOC: Validate stored evidence references
-    DOC-->>API: Evidence metadata (scan status clean)
-    API->>DB: Save draft and submission record
-    DB-->>API: Saved
-    API->>WF: Create review task
-    WF-->>API: Task created
-    API-->>Supplier: Submission received
-    Reviewer->>WF: Record review decision (approve)
-    WF->>DB: Store decision and publication snapshot
-    WF->>IDX: Outbox event "technology published"
-    IDX->>DB: Read approved publication snapshot
-    IDX->>SE: Index approved fields only
-    SE-->>IDX: Indexed
-    IDX->>DB: Record indexing status
+    participant WK as Worker
+    participant SE as Meilisearch
+    Supplier->>API: Submit version (Idempotency-Key, If-Match)
+    API->>DB: Start transaction, load technology with tenant scope, compare rev
+    API->>API: Check policy (CASL) and evidence scan status
+    API->>DB: Freeze version, status submitted, review case, transition, outbox event, audit event, commit
+    API-->>Supplier: Submission received (review case reference)
+    Reviewer->>API: Approve version and public field scope
+    API->>DB: One transaction: decision, publication snapshot, status published, transition, outbox event
+    WK->>DB: Lease pending outbox event "technology.published"
+    WK->>SE: Upsert approved public fields only
+    SE-->>WK: Indexed
+    WK->>WK: Pre-render public page, update sitemap
+    WK->>DB: Mark event published, record index status
 ```
+
+The API never calls Meilisearch, the page renderer or a notification provider inside a transaction. It writes an outbox event, and the worker performs the side effect after the commit. If indexing fails, the event stays pending and is retried; the business change is not rolled back.
 
 Implementation requirements:
 
@@ -767,29 +861,27 @@ sequenceDiagram
     actor Buyer
     participant API as Backend API
     participant DB as MongoDB
-    participant Q as Job queue
-    participant MW as Matching worker
-    participant SE as Search and vector index
-    participant WF as Workflow service
+    participant MW as Worker (matching)
+    participant SE as Meilisearch
     actor Broker
-    participant NT as Notification service
-    Buyer->>API: Submit approved demand
-    API->>DB: Save demand version
-    API->>Q: Request matching job
-    API-->>Buyer: Demand accepted (202, job id)
-    Q->>MW: Process demand version
-    MW->>DB: Load constraints and permissions
-    MW->>SE: Retrieve eligible candidates
+    participant NT as Notification providers
+    Buyer->>API: Request matching for an approved demand
+    API->>DB: Insert matching job for the demand version
+    API-->>Buyer: 202 Accepted (job id)
+    MW->>DB: Lease the job
+    MW->>DB: Hard filters: eligible offers, constraints, permissions
+    DB-->>MW: Eligible offer IDs
+    MW->>SE: Keyword retrieval restricted to eligible IDs
     SE-->>MW: Candidate list
-    MW->>MW: Rank and explain results
-    MW->>DB: Persist match evidence and scores
-    MW->>WF: Create review queue item
-    Broker->>WF: Record shortlist decision
-    WF->>NT: Notify authorized results
+    MW->>MW: Score with the current rankingVersion, explain
+    MW->>DB: One transaction: matches, broker review task, outbox event
+    Broker->>API: Record shortlist decision
+    API->>DB: Decision, transition, outbox event
+    MW->>NT: Relay outbox event (in-app, e-mail digest)
     NT-->>Buyer: New qualified matches
 ```
 
-Match records store the **versions** of the demand and technology used for scoring. Otherwise it is impossible to explain why a recommendation appeared six months ago.
+Jobs live in a MongoDB collection with leases, so no queue server is needed ([06 §4.9](06-implementation-design-v1.md)). Match records store the **versions** of the demand and technology and the ranking version used for scoring; a unique index on (demand, demand version, offer, ranking version) makes a re-run harmless. Otherwise it is impossible to explain why a recommendation appeared six months ago.
 
 ### 8.3 Execute a deal safely
 
@@ -801,7 +893,7 @@ sequenceDiagram
     participant POL as Policy engine
     participant DB as MongoDB
     participant CON as Contract service
-    participant FIN as Finance integration
+    participant FIN as Payment partner (via worker)
     Buyer->>DEAL: Propose terms
     DEAL->>POL: Check party access and authority
     POL-->>DEAL: Authorized
@@ -820,7 +912,7 @@ sequenceDiagram
     DEAL->>DB: Record state transition and audit event
 ```
 
-The contract service keeps the **exact document version and execution evidence**. The finance integration reports **authoritative** payment status; an operator can never mark an unverified payment as successful.
+The contract service keeps the **exact document version and execution evidence**. The payment partner (a bank or licensed payment institution) reports **authoritative** payment status; an operator can never mark an unverified payment as successful. Until the payment integration exists (R3), payment status is recorded from verified evidence, such as a bank receipt checked by a finance officer.
 
 ---
 
@@ -845,8 +937,8 @@ Each item shows its **age, owner, next action and deadline**. A count without ag
 
 ```mermaid
 flowchart TD
-    A["Application received, case ID assigned"] --> B["Check legal identity against reliable sources<br/>(e.g. business registry)"]
-    B --> C["Verify the applicant's authority<br/>to represent the organization"]
+    A["Application received, case ID assigned"] --> B["Check legal identity: unified social credit code<br/>against the national enterprise credit system"]
+    B --> C["Verify the applicant's authority<br/>(authorization letter, 授权委托书)"]
     C --> D{"Documents sufficient?"}
     D -->|"No"| E["Request more documents"]
     E --> B
@@ -861,7 +953,7 @@ flowchart TD
     K --> L["Appeal recorded if submitted"]
 ```
 
-Organization verification does **not** prove ownership of every technology the organization uploads. Technology rights are assessed separately.
+Sensitive decisions such as this one use **maker-checker**: one officer prepares the decision and a second one approves it (FR-ADM-02). Organization verification does **not** prove ownership of every technology the organization uploads. Technology rights are assessed separately.
 
 ### 9.3 Technology review checklist
 
@@ -920,7 +1012,7 @@ These are production-oriented examples. Each becomes a ticket with tests, design
 
 ### Epic A — Identity and organizations
 
-**US-001 Register an account.** *As a prospective participant, I want to register and verify my email so that I can access the platform.*
+**US-001 Register an account.** *As a prospective participant, I want to register and verify my mobile number (or e-mail) so that I can access the platform.*
 
 - [ ] Protected functions are unavailable until the required verification is complete.
 - [ ] Repeated registration requests do not create duplicate accounts.
@@ -1033,7 +1125,7 @@ These are production-oriented examples. Each becomes a ticket with tests, design
 - [ ] Deliverables are visible only to authorized client users.
 - [ ] The service can lead to a deal without re-publishing confidential information.
 
-These epics are an initial backlog, not a substitute for acceptance tests covering every state transition, permission boundary, integration failure and exception path.
+These epics are an initial backlog, not a substitute for acceptance tests covering every state transition, permission boundary, integration failure and exception path. The numbered requirements and user acceptance scenarios that releases are tested against are in [10 §3 and §10](10-product-requirements.md).
 
 ---
 
@@ -1045,20 +1137,20 @@ The system of record is **MongoDB** (target servers run 4.4 / 5.0; see [11](11-t
 
 Every major business collection has:
 
-- An `ObjectId` primary key **and** a human-readable reference (`TEC-000123`, `DEAL-000042`) for users and support staff.
+- An `ObjectId` primary key **and** a human-readable reference (`TEC-000123`, `DEM-…`, `DEAL-000042`, `CASE-…`) for users and support staff, generated from an atomic counter.
 - `createdAt` and `updatedAt`.
-- An organization (tenant) ownership field where applicable.
+- An organization (tenant) ownership field where applicable, enforced by `tenantScopePlugin` (§11.3).
 - An explicit status, validated as an enum.
-- A `rev` counter for optimistic concurrency, plus an immutable version collection where history matters.
+- A `rev` field for optimistic concurrency: the Mongoose version key with `optimisticConcurrency`, so every `save()` checks and increments it, and a stale `If-Match` returns `409 VERSION_CONFLICT`. Where history matters, an immutable version collection (`freezablePlugin`) and append-only transition records (`appendOnlyPlugin`).
 - A Mongoose schema (types, enums, required fields, cross-field rules) plus a `$jsonSchema` validator in the database and unique indexes for invariants that must hold under concurrency.
-- Indexes for its common access patterns.
+- Indexes for its common access patterns, declared in the schema.
 - Audit events for sensitive transitions.
 
-Use structured, validated fields for relationships, state, rights, money and permissions. Use flexible sub-documents only for sector-specific technical attributes and extraction metadata. Money is stored as **integer minor units with a currency** (`{ currency: 'CNY', amountMinor: Int64 }`), never as floating point.
+Use structured, validated fields for relationships, state, rights, money and permissions. Use flexible sub-documents only for sector-specific technical attributes and extraction metadata. Money is stored as **integer minor units (fen) with a currency** (`{ currency: 'CNY', amountMinor: Int64 }`), never as floating point; rates and percentages use `Decimal128`. Mongoose 5 has no 64-bit integer type, so the project registers a strict `Int64` type that rejects fractions ([06 §4.5](06-implementation-design-v1.md)).
 
 ### 11.2 Document model (excerpt)
 
-A technology is split into a small, frequently updated **identity document**, **immutable versions**, and an **approved public snapshot**, the only part that search and public pages ever see:
+A technology is split into a small, frequently updated **identity document**, **immutable versions**, and the **technology publication snapshot**, the only part that search and public pages ever see. This split lets version 4 be edited and reviewed while version 3 stays public:
 
 ```javascript
 // technologies: identity and lifecycle
@@ -1068,11 +1160,11 @@ A technology is split into a small, frequently updated **identity document**, **
 
 // technology_versions: immutable once submitted
 { technologyId: ObjectId("…"), version: 3, frozen: true,
-  title: { zh: "锂电池极片缺陷在线检测技术", en: "Inline defect detection for battery electrodes" },
+  title: { zh: "锂电池极片缺陷在线检测技术", en: "Inline defect detection for lithium-battery electrodes" },
   publicSummary: { zh: "…", en: "…" }, claimedTrl: 6, assessedTrl: null,
   technicalAttributes: { lineSpeed: "≤ 80 m/min", accuracy: "> 99%" }, createdAt: ISODate("…") }
 
-// technology_publications: approved public snapshot (search index source)
+// technology_publications: technology publication snapshot (source for search and public pages)
 { technologyId: ObjectId("…"), version: 3, ref: "TEC-000123", status: "live",
   title: { zh: "…", en: "…" }, summary: { zh: "…" }, industryCodes: ["C384"],
   trl: { claimed: 6, assessed: null }, offerTypes: ["license"], badges: ["patent_verified"] }
@@ -1082,7 +1174,7 @@ The full collection catalogue, Mongoose models, validators, indexes, roles and v
 
 **Intentionally deferred.** Payment obligations, provider transactions, payouts, ledger entries and reconciliation ([08 §9](08-china-operating-model.md)) are added when money starts flowing through the platform.
 
-Use **migrations from the beginning** (`migrate-mongo` for validators, roles and data; index sync from the Mongoose schemas at release). Never change validators, indexes or roles manually in production.
+Use **migrations from the beginning**: `migrate-mongo` for validators, roles and data fixes, and `npm run db:indexes` to create the indexes declared in the Mongoose schemas, both run at release as the `tex_migrator` user. The application user cannot create indexes, so the API and worker never do it. Never change validators, indexes or roles manually in production.
 
 ### 11.3 Multi-tenant isolation
 
@@ -1090,7 +1182,7 @@ When many organizations share the platform, tenant isolation is a first-class se
 
 1. Every tenant-owned document has an explicit ownership or access relationship.
 2. Every tenant-owned Mongoose model carries a **tenant-scope plugin** that adds the tenant filter to every query, and rejects any query that does not state a tenant or an audited staff reason (06 §4.8). MongoDB has no row-level security, so this rule is enforced in one place and covered by automated cross-tenant tests.
-3. The application connects with a **least-privilege role**: CRUD on business collections, insert-only on the audit trail, no schema changes.
+3. The application connects with a **least-privilege role** (`texApp`): CRUD on business collections, insert-only on the audit trail (kept in a separate `tex_audit` database), no index or validator changes.
 4. Privileged staff access goes through a separate path that requires a case-related reason and writes an audit event.
 5. Background jobs carry and validate their tenant and resource scope.
 6. Search results, caches, exports and document URLs obey the same access policy.
@@ -1100,15 +1192,15 @@ When many organizations share the platform, tenant isolation is a first-class se
 ```mermaid
 flowchart LR
     DB[("MongoDB<br/>source of truth: technologies, demands,<br/>rights, deals, permissions")] -->|"transactional outbox events"| W["Worker: indexer"]
-    W --> SI[("Meilisearch<br/>approved public snapshots,<br/>Chinese segmentation, facets")]
+    W --> SI[("Meilisearch<br/>publication snapshots and anonymized<br/>public demands; Chinese segmentation")]
     W --> PG["Pre-rendered public pages<br/>+ sitemap"]
     OS[("File storage<br/>original documents")] -.->|"never indexed publicly"| W
     DB --> AN[("Reporting views /<br/>analytics exports")]
     SI -. "never decides access" .-> API["Backend API<br/>(re-checks status and permissions in MongoDB)"]
 ```
 
-- The search index is a **derived** representation. It never decides whether a user may access a confidential document, and it can be rebuilt from MongoDB at any time.
-- When a technology is suspended or its visibility changes, the change must reach the index, the pre-rendered page and any cache. The **transactional outbox** guarantees that the event is not lost when indexing fails.
+- The search index is a **derived** representation. It never decides whether a user may access a confidential document, and it can be rebuilt from MongoDB at any time (`npm run search:rebuild`). The API holds only a search-only key and re-checks every result's status and permissions in MongoDB before returning it.
+- When a technology is suspended or its visibility changes, the change must reach the index, the pre-rendered page and any cache. The **transactional outbox** guarantees that the event is not lost when indexing fails, and a nightly job reconciles the index with MongoDB.
 - Semantic (vector) matching is a later phase: Meilisearch hybrid search, or MongoDB Search / Vector Search after a database upgrade to 8.2+.
 
 ### 11.5 Document lifecycle
@@ -1123,12 +1215,12 @@ flowchart TD
     C -->|"Clean"| D["Text and metadata extraction<br/>(restricted worker)"]
     D --> E["Access classification and review"]
     E --> F["Approved private storage"]
-    F --> G["Authorized search fields"]
+    F --> G["Reviewed extracted fields<br/>(never raw document text)"]
     F --> H["Restricted deal room<br/>(watermarked downloads)"]
     F --> I["Versioned evidence record"]
 ```
 
-The extraction pipeline **never publishes document text automatically**. It must also handle embedded metadata, hidden spreadsheet content, tracked revisions and other unintended disclosures.
+The extraction pipeline **never publishes document text automatically**. It must also handle embedded metadata, hidden spreadsheet content, tracked revisions and other unintended disclosures. If the scanner is unavailable, files stay in quarantine; they never become available because a timeout elapsed ([06 §9.1](06-implementation-design-v1.md)).
 
 ---
 
@@ -1138,68 +1230,76 @@ The backend exposes **business operations**. It never lets the frontend edit sta
 
 ### 12.1 Module boundaries
 
-| Module | Owns |
-| --- | --- |
-| Identity and access | Users, sessions, memberships, policies |
-| Organization management | Organization profiles and verification |
-| Technology registry | Technology identity and revisions |
-| Offer management | Rights available, commercial terms and territories |
-| Demand management | Requirements, demand versions and approvals |
-| Discovery | Search, filters, facets and result explanations |
-| Matching | Candidate retrieval, scores, feedback and match versions |
-| Verification | Review cases, evidence and decisions |
-| Workflow | Tasks, state transitions, deadlines and escalations |
-| Deal management | Deal parties, stages, negotiations and milestones |
-| Contract management | Document versions, approvals and execution evidence |
-| Transaction management | Completion criteria and transaction records |
-| Finance | Invoices, provider events, refunds and reconciliation |
-| Services | Scouting, evaluation, experts and service engagements |
-| Notifications | Email, in-app notifications and delivery status |
-| Reporting | Operational, marketplace and commercial analytics |
+| Module | Owns | Folder ([06 §11.4](06-implementation-design-v1.md)) · first release |
+| --- | --- | --- |
+| Identity and access | Users, sessions, memberships, policies | `identity/` · R0 |
+| Organization management | Organization profiles, verification, delegated authority | `organizations/` · R0–R1 |
+| Taxonomy | Industry codes, technology fields, synonyms | `taxonomy/` · R1 |
+| Technology registry | Technology identity, versions, publication snapshots, IP assets | `technology/` · R1 |
+| Offer management | Rights available, commercial terms and territories | `offers/` · R1 |
+| Demand management | Requirements, demand versions and approvals | `demands/` · R1 |
+| Discovery | Search, filters, facets and result explanations | `discovery/` · R1 |
+| Matching | Candidate retrieval, scores, feedback and match versions | `matching/` · R1 |
+| Exchange | Shortlists, introduction requests, broker assignments | `exchange/` · R1 |
+| Verification and workflow | Review cases, evidence, decisions, tasks, state transitions, deadlines, escalations, the outbox | `workflow/` · R1 |
+| Documents | Private files, quarantine, access grants, data rooms | `documents/` · R1 (data rooms R2) |
+| Deal management | Deal parties, stages, proposals and milestones | `deals/` · R2 |
+| Contract management | Contract versions, approvals and execution evidence | new folder · R2 |
+| Services | Scouting, evaluation, experts and service orders | new folder · R1 (expert pool), R2 |
+| Venue route | Venue submissions, buyer registrations, certificates | new folder · R3 |
+| Transactions and finance | Completion criteria, invoices, provider events, refunds, reconciliation | new folder · R2 (invoices), R3 (payments) |
+| Notifications | E-mail, SMS, WeChat and in-app notifications, delivery status | `notifications/` · R1 |
+| Content | News, policies, help pages, events | `content/` · R1 (events R2) |
+| Audit | Append-only audit trail in `tex_audit` | `audit/` · R0 |
+| Reporting | Operational, marketplace and commercial analytics | `reporting/` · R1 |
 
-These start as module folders inside one deployable Express application (06 §11.4).
+All of these are module folders inside one deployable Express application. The folders marked "new" do not exist in the first-release layout; they are added to the same application when their release starts.
 
 ### 12.2 Example REST API
 
+State changes are **action endpoints** (`…/submissions`, `…/decisions`, `…/stage-actions`), not field updates. Examples (all under `/api/v1`):
+
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `POST` | `/v1/technologies` | Create technology draft |
-| `PATCH` | `/v1/technologies/{id}` | Update draft metadata |
-| `POST` | `/v1/technologies/{id}/submissions` | Submit a version for review |
-| `GET` | `/v1/technologies/{id}` | Read technology with access controls |
-| `POST` | `/v1/technologies/{id}/offers` | Create licensing or transfer offer |
-| `POST` | `/v1/demands` | Create demand |
-| `POST` | `/v1/demands/{id}/submissions` | Submit demand for review |
-| `GET` | `/v1/demands/{id}/matches` | Retrieve authorized recommendations |
-| `POST` | `/v1/matches/{id}/shortlists` | Shortlist a candidate |
-| `POST` | `/v1/matches/{id}/introduction-requests` | Request supplier introduction |
-| `POST` | `/v1/deals` | Create deal |
-| `POST` | `/v1/deals/{id}/proposals` | Submit proposal |
-| `POST` | `/v1/deals/{id}/transition` | Request an allowed state transition |
-| `POST` | `/v1/deals/{id}/documents` | Register an authorized deal document |
-| `POST` | `/v1/deals/{id}/completion-checks` | Evaluate completion prerequisites |
-| `GET` | `/v1/admin/review-queues` | Retrieve authorized review tasks |
+| `POST` | `/api/v1/technologies` | Create technology draft |
+| `PATCH` | `/api/v1/technologies/{id}/draft` | Update the editable draft |
+| `POST` | `/api/v1/technologies/{id}/submissions` | Submit a version for review |
+| `GET` | `/api/v1/technologies/{id}` | Read technology with access controls |
+| `POST` | `/api/v1/technologies/{id}/offers` | Create licensing or transfer offer |
+| `POST` | `/api/v1/demands` | Create demand |
+| `POST` | `/api/v1/demands/{id}/submissions` | Submit demand for review |
+| `POST` | `/api/v1/demands/{id}/matching-jobs` | Request matching (`202 Accepted` + job ID) |
+| `GET` | `/api/v1/demands/{id}/matches` | Retrieve authorized recommendations |
+| `POST` | `/api/v1/matches/{id}/shortlist-actions` | Shortlist or remove a candidate |
+| `POST` | `/api/v1/matches/{id}/introduction-requests` | Request supplier introduction |
+| `POST` | `/api/v1/introduction-requests/{id}/decisions` | Record the supplier's or broker's decision |
+| `POST` | `/api/v1/deals` | Create deal |
+| `POST` | `/api/v1/deals/{id}/proposals` | Submit proposal |
+| `POST` | `/api/v1/deals/{id}/stage-actions` | Request an allowed stage transition (§13) |
+| `POST` | `/api/v1/deals/{id}/completion-checks` | Evaluate completion prerequisites |
+| `GET` | `/api/v1/admin/review-queues` | Retrieve authorized review tasks |
+| `POST` | `/api/v1/admin/review-cases/{id}/decisions` | Record a review decision |
 
-For privileged operations, use explicit endpoints such as `POST /v1/admin/verification-cases/{id}/decisions`. Never let clients set `verification_status` through a general-purpose update endpoint. The full endpoint catalogue for the first release is in [06 §5](06-implementation-design-v1.md).
+Never let clients set a status field (`lifecycle_status`, a verification status) through a general-purpose update endpoint. The full endpoint catalogue, request and response formats and error codes for the first release are in [06 §5](06-implementation-design-v1.md).
 
 ### 12.3 API implementation rules
 
-- Validate inputs at the API boundary **and** again at critical domain transitions.
-- Require an **idempotency key** for retriable requests, especially deal creation, payment initiation, refunds and external callbacks.
+- Validate inputs at the API boundary (zod) **and** again at critical domain transitions (Mongoose schema, policy and preconditions). Build MongoDB filters only from validated values; Mongoose 5 has no filter sanitizer.
+- Require an **idempotency key** (`Idempotency-Key` header, results kept in `idempotency_keys`) for retriable requests, especially submissions, deal creation, payment initiation, refunds and external callbacks.
 - Apply authorization to every resource access.
 - Return structured error codes and safe messages.
 - Use pagination, filtering and deterministic sorting.
 - Rate-limit authentication, search and expensive AI operations.
-- Use **optimistic concurrency control** when several users may edit the same record.
-- Version APIs and document their contracts.
+- Use **optimistic concurrency control** (`If-Match` compared with `rev`; `409 VERSION_CONFLICT` on mismatch) when several users may edit the same record.
+- Version APIs and document their contracts (OpenAPI generated from the zod schemas).
 - Never trust frontend-supplied prices, fees, organization roles or completion status.
-- Publish domain events **only after** the business change has committed.
+- Write domain events to the **outbox in the same transaction** as the business change. The worker delivers them only after the commit, so no event is sent for a change that was rolled back, and no committed change loses its event.
 
 ---
 
 ## 13. Workflow engine and state transitions
 
-Do not scatter business rules as conditions across controllers. Each workflow is a **state machine with explicit transition rules**.
+Do not scatter business rules as conditions across controllers. Each workflow is a **state machine with explicit transition rules**: a table of `(current state, action) → next state`, each with its own precondition check. The table below is the complete deal state machine of §7.5; the technology, demand and introduction machines follow the same pattern ([06 §6](06-implementation-design-v1.md)).
 
 ```typescript
 // src/modules/deals/deal-transitions.ts — transitions are data, not scattered if-statements.
@@ -1207,62 +1307,98 @@ type DealStatus =
   | 'opportunity' | 'qualified' | 'due_diligence' | 'negotiation' | 'contract_draft' | 'approval'
   | 'signed' | 'conditions_pending' | 'ready_to_complete' | 'completed' | 'on_hold' | 'lost' | 'disputed';
 type DealAction =
-  | 'qualify' | 'start_diligence' | 'agree_terms' | 'record_signatures'
-  | 'confirm_conditions' | 'confirm_completion' | 'open_dispute';
+  | 'qualify' | 'start_diligence' | 'pass_diligence' | 'pause' | 'resume' | 'agree_terms'
+  | 'submit_for_approval' | 'request_changes' | 'record_signatures' | 'await_conditions'
+  | 'confirm_conditions' | 'confirm_completion' | 'open_dispute' | 'resolve_dispute' | 'mark_lost';
 
 interface Deal { status: DealStatus; rev: number }
-interface Command { action: DealAction; evidence?: Record<string, unknown> }
-interface Actor { userId: string; can(action: DealAction, deal: Deal): boolean }
+interface Command { action: DealAction; reason?: string; evidence?: Record<string, unknown> }
+interface Actor { userId: string; can(action: DealAction, deal: Deal): boolean }   // CASL ability in the real code
 
 interface Transition {
   to: DealStatus;
-  validate(deal: Deal, cmd: Command): void;                  // throws PreconditionFailed with a reason
+  validate(deal: Deal, cmd: Command): void;                  // throws PreconditionFailedError with a reason
 }
 
-export class InvalidTransitionError extends Error {}
-export class ForbiddenError extends Error {}
+export class InvalidTransitionError extends Error {}         // 409 INVALID_STATE_TRANSITION
+export class ForbiddenError extends Error {}                 // 403 PERMISSION_DENIED
+export class PreconditionFailedError extends Error {}        // 422 VALIDATION_FAILED
 
-const ACTIVE: DealStatus[] = ['opportunity', 'qualified', 'due_diligence', 'negotiation', 'contract_draft', 'approval', 'signed', 'conditions_pending'];
-const noCheck = () => undefined;
+const noCheck = (): void => undefined;
+const needsReason = (_deal: Deal, cmd: Command): void => {
+  if (!cmd.reason) throw new PreconditionFailedError('A reason is required');
+};
+const needsEvidence = (...keys: string[]) => (_deal: Deal, cmd: Command): void => {
+  const missing = keys.filter((k) => !cmd.evidence || cmd.evidence[k] === undefined);
+  if (missing.length > 0) throw new PreconditionFailedError(`Missing evidence: ${missing.join(', ')}`);
+};
+const t = (to: DealStatus, validate: Transition['validate'] = noCheck): Transition => ({ to, validate });
 
 const TRANSITIONS = new Map<string, Transition>([
-  ['opportunity:qualify',            { to: 'qualified',          validate: noCheck }],
-  ['qualified:start_diligence',      { to: 'due_diligence',      validate: noCheck }],
-  ['negotiation:agree_terms',        { to: 'contract_draft',     validate: noCheck }],
-  ['approval:record_signatures',     { to: 'signed',             validate: noCheck }],
-  ['conditions_pending:confirm_conditions', { to: 'ready_to_complete', validate: noCheck }],
-  ['ready_to_complete:confirm_completion',  { to: 'completed',         validate: noCheck }],
-  ...ACTIVE.map((from): [string, Transition] => [`${from}:open_dispute`, { to: 'disputed', validate: noCheck }]),
+  ['opportunity:qualify',                    t('qualified')],
+  ['opportunity:mark_lost',                  t('lost', needsReason)],
+  ['qualified:start_diligence',              t('due_diligence')],
+  ['due_diligence:pass_diligence',           t('negotiation', needsEvidence('diligenceSummary'))],
+  ['due_diligence:mark_lost',                t('lost', needsReason)],
+  ['negotiation:pause',                      t('on_hold', needsReason)],
+  ['on_hold:resume',                         t('negotiation')],
+  ['negotiation:agree_terms',                t('contract_draft', needsEvidence('acceptedProposalVersion'))],
+  ['negotiation:mark_lost',                  t('lost', needsReason)],
+  ['contract_draft:submit_for_approval',     t('approval', needsEvidence('contractVersion'))],
+  ['approval:request_changes',               t('contract_draft', needsReason)],
+  ['approval:record_signatures',             t('signed', needsEvidence('signatures'))],
+  ['signed:await_conditions',                t('conditions_pending', needsEvidence('openConditions'))],
+  ['signed:confirm_conditions',              t('ready_to_complete')],          // no conditions outstanding
+  ['conditions_pending:confirm_conditions',  t('ready_to_complete', needsEvidence('conditionEvidence'))],
+  ['ready_to_complete:confirm_completion',   t('completed', needsEvidence('completionCheck'))],
+  ['signed:open_dispute',                    t('disputed', needsEvidence('issue', 'remedySought'))],
+  ['conditions_pending:open_dispute',        t('disputed', needsEvidence('issue', 'remedySought'))],
+  ['ready_to_complete:open_dispute',         t('disputed', needsEvidence('issue', 'remedySought'))],
+  ['disputed:resolve_dispute',               t('conditions_pending', needsEvidence('resolution'))],
+  ['disputed:mark_lost',                     t('lost', needsReason)],
 ]);
 
 export function resolveTransition(deal: Deal, cmd: Command, actor: Actor): Transition {
   if (!actor.can(cmd.action, deal)) throw new ForbiddenError(`Not allowed: ${cmd.action}`);
-  const t = TRANSITIONS.get(`${deal.status}:${cmd.action}`);
-  if (!t) throw new InvalidTransitionError(`Action ${cmd.action} is not allowed from ${deal.status}`);
-  t.validate(deal, cmd);                                    // evidence, approvals, holds
-  return t;   // caller applies it in one MongoDB transaction: status + rev check + transition record + outbox
+  const transition = TRANSITIONS.get(`${deal.status}:${cmd.action}`);
+  if (!transition) throw new InvalidTransitionError(`Action ${cmd.action} is not allowed from ${deal.status}`);
+  transition.validate(deal, cmd);                           // evidence, approvals, holds
+  return transition;
 }
+
+// The caller (deal.service.ts) applies the transition inside inTransaction() (06 §4.7):
+//   load the deal with tenant scope → compare If-Match with rev → resolveTransition()
+//   → deal.status = transition.to → deal.save() (checks and increments rev)
+//   → append workflow_transitions + outbox_events + audit event → commit.
 ```
 
-*Type-checked sketch: real transitions add evidence, approval and hold checks in `validate`.*
+*Type-checked with TypeScript 5 (`strict`, target and `lib` ES2019). The evidence keys are placeholders; real `validate` functions also check approvals, holds and deal-type completion criteria.*
 
-An excerpt from the transition table:
+The transition table:
 
 | From | Action | To | Allowed actors | Preconditions |
 | --- | --- | --- | --- | --- |
 | `opportunity` | `qualify` | `qualified` | Deal owner, broker | Both parties identified |
 | `qualified` | `start_diligence` | `due_diligence` | Deal owner | NDA verified, if confidential data is needed |
+| `due_diligence` | `pass_diligence` | `negotiation` | Deal owner | Diligence findings recorded |
+| `negotiation` | `pause` / `resume` | `on_hold` / `negotiation` | Deal owner | Reason recorded |
 | `negotiation` | `agree_terms` | `contract_draft` | Each party's authorized representative | All parties accepted the **same** proposal version |
-| `approval` | `record_signatures` | `signed` | Contract service | Verified signatures from all required signatories |
-| `conditions_pending` | `confirm_conditions` | `ready_to_complete` | Deal owner | Every completion condition satisfied with evidence |
-| any active | `open_dispute` | `disputed` | Any deal party | Issue, remedy sought and evidence provided |
+| `contract_draft` | `submit_for_approval` | `approval` | Deal owner | A contract version exists |
+| `approval` | `request_changes` | `contract_draft` | Any required approver | Reason recorded |
+| `approval` | `record_signatures` | `signed` | Contract module (e-signature result) | Verified signatures from all required signatories |
+| `signed` | `await_conditions` | `conditions_pending` | Deal owner | Open completion conditions listed |
+| `signed` or `conditions_pending` | `confirm_conditions` | `ready_to_complete` | Deal owner | Every completion condition satisfied with evidence (or none outstanding) |
+| `ready_to_complete` | `confirm_completion` | `completed` | Deal owner | Deal-type completion check passes (`completion-checks`); no open dispute |
+| `signed`, `conditions_pending` or `ready_to_complete` | `open_dispute` | `disputed` | Any deal party | Issue, remedy sought and evidence provided |
+| `disputed` | `resolve_dispute` | `conditions_pending` | Dispute officer | Resolution and evidence recorded |
+| `opportunity`, `due_diligence`, `negotiation` or `disputed` | `mark_lost` | `lost` | Deal owner (dispute officer for `disputed`) | Loss reason recorded |
 
 ### Required workflow capabilities
 
 - Allowed transitions and their prerequisites.
 - Role- and attribute-based authorization.
 - Task assignment and reassignment.
-- Deadlines, reminders and escalation.
+- Deadlines, reminders and escalation, counted in working days on the official China calendar (`calendar_days`, FR-ADM-09).
 - Approval chains and dual control.
 - Idempotent commands.
 - Immutable transition history.
@@ -1270,7 +1406,7 @@ An excerpt from the transition table:
 - Timeout and exception handling.
 - Versioned workflow definitions, so old cases continue under their original rules.
 
-State machines implemented in the application and persisted in MongoDB (status + `rev` + `workflow_transitions`, changed in one transaction) are enough for the first release. Consider a dedicated engine such as **Temporal** when workflows become long-running, distributed, timer-heavy and dependent on reliable retries across many systems.
+State machines implemented in the application and persisted in MongoDB (status + `rev` + `workflow_transitions`, changed in one transaction) are enough for the first release. Timers (review deadlines, reminders, demand expiry) run as scheduled jobs in the worker. Consider a dedicated engine such as **Temporal** only after the runtime upgrade, and only when workflows become long-running, distributed, timer-heavy and dependent on reliable retries across many systems.
 
 ---
 
@@ -1302,7 +1438,7 @@ The finance model distinguishes:
 - Recognized and deferred revenue.
 - Outstanding receivables and payables.
 
-If a licence is worth €1,000,000 and the platform earns a €20,000 service fee, platform revenue is €20,000. Money held or transmitted on behalf of parties is **not** platform revenue, and depending on the legal structure it may require licensed payment providers and specific accounting treatment.
+If a licence is worth ¥1,000,000 and the platform earns a ¥20,000 service fee, platform revenue is ¥20,000 (an illustrative example; see [03 §1](03-business-models-and-revenue.md)). Money held or transmitted on behalf of parties is **not** platform revenue. In China it may be held only by a bank or licensed payment institution, and it needs specific accounting treatment.
 
 ### 14.3 First-year commercial design
 
@@ -1326,8 +1462,8 @@ Do not charge for every action before there is enough supply and demand. Tie mon
 
 Use a separate finance domain with:
 
-- Immutable invoice and payment references.
-- Defined currency and decimal precision.
+- Immutable invoice and payment references; digital e-invoices (数电票) for platform services.
+- Money as `{ currency, amountMinor: Int64 }` in fen; rates as `Decimal128`.
 - A ledger or accounting integration suited to the business.
 - Explicit transaction fees and versioned fee-calculation rules.
 - Reconciliation against authoritative provider or bank records.
@@ -1335,7 +1471,7 @@ Use a separate finance domain with:
 - Separation of revenue, receivables, payables and third-party funds.
 - Audit trails for all financial adjustments.
 
-Never use floating-point numbers for money: use fixed-precision decimals or integer minor units with explicit currency. Do **not** build an internal wallet or escrow service before resolving the legal and licensing requirements (see [07 §6](07-roles-workflows-and-money.md) and [08 §6](08-china-operating-model.md)).
+Never use floating-point numbers for money: use integer minor units with an explicit currency, and `Decimal128` only for rates and percentages. Do **not** build an internal wallet or escrow service. Funds are held and released only by a bank or licensed payment institution; the platform records the conditions, sends authorized instructions and reconciles the provider's confirmations (see [07 §6](07-roles-workflows-and-money.md), [08 §1.2 and §6](08-china-operating-model.md)).
 
 ---
 
@@ -1375,11 +1511,13 @@ flowchart TD
     I --> J["Human review / controlled business action"]
 ```
 
+This is the target pipeline. At launch, retrieval is keyword and structured search only (Meilisearch and MongoDB filters); vector similarity and graph relationships are later phases (§3.2, §15.4), and the core flows work without AI.
+
 Every AI-generated fact keeps its **provenance**: source document, page or passage, extraction time, model or pipeline version, and review status.
 
 ### 15.3 AI safety and reliability requirements
 
-- Never send confidential documents to an external AI provider without an approved data-processing and confidentiality arrangement (and, in China, a data-export assessment, see [08 §1](08-china-operating-model.md)).
+- Never send confidential documents to an external AI provider without an approved data-processing and confidentiality arrangement. In China, use domestic model providers that have completed generative-AI filing, and assess cross-border data rules before any data leaves the country (see [08 §1](08-china-operating-model.md), [10 §8](10-product-requirements.md)).
 - Enforce tenant and deal permissions **before** retrieving content for a model's context.
 - Treat document text as untrusted data, never as instructions to the AI system (prompt-injection defence).
 - Prevent retrieval from leaking confidential records across organizations.
@@ -1400,7 +1538,7 @@ A technology-transfer platform handles patent strategies, confidential research,
 
 ### 16.1 Security controls
 
-- Strong authentication; MFA for privileged users and enterprise controls (SSO) where needed.
+- Strong authentication; TOTP MFA mandatory for platform staff; enterprise controls (SSO) where needed.
 - RBAC/ABAC authorization with resource-level checks.
 - Encryption in transit and at rest.
 - Managed secrets and key rotation.
@@ -1412,6 +1550,8 @@ A technology-transfer platform handles patent strategies, confidential research,
 - Dependency scanning, patch management and secure releases.
 - Separate production, test and development environments.
 - Data minimization and explicit retention policies.
+- Personal data, documents and backups stored in mainland China; the system prepared for an MLPS (等保) level 2 filing at launch (NFR-06, NFR-08 in [10 §7](10-product-requirements.md)).
+- Compensating controls for the end-of-life runtime: TLS terminated in a current Nginx, Node and MongoDB reachable only on private interfaces, strict input limits ([11 §11](11-target-runtime-node12-mongodb.md)).
 
 ### 16.2 Legal and jurisdictional questions to resolve first
 
@@ -1428,7 +1568,7 @@ Before enabling real transactions, answer:
 9. How are conflicts of interest disclosed?
 10. What legal responsibilities apply to professional service providers?
 
-These answers change product scope and data flows. Do not defer them until after the transaction engine is built. For the chosen China launch, see [08](08-china-operating-model.md).
+These answers change product scope and data flows. Do not defer them until after the transaction engine is built. For the China launch, questions 1, 2 and 7 are answered: China, Shanghai first; a matching and service platform that reaches venue functions as a registered practising agent of a licensed venue (§2.2); and payments only through a bank or licensed payment institution. The others are worked through in [08](08-china-operating-model.md) (checklist in 08 §10) and the open decisions in [10 §12](10-product-requirements.md).
 
 ---
 
@@ -1450,9 +1590,19 @@ flowchart LR
 | **0 — Business and domain validation** (before development) | Business model and target market · Target jurisdictions and compliance boundaries · Stakeholder interviews and journey maps · Domain glossary and ER model · Workflow state machines · Information architecture and wireframes · Security and confidentiality requirements · Monetization experiments and cost model · PRD | The team can explain how a technology moves from submission to completed transfer, who is responsible at each stage, and what a completed deal is |
 | **1 — Marketplace foundation** | Registration and authentication · Organizations, memberships, permissions · Technology registration and versioning · Publication review · Search, filters, detail pages · Demand registration · Basic matching and shortlists · Admin queues and audit logs · Private document storage and notifications | Suppliers publish reviewed technologies, buyers submit demands, and both sides discover and manage opportunities securely |
 | **2 — Transfer operations** | Introduction requests · NDA workflow and controlled disclosure · Restricted deal rooms · Broker assignments and expert tasks · Due-diligence cases · Deal pipeline and negotiation records · Contract versions and approvals · Milestones, reminders and exception handling | A qualified opportunity can be managed through diligence and negotiation with a complete history |
-| **3 — Commercial transaction infrastructure** | Configurable transaction types · Licensing and assignment workflows · Contract-execution integrations · Invoicing and reconciliation · Fee calculation and revenue reporting · Completion evidence · Disputes, refunds, audit controls · Auction or competitive bidding where legally permitted | The platform records and coordinates a transaction, including financial and contractual conditions, without confusing contract value with platform revenue |
+| **3 — Commercial transaction infrastructure** | Configurable transaction types · Licensing and assignment workflows · Contract-execution integrations · Payment-partner integration, invoicing and reconciliation · Fee calculation and revenue reporting · Completion evidence · Disputes, refunds, audit controls · Venue-routed listing, bidding, auction and tender, as the venue's registered agent | The platform records and coordinates a transaction, including financial and contractual conditions, without confusing contract value with platform revenue |
 | **4 — Enterprise intelligence and services** | Enterprise subscriptions · Managed scouting · Advanced multilingual search · AI-assisted matching and evidence extraction · Expert marketplace · Evaluation and valuation services · Enterprise reporting and API · CRM and procurement integrations | Repeatable paid services and recurring enterprise usage, not only sporadic transaction fees |
 | **5 — Commercialization network** | PoC project management · Pilot milestones and validation evidence · Manufacturing and industrial partners · Financing and investment workflows · Regional and international networks · Post-transfer outcome tracking · Advanced analytics and benchmarking | The platform measures deployment and commercial impact, not just transactions |
+
+These phases describe the product's growth. The **release plan of record** is R0–R3 in [10 §9](10-product-requirements.md), and [06 §13](06-implementation-design-v1.md) splits the engineering work into vertical slices. The releases cut across the phases:
+
+| Release ([10 §9](10-product-requirements.md)) | Covers |
+| --- | --- |
+| R0 Foundation | Runtime set-up, CI, authentication, organizations, audit: the base of Phase 1 |
+| R1 Marketplace MVP | Phase 1, plus introductions with contact masking |
+| R2 Managed transfer and clients | Phase 2, plus the enterprise and institutional services of Phase 4 (subscriptions, scouting, client workspaces) |
+| R3 Venue-routed transactions and payments | Phase 3 |
+| After R3 | The rest of Phases 4 and 5 |
 
 ### Practical initial scope
 
@@ -1460,7 +1610,7 @@ Do not attempt all five phases in the first release. The **minimum commercially 
 
 > Organization management + technology registry + demand management + discovery and matching + verification + confidential introduction + deal pipeline + administration.
 
-Build contracts, finance and commercialization on that foundation as the first real transactions reveal the requirements. The first-release implementation plan is in [06 §13](06-implementation-design-v1.md).
+That is R1 plus the NDA, data-room and deal parts of R2. Build contracts, finance and commercialization on that foundation as the first real transactions reveal the requirements. The first-release implementation plan is in [06 §13](06-implementation-design-v1.md).
 
 ---
 
@@ -1470,8 +1620,9 @@ The platform needs more than unit tests for CRUD endpoints.
 
 | Test layer | What to validate |
 | --- | --- |
-| Unit tests | Domain rules, pricing, state transitions, permission decisions |
-| Integration tests | MongoDB replica set (transactions), file storage, Meilisearch, outbox worker and external APIs |
+| Unit tests | Domain rules, pricing, state transitions, permission decisions; run on `node:12.4.0`, the real runtime |
+| Integration tests | MongoDB 4.4 replica set (transactions, validators, tenant scope), file storage, Meilisearch, outbox worker and external APIs |
+| Compatibility gate | Every dependency change passes the Node 12 smoke test (`draft-implementation/run.sh`, [11 §2](11-target-runtime-node12-mongodb.md)) |
 | API contract tests | Request validation, response schemas and error behaviour |
 | Authorization tests | Cross-tenant access, role escalation and restricted documents |
 | Workflow tests | Valid and invalid transitions, timeouts and recovery |
@@ -1487,6 +1638,7 @@ The platform needs more than unit tests for CRUD endpoints.
 1. A buyer from Organization A **cannot** retrieve Organization B's confidential document by guessing its identifier or URL.
 2. A failed or repeated payment callback **cannot** create duplicate payment records or accounting effects.
 3. A technology suspended for a rights dispute **cannot** stay discoverable through a stale search index or cached recommendation.
+4. A query on a tenant-owned model without a tenant scope **cannot** run: it throws instead of returning another organization's data.
 
 ---
 
@@ -1507,26 +1659,27 @@ Do not optimize for the number of listings or nominal transaction value. A platf
 
 ## 20. Deployment and infrastructure
 
-For the initial release, deploy a small number of clearly separated components:
+For the initial release, deploy a small number of clearly separated components on self-hosted Linux servers. Every process is a systemd service; there is no Docker Compose or Kubernetes:
 
 ```mermaid
 flowchart TB
     U["Web and enterprise users"] --> EDGE["Nginx: TLS, WAF rules, rate limits,<br/>static web and pre-rendered pages"]
-    EDGE --> BE["Backend API instances<br/>(Node.js, Express)"]
-    BE --> DB[("MongoDB replica set")]
+    EDGE --> BE["tex-api@3001, tex-api@3002<br/>(Node 12, Express, systemd)"]
+    BE --> DB[("MongoDB 4.4 / 5.0<br/>replica set")]
     BE --> OS[("Private file storage")]
     BE --> SI[("Meilisearch")]
-    WK["Worker: outbox, indexing,<br/>rendering, notifications"] --> DB
+    WK["tex-worker (systemd): outbox, indexing,<br/>page rendering, notifications, jobs"] --> DB
     WK --> SI
     WK --> OS
     WK --> AI["AI providers or local models<br/>(later phase)"]
-    WK --> EM["SMS / e-mail / WeChat providers"]
-    BE --> INT["E-signature / payment integrations"]
+    WK --> EXT["SMS, e-mail, WeChat, e-signature,<br/>payment and venue interfaces"]
     BE -.-> OBS["Logs / metrics / alerts"]
     WK -.-> OBS
-    DB -.-> BK["Backup and recovery"]
+    DB -.-> BK["Nightly mongodump --oplog<br/>to separate backup storage"]
     OS -.-> BK
 ```
+
+External providers are called only after the business transaction has committed, normally by the worker relaying an outbox event; never from inside a transaction.
 
 ### Deployment rules
 
@@ -1534,14 +1687,14 @@ flowchart TB
 - Use managed or controlled secrets; never store credentials in source code.
 - Back up both database records and the required object-storage content.
 - Test recovery; do not rely on "backup job succeeded".
-- Use separate development, staging and production environments.
-- Run schema migrations through the release process.
-- Alert on queue backlog, failed jobs, indexing delays, authentication anomalies and database capacity.
-- Document a recovery time objective (RTO) and recovery point objective (RPO).
+- Use separate development, staging and production environments; staging runs exactly the production Node and MongoDB versions.
+- Run migrations and index creation through the release process, as `tex_migrator`. Migrations are expand-and-contract, so a rollback is a switch of the release symlink ([11 §9.4](11-target-runtime-node12-mongodb.md)).
+- Alert on outbox backlog, failed jobs, indexing delays, authentication anomalies and database capacity.
+- Document a recovery time objective (RTO) and recovery point objective (RPO); the launch targets are RPO ≤ 24 h and RTO ≤ 4 h (NFR-05).
 - Track infrastructure costs per major subsystem.
 - Never store confidential documents in public buckets or unprotected application logs.
 
-For an early-stage system, two API instances plus one worker are enough. Search and AI workloads can scale independently later. The self-hosted deployment for the first release is in [06 §11](06-implementation-design-v1.md) and [11 §9](11-target-runtime-node12-mongodb.md).
+For an early-stage system, two API instances plus one worker are enough. Search and AI workloads can scale independently later. The self-hosted deployment for the first release (hosts, network zones, systemd units, Nginx configuration and release procedure) is in [06 §11](06-implementation-design-v1.md) and [11 §9](11-target-runtime-node12-mongodb.md).
 
 ---
 
@@ -1558,7 +1711,8 @@ For an early-stage system, two API instances plus one worker are enough. Search 
 | Contracts and finance | Execution integrations, invoicing, reconciliation | Deal workflows and legal review |
 | AI and intelligence | Extraction, semantic search, ranking and evaluation | Approved data and permissions |
 | Administration | Queues, escalation, policies, reporting | All business modules |
-| DevOps and security | CI/CD, monitoring, backups, incident response, security tests | Platform foundation onward |
+| DevOps and security | CI/CD with the Node 12 compatibility gate, systemd and Nginx configuration, monitoring, backups, incident response, security tests | Platform foundation onward |
+| Venue route | Venue submission packages, buyer registration, timeline tracking, certificate records | Deal workflows, venue partnership (D-01) |
 | Commercialization | Pilots, milestones, service providers, outcome reporting | Deal and service modules |
 
 Every workstream delivers its own requirements and acceptance criteria, data model and migration, API contract, UI states and error handling, authorization policy, automated tests, and monitoring and operational documentation.
@@ -1573,20 +1727,22 @@ Several business decisions change the detailed design. They were settled step by
 
 | # | Decision | Options considered | Decision taken | Where |
 | --- | --- | --- | --- | --- |
-| 1 | Initial operating region | Global · China · Europe · one region first | One region first ([06](06-implementation-design-v1.md)), then **China** ([08](08-china-operating-model.md)) | 06 §1, 08 |
-| 2 | Primary business model | Formal exchange · transfer and brokerage · hybrid exchange + services + SaaS | **Managed technology exchange** (marketplace + managed transfer) | 06 §1 |
+| 1 | Initial operating region | Global · China · Europe · one region first | One region first ([06](06-implementation-design-v1.md)), then **China, Shanghai first** ([08](08-china-operating-model.md)) | 06 §1, 08 |
+| 2 | Primary business model | Formal exchange · transfer and brokerage · hybrid exchange + services + SaaS | **Demand-driven matching and service platform with managed transfer workflows**; venue functions through a licensed venue (STEX or CTEX) as its registered practising agent | 06 §1, 10 §1, §2.2 here |
 | 3 | Initial users | Suppliers first · buyers first · both | **Both** suppliers and buyers | 06 §1 |
-| 4 | Deployment | Cloud · self-hosted · hybrid · on-premises | **Self-hosted** Linux servers: systemd services behind Nginx on the target server (containers optional, see 11 §11.2) | 06 §3, §11; 11 §9 |
+| 4 | Deployment | Cloud · self-hosted · hybrid · on-premises | **Self-hosted** Linux servers: systemd services behind Nginx; no Docker Compose or Kubernetes. A container with a current Node LTS is only a later upgrade option (11 §11.2) | 06 §3, §11; 11 §9 |
 | 5 | Team size | 1–4 · 5–12 · multiple squads | **1–4 developers** | 06 §13 |
-| 6 | Transactions at launch | Managed introductions and deal records · contracts and payments · formal exchange mechanisms | Managed introductions and deal tracking first ([06](06-implementation-design-v1.md)); later **all deal types with provider-backed conditional funds handling** ([08](08-china-operating-model.md)) | 06, 07, 08 |
+| 6 | Transactions at launch | Managed introductions and deal records · contracts and payments · formal exchange mechanisms | Managed introductions and deal tracking first ([06](06-implementation-design-v1.md)); later **all deal types with provider-backed conditional funds handling** ([08](08-china-operating-model.md)) and venue-routed listing sales (R3) | 06, 07, 08, 10 §9 |
 | 7 | Technology scope | All industries · deep tech · specific industries | **Broad, cross-industry** | 06 §1 |
-| 8 | Backend stack | Python + PostgreSQL · Node.js + MongoDB | **Node.js + MongoDB on the given servers: Node 12.4, MongoDB 4.4 / 5.0** | 06 §3, 11 |
-| 9 | Data access | Native driver with repositories · Mongoose ODM | **Mongoose 5.13** schemas, models and Document API, with tenant-scope and immutability plugins; database validators kept as a safety net | 06 §4, 11 §5.2 |
+| 8 | Backend stack | Python + PostgreSQL · NestJS 8 · Node.js + Express + MongoDB | **Express 4 modular monolith on the given servers: Node 12.4, MongoDB 4.4 / 5.0.** NestJS 8 rejected (end-of-life, pins an older Express) | 06 §3, 11 §3 |
+| 9 | Data access | Native driver with repositories · Mongoose ODM | **Mongoose 5.13** schemas, models and Document API, with tenant-scope and immutability plugins; database validators kept as a safety net. The move to Mongoose 6.13 with Node 12.22.12 is open decision D-08 | 06 §4, 11 §5.2, §11.2 |
+| 10 | Search | MongoDB text index · Elasticsearch 7.17 + IK · Meilisearch | **Meilisearch**, fed from the outbox; MongoDB 4.4 / 5.0 cannot search Chinese text | 06 §10, 11 §6 |
+| 11 | Background work | Redis + `bull` · MongoDB outbox and leased jobs | **Transactional outbox and leased jobs in MongoDB**, one worker process; no Redis at launch | 06 §3, 11 §3 |
 
 ### Final architectural recommendation
 
-Start with the hybrid model: a demand-driven marketplace, rigorous technology records, controlled verification, explainable matching and a complete transfer workflow.
+Start with the hybrid model: a demand-driven marketplace, rigorous technology records, controlled verification, explainable matching and a complete transfer workflow. Reach regulated venue functions through a licensed venue, and money through licensed payment providers, instead of building them.
 
-Use a modular Node.js backend, MongoDB as the source of truth (Mongoose models, database validators, transactions and least-privilege roles), a dedicated Chinese-capable search index, private document storage, explicit state machines and strong resource-level permissions. Keep **transaction completion, financial records and legal status** as separate, auditable concepts.
+Use a modular Express backend (TypeScript on Node.js 12) with one worker, MongoDB as the source of truth (Mongoose models, database validators, transactions and least-privilege roles), Meilisearch for Chinese search, private document storage, explicit state machines, a transactional outbox and strong resource-level permissions. Keep **transaction completion, financial records and legal status** as separate, auditable concepts.
 
 Above all, design the business operations alongside the software. Verification staff, technology brokers, deal managers, finance operators and administrators are not secondary users. They are part of the service that makes the marketplace trustworthy.

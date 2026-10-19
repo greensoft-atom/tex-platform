@@ -23,7 +23,7 @@ run(async () => {
   ok('manager can submit own draft', mgr.can('submit', t({})));
   ok('manager cannot submit a listing already in review', !mgr.can('submit', t({ lifecycleStatus: 'submitted' })));
   ok('manager can submit a revision of a published listing', mgr.can('submit', t({ lifecycleStatus: 'published' })));
-  ok('manager cannot edit while an update is pending', !mgr.can('update', t({ lifecycleStatus: 'update_pending' })));
+  ok('manager cannot edit while an update is pending or an approval awaits publication', !mgr.can('update', t({ lifecycleStatus: 'update_pending' })) && !mgr.can('update', t({ lifecycleStatus: 'approved' })));
   ok('manager cannot update another organization', !mgr.can('update', t({ ownerOrganizationId: orgB })));
   ok('viewer can read but not submit', viewer.can('read', t({})) && !viewer.can('submit', t({})));
   ok('anonymous reads published public listings only', anon.can('read', t({ lifecycleStatus: 'published', visibility: 'public' })) && !anon.can('read', t({})));

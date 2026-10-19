@@ -125,7 +125,7 @@ export function updateTechnologyContent(
 /** Submit for review: freeze the version, open a review case, record transition, outbox and audit events. */
 export function submitTechnologyForReview(
   actor: Actor, id: Types.ObjectId, expectedRev: number,
-): Promise<{ reviewCaseRef: string; status: TechnologyStatus }> {
+): Promise<{ reviewCaseRef: string; status: TechnologyStatus; rev: number }> {
   return inTransaction(async (session) => {
     const tech = await loadForChange(actor, id, expectedRev, session);
     ForbiddenError.from(actor.ability).throwUnlessCan('submit', tech);
@@ -152,7 +152,7 @@ export function submitTechnologyForReview(
     });
     await reviewCase.save({ session });
     await record(session, actor, tech, 'submitted', fromStatus, tech.lifecycleStatus, { reviewCaseRef: reviewCase.ref });
-    return { reviewCaseRef: reviewCase.ref, status: tech.lifecycleStatus };
+    return { reviewCaseRef: reviewCase.ref, status: tech.lifecycleStatus, rev: tech.rev };   // new ETag value
   });
 }
 

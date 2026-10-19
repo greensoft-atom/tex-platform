@@ -11,7 +11,7 @@
 
 ## Summary
 
-- The design **runs on Node.js 12.4.0 with MongoDB 4.4 and 5.0**, using **Mongoose 5.13** for data access. This was verified in a real run: 34 runtime libraries, the Mongoose models and their database validators, the Document API in multi-document transactions, tenant isolation, the permission policy and Chinese search (90 database checks per MongoDB version).
+- The design **runs on Node.js 12.4.0 with MongoDB 4.4 and 5.0**, using **Mongoose 5.13** for data access. This was verified in a real run: 34 library smoke checks, the Mongoose models and their database validators, the Document API in multi-document transactions, tenant isolation, the permission policy and Chinese search (90 database checks per MongoDB version).
 - **"MongoDB 4.5" is not a production release.** Before 5.0, odd minor versions were development builds. Use **4.4.x** (if the CPU lacks AVX or the OS is old) or **5.0.x**. All code targets the 4.4 feature set, so it works on both.
 - Four constraints shape the design:
   1. Data access uses **Mongoose 5.13.23**, which bundles driver **3.7.4**. Mongoose 6+ (driver 4+) needs Node ≥ 12.9.
@@ -39,7 +39,7 @@ ldd --version | head -1            # glibc: Node 16 needs >= 2.17, Node 18+ need
 grep -o -m1 avx /proc/cpuinfo      # empty output = no AVX = MongoDB 5.0+ will not run
 nproc && free -h && df -h          # CPU, memory, disk
 nginx -v                           # reverse proxy version (http2 directive syntax, §9.3)
-docker --version                   # if Docker exists, the Node version problem largely disappears (§11.2)
+docker --version                   # if Docker is allowed, a container with a current Node LTS is an upgrade option (§11.2)
 ```
 
 ### 1.2 MongoDB 4.4 or 5.0?
@@ -58,11 +58,11 @@ All code in this repository uses only 4.4 features, so the team can move from 4.
 
 ## 2. Verification results
 
-[`draft-implementation/`](draft-implementation/README.md) reproduces these results with `./run.sh` (Docker only):
+[`draft-implementation/`](draft-implementation/README.md) reproduces these results with `./run.sh`. The script needs only Docker, which it uses for throwaway test containers; production runs under systemd (§9).
 
 | Check | Node 12.4.0 + MongoDB 4.4.30 | Node 12.4.0 + MongoDB 5.0.33 |
 | --- | --- | --- |
-| 34 runtime libraries load and work (including Mongoose 5.13.23 and `@casl/mongoose` 5.0.0) | PASS | PASS |
+| 34 library smoke checks: each pinned library loads and performs a basic operation (including Mongoose 5.13.23 and `@casl/mongoose` 5.0.0) | PASS | PASS |
 | Release steps: `migrate-mongo up` (validators, roles), index sync from the Mongoose schemas, drift check | PASS | PASS |
 | Mongoose schemas reject bad data before it is sent (TRL 10, money with fractions, unknown state or field, budget min > max, buyer = supplier, one-party deal…) | PASS | PASS |
 | Database validators still reject bad raw writes that bypass Mongoose; unique and TTL indexes hold | PASS | PASS |
@@ -71,9 +71,11 @@ All code in this repository uses only 4.4 features, so the team can move from 4.
 | Document API use cases in cross-database transactions (create, update, submit, revise, discard, list); no partial writes; concurrent edits give one 409 | PASS (25/25) | PASS (25/25) |
 | Permission policy (CASL 5) on plain objects and Mongoose documents, `accessibleBy` filters, tenant-scope plugin on every query type | PASS (25/25) | PASS (25/25) |
 | Login sessions through the Mongoose connection (`connect-mongo` 3) | PASS | PASS |
-| Chinese full-text search with MongoDB text index | **Returns nothing** | (same engine) |
+| Chinese full-text search with MongoDB text index | **Returns nothing** | Not run (same text-index engine) |
 | Chinese full-text search with Meilisearch v1.11.3 | PASS | — |
 | Chinese date formatting and pinyin sorting with `full-icu` | PASS (fails without it) | — |
+
+Per MongoDB version, the database checks are `tests/test-mongo.js` (40), `tests/test-documents.js` (25) and `tests/test-policy.js` (25): 90 in total, all passed on both versions. The smoke and ICU checks run once; the search comparison runs once, on MongoDB 4.4.
 
 ---
 
@@ -150,9 +152,11 @@ flowchart LR
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "rootDir": "src",
     "outDir": "dist",
     "sourceMap": true
-  }
+  },
+  "include": ["src"]
 }
 ```
 
@@ -225,7 +229,7 @@ Mongoose 5.13.23 is the newest Mongoose that runs on Node 12.4. It differs from 
 
 ### 5.4 Validation, transactions and indexes
 
-- **Mongoose schemas are the primary definition**; database validators (`$jsonSchema`) are the **safety net** for writes that bypass Mongoose. The test that saves documents through every model into the validated collections keeps the two in step. `zod` in the API produces the user-facing error messages, because 4.4 reports only "Document failed validation".
+- **Mongoose schemas are the primary definition**; database validators (`$jsonSchema`) are the **safety net** for writes that bypass Mongoose. A test saves sample documents of the validated models through Mongoose and checks that the database validators accept them; this keeps the two layers in step. `zod` in the API produces the user-facing error messages, because 4.4 reports only "Document failed validation".
 - Keep transactions **short** (well under a second; hard limit 60 s) and **small** (hundreds of documents, not thousands). Run them through `inTransaction()` ([06 §4.7](06-implementation-design-v1.md)): `withTransaction` retries transient errors, with read concern `snapshot` and write concern `majority`.
 - Declare indexes in the Mongoose schemas. The release step creates them with `npm run db:indexes` as `tex_migrator`, and CI runs `npm run db:indexes:check`. Check every new query with `explain()`.
 
@@ -236,7 +240,7 @@ Mongoose 5.13.23 is the newest Mongoose that runs on Node 12.4. It differs from 
 | Logical backup | `mongodump --oplog --gzip` from a secondary (consistent snapshot of a replica set) to separate storage | Nightly; keep 30 daily + 12 monthly |
 | Point-in-time recovery | Percona Backup for MongoDB, or regular oplog archiving. **Check the tool's version matrix for 4.4/5.0** before adopting | When RPO < 24 h is required |
 | Uploaded files | Sync the storage volume or bucket to a separate failure domain | Nightly + on-change |
-| Search index | **Not backed up**: rebuilt from MongoDB with `npm run search:rebuild` | On restore |
+| Search index | **Not backed up**: rebuilt from MongoDB with `npm run search:rebuild` (application script, [06 §11.4](06-implementation-design-v1.md)) | On restore |
 | Restore test | Restore into a scratch environment and run smoke tests | Monthly |
 
 ---
@@ -269,7 +273,7 @@ flowchart LR
 - Index **only public data**: approved publication snapshots and anonymized public demands. Drafts, restricted fields and documents are never sent to Meilisearch.
 - The API server holds a **search-only key**. The master key stays in the admin tooling.
 - Search results are **re-checked** against MongoDB before display. The index is never the authority for access or status (05 §11.4).
-- Settings: searchable attributes `title.zh`, `title.en`, `summary.zh`, `summary.en`, `keywords`; filterable `industryCodes`, `trl.claimed`, `offerTypes`, `territories`, `badges`, `ownerType`; sortable `publishedAt`; a curated **synonym list** (锂电 ↔ 锂电池 ↔ lithium battery); a stop-word list.
+- Settings (as in [06 §10.2](06-implementation-design-v1.md)): searchable attributes `title.zh`, `title.en`, `keywords`, `summary.zh`, `summary.en`, `owner.displayName`; filterable `status`, `industryCodes`, `trl.claimed`, `offerTypes`, `territories`, `badges`, `owner.type`; sortable `publishedAt`; a curated **synonym list** (锂电 ↔ 锂电池 ↔ lithium battery); a stop-word list.
 - Meilisearch runs as a single node. That is acceptable because the index can be rebuilt from MongoDB within minutes for the expected catalogue size.
 - Move to Elasticsearch 7.17 + IK analyzer only if complex aggregations or very large scale are needed. Revisit MongoDB Search (8.2+) after a database upgrade.
 
@@ -479,19 +483,21 @@ Migrations follow **expand-and-contract**: add fields and indexes first; remove 
 ```mermaid
 flowchart LR
     N0["Node 12.4.0"] --> N1["Node 12.22.12<br/>(drop-in, same major)"]
-    N1 --> N2["Node 16 on glibc 2.17 servers,<br/>or Node 20/22 LTS in Docker"]
+    N1 --> N2["Node 16 on glibc 2.17 servers (also EOL),<br/>or a current Node LTS (22 / 24) in a container"]
     M0["MongoDB 4.4"] --> M1["5.0"] --> M2["6.0"] --> M3["7.0"] --> M4["8.0 / 8.2+"]
-    D0["Mongoose 5.13<br/>(driver 3.7)"] --> D1["Mongoose 6.13<br/>(driver 4.17, Node ≥ 12.9)"] --> D2["Mongoose 8 / 9<br/>(driver 6, current Node LTS)"]
+    D0["Mongoose 5.13<br/>(driver 3.7)"] --> D1["Mongoose 6.13<br/>(driver 4.17, Node ≥ 12.9)"] --> D2["Mongoose 8 / 9<br/>(driver 6+, current Node LTS)"]
     M4 --> S["Optional: MongoDB Search replaces<br/>Meilisearch"]
 ```
 
-- **Node:** 12.22.12 is a drop-in step. If the server allows Docker, run the API and worker in a container with a current LTS Node. The host's Node version then no longer matters.
+- **Node:** 12.22.12 is a drop-in step. Node 16 is itself end-of-life (September 2023); it is only an option for servers whose glibc (2.17) cannot run Node 18+. If the server allows containers, run the API and worker in a container with a current Node LTS, still started by systemd behind Nginx (no Docker Compose or Kubernetes). The host's Node version then no longer matters.
 - **MongoDB:** upgrade one major version at a time, setting `featureCompatibilityVersion` after each step, and take a backup before each one.
-- **Mongoose:** Mongoose 6 is in limited maintenance (security patches) and its driver 4.17 declares Node ≥ 12.9, so it pairs with the Node 12.22.12 step. A basic test (connect, transaction, optimistic concurrency) passed with Mongoose 6.13.11 on Node 12.22.12; the draft implementation has not yet been ported. Expected changes: remove the four driver options from `mongoose-settings.ts`, set `strictQuery` explicitly (its default changed), `@casl/mongoose` 6+, and typing adjustments. Mongoose 7 removes callbacks and `remove()`, which the code already avoids. Because services use only models and the `inTransaction()` helper, never the driver, these changes stay inside `core/db` and the model typings.
+- **Mongoose:** Mongoose 6 is in limited maintenance (security patches) and its driver 4.17 declares Node ≥ 12.9, so it pairs with the Node 12.22.12 step. A basic test (connect, transaction, optimistic concurrency) passed with Mongoose 6.13.11 on Node 12.4.0 and 12.22.12; the draft implementation has not yet been ported. Expected changes: remove the four driver options from `mongoose-settings.ts`, set `strictQuery` explicitly (its default changed), `@casl/mongoose` 6+, and typing adjustments. Mongoose 7 removes callbacks and `remove()`, which the code already avoids. Because services use only models and the `inTransaction()` helper, never the driver, these changes stay inside `core/db` and the model typings.
 
 ---
 
 ## Sources
+
+Notes, excerpts and saved copies of these sources (with retrieval dates and archived links) are in [`references/`](references/README.md).
 
 - Node.js release schedule (Node 12 end-of-life 30 April 2022): <https://github.com/nodejs/release#end-of-life-releases>
 - MongoDB lifecycle schedules (4.4 and 5.0 end-of-life): <https://www.mongodb.com/legal/support-policy/lifecycles>

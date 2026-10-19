@@ -72,7 +72,7 @@ run(async () => {
   const rev = (await M.Technology.findById(created.id).setOptions({ tenant: manager })).rev;
   const sub = await svc.submitTechnologyForReview(manager, created.id, rev);
   const t1 = await M.Technology.findById(created.id).setOptions({ tenant: manager }).lean();
-  ok('submit: ' + sub.reviewCaseRef + ', status submitted, rev incremented', /^CASE-\d{6}$/.test(sub.reviewCaseRef) && t1.lifecycleStatus === 'submitted' && t1.rev === rev + 1);
+  ok('submit: ' + sub.reviewCaseRef + ', status submitted, rev incremented and returned', /^CASE-\d{6}$/.test(sub.reviewCaseRef) && t1.lifecycleStatus === 'submitted' && t1.rev === rev + 1 && sub.rev === t1.rev);
   ok('submit: version 1 frozen; review case points at it', (await M.TechnologyVersion.findOne({ technologyId: created.id, version: 1 })).frozen === true
     && (await count(M.ReviewCase, { ref: sub.reviewCaseRef, 'resource.version': 1 })) === 1);
   await rejects('submit again -> 403 (state rule)', () => svc.submitTechnologyForReview(manager, created.id, t1.rev), is.named('ForbiddenError'));

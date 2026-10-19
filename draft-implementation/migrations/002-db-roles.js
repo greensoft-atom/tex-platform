@@ -1,5 +1,5 @@
 // migrations/002-db-roles.js — least-privilege role for the application user.
-// The API/worker connects as a user holding only `texApp`; migrations run as a separate `texMigrator` user.
+// The API/worker connects as a user holding only `texApp`; migrations run as a separate `tex_migrator` user.
 module.exports = {
   async up(db, client) {
     const admin = client.db('admin');

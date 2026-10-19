@@ -12,11 +12,11 @@ A simple, working draft of the backend data layer described in [doc 06](../06-im
 | Authorization | CASL **5.4.4** + `@casl/mongoose` **5.0.0** |
 | Migrations | `migrate-mongo` **8.2.3** (CLI run on Node 12.4.0) |
 | Search | Meilisearch **v1.11.3** (HTTP API via axios) |
-| TypeScript (build machine only) | 5.6.3, output `ES2019` / CommonJS, strict mode |
+| TypeScript (build machine only) | 5.6.3 on `node:22.11.0-alpine`, output `ES2019` / CommonJS, strict mode |
 
 ## Run it
 
-Requirements: Docker only. Nothing is installed on the host; containers use a private network, publish no ports and are removed afterwards.
+Requirements: Docker only. Nothing is installed on the host; containers use a private network, publish no ports and are removed afterwards. Docker is used only for these throwaway checks: the production baseline runs Node directly under systemd behind Nginx ([doc 11 §9](../11-target-runtime-node12-mongodb.md)).
 
 ```bash
 ./run.sh
@@ -37,16 +37,18 @@ src/
 │   ├── tenant-scope.plugin.ts   # every query on tenant data must name a tenant or a staff reason
 │   ├── immutability.plugins.ts  # freezablePlugin (versions), appendOnlyPlugin (history, audit)
 │   └── transaction.ts           # inTransaction(): withTransaction + result + endSession
-├── core/http/idempotency-key.model.ts
-├── modules/<module>/*.model.ts  # 24 models: identity, organizations, technology, offers, demands,
-│                                # matching, exchange, deals, documents, workflow, audit
+├── core/http/idempotency-key.model.ts  # stored results of retried commands (Idempotency-Key header)
+├── modules/<module>/*.model.ts  # 23 models in 11 modules: identity, organizations, technology, offers,
+│                                # demands, matching, exchange, deals, documents, workflow, audit
 ├── modules/identity/abilities.ts            # CASL policy
 ├── modules/technology/technology.service.ts # Document API use cases in transactions
-├── models.ts                    # registry of all models
+├── models.ts                    # registry of all 24 models (used by index sync and tests)
 └── scripts/sync-indexes.ts      # release step: create missing indexes / --check for drift
 migrations/                      # migrate-mongo: $jsonSchema validators, roles, sessions TTL index
 tests/                           # plain JavaScript, run directly on Node 12.4.0
 ```
+
+`package.json` pins every library that was smoke-tested, so it is **not** the application's dependency list. Some entries were only evaluated and are not in the approved stack ([doc 11 §3](../11-target-runtime-node12-mongodb.md)): NestJS 8 with `class-validator`, `class-transformer`, `reflect-metadata` and `rxjs` (considered and rejected), `joi` and `jsonwebtoken`, `@elastic/elasticsearch` (alternative search client), the `meilisearch` client (the tests call the HTTP API through `axios`), and `bull` 3 (optional, later).
 
 ## What it checks
 
@@ -54,18 +56,25 @@ tests/                           # plain JavaScript, run directly on Node 12.4.0
 | --- | --- | --- |
 | 1 | `package.json` | All runtime dependencies install with npm 6 on Node 12.4.0 (versions pinned, lockfile v1) |
 | 2 | `tsconfig.json`, `src/**/*.ts` | TypeScript compiles in strict mode to ES2019/CommonJS against the Mongoose 5.13 and Node 12 typings |
-| 3 | `tests/smoke.js`, `tests/test-icu.js` | 34 libraries load and perform a basic operation; Chinese dates and pinyin sorting work with `full-icu` (they fail with Node 12's default small ICU) |
+| 3 | `tests/smoke.js`, `tests/test-icu.js` | 34 smoke checks: each pinned library loads and performs a basic operation; Chinese dates and pinyin sorting work with `full-icu` (they fail with Node 12's default small ICU) |
 | 4 | `migrate-mongo up` / `status`, `sync-indexes` (and `--check`) | Release steps run on Node 12.4.0; indexes declared in the schemas are created and the drift check reports nothing |
 | 4 | `tests/test-mongo.js` (40 checks) | Mongoose validation (strict fields and filters, update validators, cross-field rules, Int64 money); unique, partial and TTL indexes; database validators still reject raw writes; BSON types; optimistic concurrency; frozen versions and append-only history; least-privilege role; cross-database transactions with rollback; login sessions through the Mongoose connection |
 | 4 | `tests/test-documents.js` (25 checks) | Technology use cases with the Document API: create, update, stale `If-Match` (409), invalid input (422), other tenant (404), concurrent edits, `lean()` + `populate()` list, submit, revise a published listing, discard |
 | 4 | `tests/test-policy.js` (25 checks) | CASL rules on plain objects and Mongoose documents; `accessibleBy()` filters; tenant-scope plugin on find, findById, updateMany, deleteMany, countDocuments, distinct and aggregate; buyer/supplier and deal-party visibility |
-| 5 | `tests/test-search.js` | Chinese queries: MongoDB text index returns nothing; Meilisearch returns correct results |
+| 5 | `tests/test-search.js` (MongoDB 4.4 only) | Chinese queries: MongoDB text index returns nothing; Meilisearch returns correct results |
 
-Steps 4 run once per MongoDB version. Any Node deprecation warning during the database tests counts as a failure, because it means a Mongoose setting is missing. Expected result: every line `PASS` / `OK`, `40 + 25 + 25` passed per MongoDB version, and the search table:
+Step 4 runs once per MongoDB version (4.4 and 5.0). Any Node deprecation warning during the database tests counts as a failure, because it means a Mongoose setting is missing. Expected result: every line `PASS` / `OK`, `40 + 25 + 25` passed per MongoDB version, and the search table:
 
 ```text
 MongoDB $text  q=缺陷检测 -> []
+MongoDB $text  q=电池 -> []
+MongoDB $text  q=固态电解质 -> []
+MongoDB $text  q=defect -> ["t3"]
 Meilisearch    q=缺陷检测 -> ["t1"]
+Meilisearch    q=电池 -> ["t2","t1"]
+Meilisearch    q=固态电解质 -> ["t2"]
+Meilisearch    q=defect -> ["t3"]
+Meilisearch    q=锂电池缺陷 -> ["t1","t2"]
 ```
 
 ## Known incompatible or not approved on Node 12.4.0
@@ -87,4 +96,4 @@ Meilisearch    q=缺陷检测 -> ["t1"]
 
 ## What these checks do not prove
 
-Performance and capacity, production MongoDB configuration (authentication, TLS, 3-member replica set, backups), Meilisearch production setup, and the security posture of end-of-life software (Node 12, MongoDB 4.4/5.0, Mongoose 5). See doc 11 §11 for the risk register and upgrade path.
+Performance and capacity, production MongoDB configuration (authentication, TLS, 3-member replica set, backups), Meilisearch production setup, and the security posture of end-of-life software (Node 12, MongoDB 4.4/5.0, Mongoose 5). See [doc 11 §11](../11-target-runtime-node12-mongodb.md) for the risk register and upgrade path.

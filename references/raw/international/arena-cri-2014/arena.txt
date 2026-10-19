@@ -1,0 +1,525 @@
+Commercial Readiness Index
+for Renewable Energy Sectors
+
+ARENA has developed the Commercial Readiness Index as a tool that project proponents
+may want to use when considering their projects and ARENA will use to measure the
+“commercial readiness” of renewable energy solutions.
+It is expected the Index will be updated from time to time.
+Commercial Readiness Index – Renewable Energy Sectors                                              page      1
+
+
+1.      Context
+1.1     Why is a Commercial Readiness Index required?
+The Technology Readiness Level (TRL) index is a globally accepted benchmarking tool for tracking
+progress and supporting development of a specific technology through the early stages of the technology
+development chain, from blue sky research (TRL1) to actual system demonstration over the full range of
+expected conditions (TRL9).
+                                                                          1
+The TRL methodology was developed by Stan Sadin with NASA in 1974. Since then, the process has
+evolved and is used across a wide range of sectors including renewable energy. An example of this is the
+ESB and Vattenfall classification system for evaluating the Technology Readiness for Wave Energy
+         2
+Projects. ARENA also uses the TRL index in the Emerging Renewables Program, for example, to help
+applicants in the early stages of technology development identify the stage of development of their
+                       3
+particular innovation.
+While the majority of technology risk is retired through the TRL 1–9 framework there is often significant
+commercial uncertainty and risk remaining in the demonstration and deployment phase. New technology
+and/or entrants entering a market place typically supplied by proven incumbents and financed by capital
+markets that are often risk adverse, face a multi-faceted range of barriers during the commercialisation
+process. This is particularly relevant in the context of renewable energy where capital cost and therefore
+access to capital is a key barrier to accelerating deployment.
+There is a wide body of knowledge and literature on the general commercialisation process that has
+evolved to inform public policy and associated funding tools to enable renewable energy development
+                 4
+and deployment. However, there does not appear to be an accepted process to benchmark the
+commercial readiness of renewable energy technology across the facets of a typical investment due
+diligence process following successful initial demonstration.
+Historically, the majority of support for the development of new renewable energy technologies has been
+through the provision of upfront capital grants. Upfront grants can be useful in assisting companies with
+acquiring funding for their projects, especially where they are small scale and the Government funding
+covers most of the costs. Yet the experience of this traditional funding model is also that rapid change
+increases risks to projects. Projects that have attempted to go straight from bench or desktop to
+demonstration at a commercial scale face the greatest challenges, such as raising private sector co-
+investment commitments, costs exceeding early expectations and the external market context changing
+over time such that the original goals no longer deliver a sustainable commercial proposition. ARENA has
+been given a broad mandate for assisting renewable energy technologies and projects through to
+commercialisation; accordingly, ARENA will structure its funding support to best reduce risks and barriers
+at the various stages of the technology development chain.
+Commercial Readiness Index – Renewable Energy Sectors                                            page   2
+
+
+1.2    How does Commercial Readiness relate to Technology
+       Readiness and Development along the Technology Development
+      Chain?
+A pictorial representation of the TRLs and CRI is shown in Figure 1 and Figure 2. The figures
+demonstrate that the CRI begins once the technology is at the stage where there is research to prove that
+it is feasible in the field (TRL 2). The CRI extends to when the technology or application is being
+commercially deployed and has become a bankable asset class (eg. Status Summary Level 6).
+
+
+
+
+Figure 1: TRL and CRI
+Commercial Readiness Index – Renewable Energy Sectors              page   3
+
+Figure 2: TRL and CRI mapped on the Technology Development Chain
+Commercial Readiness Index – Renewable Energy Sectors                                                          page     4
+
+
+1.3      Commercial Readiness –
+         Status Summary and Indicators
+There are two components to the CRI, the Status Summary (green component of the CRI) and the
+detailed Indicators (blue component of the CRI) as shown in Figure 3.
+
+Figure 3: CRI – Status Summary and Indicators
+
+
+
+
+Status Summary
+
+This is the single, overall rating numbered 1 to 6, as shown in Table 1 on the next page. The Status Summary
+correlates to the current status in the market, such as commercial trial (i.e. Status Summary Level 2) or multiple
+commercial applications (i.e. Status Summary Level 4) etc.
+
+The Status Summary is determined by evidence in the market (ie for Status Summary Level 2, whether a a
+commercial trial has been conducted) and does not require each of the individual Indicators to be at the same level
+as the Status Summary. In most cases, an individual project will not raise the overall Status Summary but rather will
+increase an Indicator/s.
+Commercial Readiness Index – Renewable Energy Sectors                                                             page      5
+
+Table 1: Description of Status Summary
+
+    Summary
+                Descriptions
+    Status
+
+    Level
+
+
+
+                "Bankable" grade asset class driven by same criteria as other mature energy technologies. Considered
+                as a "Bankable” grade asset class with known standards and performance expectations. Market and
+    6
+                technology risks not driving investment decisions. Proponent capability, pricing and other typical market
+                forces driving uptake.
+                Market competition driving widespread deployment in context of long-term policy settings. Competition
+    5           emerging across all areas of supply chain with commoditisation of key components and financial products
+                occurring.
+                Multiple commercial applications becoming evident locally although still subsidised. Verifiable data on
+    4           technical and financial performance in the public domain driving interest from variety of debt and equity
+                sources however still requiring government support. Regulatory challenges being addressed in multiple
+                jurisdictions.
+                Commercial scale up occurring driven by specific policy and emerging debt finance.
+    3           Commercial proposition being driven by technology proponents and market segment participants –
+                publically discoverable data driving emerging interest from finance and regulatory sectors.
+                Commercial trial: Small scale, first of a kind project funded by equity and government project support.
+    2
+                Commercial proposition backed by evidence of verifiable data typically not in the public domain.
+                Hypothetical commercial proposition: Technically ready – commercially untested and unproven.
+    1           Commercial proposition driven by technology advocates with little or no evidence of verifiable technical or
+                financial data to substantiate claims.
+
+
+
+Indicators
+
+The Indicators are used to reflect the commercialisation process of renewable energy. The CRI addresses a range of
+interlinked barriers in making progress towards widespread deployment.
+
+In drawing on past experience, consulting with stakeholders and reviewing available literature, ARENA has identified
+the following Indicators as being sufficiently quantifiable to warrant inclusion (as shown in Table 2 on the next page).
+To improve a technology solution or an application’s overall commercial readiness, we consider that it needs to
+progress along each of these dimensions. We would also expect that projects that are transitioning from measuring
+themselves in the TRL index to the CRI will aim to increase one or more of these Indicators.
+
+Descriptors for each of the Indicators are provided in Appendix A on page 10. The Indicators are measured from 1 to
+6. An example of the Indicators and the progression through the levels is:
+
+•       Stakeholder Acceptance Indicator Level 1 –Stakeholder support/opposition is hypothetical.
+
+•       Stakeholder Acceptance Indicator Level 6 –Established process understood and expected by all parties, used to
+        gain stakeholder acceptance.
+Commercial Readiness Index – Renewable Energy Sectors                                                          page      6
+
+Table 2: Description of Indicators
+
+
+
+      Indicators   Summary of Indicators
+
+
+
+ Regulatory
+                   The maturity of the planning, permitting and standards relating to the technology.
+ Environment
+
+ Stakeholder       The maturity of the process for evidence based stakeholder consultation linked to renewable
+ Acceptance        energy integration into the energy markets.
+ Technical
+ Performance       The availability of discoverable technical performance information.
+
+ Financial
+ Proposition
+ – Costs           The availability of robust, competitive financial information linked to capital and operating costs
+                   and forecast revenues allowing investors to take increasing levels of future market and project
+ Financial         risk.
+ Proposition
+ – Revenue
+ Industry
+                   The development of a competitive and efficient industry product and skills supply chain required
+ Supply Chain
+                   to support a commercially viable sector.
+ and Skills
+ Market            The development from a hypothetical commercial plan to the demonstration of a viable market
+ Opportunities     (local and/or overseas) via competitive channels to market and sustainable business models.
+
+ Company           The development of the sector to include established companies with strong credit ratings and
+ Maturity          established performance records.
+Commercial Readiness Index – Renewable Energy Sectors                                               page    7
+
+
+2       Self-Assessment: Using the Commercial Readiness Index
+Project proponents may find that the CRI is a helpful tool to evaluate their project. An example project
+evaluation is included in section 2.1 below. A blank template for project proponents is at Appendix B on
+page 14..
+
+2.1     An Example Self-Assessment
+An example of how the Index may be completed is shown in Figure 4.
+
+
+Figure 4: Example Project Evaluation for a Utility Scale Solar PV Project
+
+
+
+
+One can see that solar PV is seen within the market as a solution at Commercial Scale Up (Status
+Summary Level 3). This is demonstrated by the placement of the green circle within the green Status
+Summary area.
+Also four of the Indicators are expected to progress if this particular Solar PV project was to proceed. This
+is demonstrated by the blue bars moving apart in the columns titled: Stakeholder Acceptance, Technical
+Performance, Financial Performance – Costs and Market Opportunities. The arrows in those four
+columns suggest that the progression is expected to be an improvement rather than a decrease in
+capability (which would be shown as a down arrow). Following this logic, the diagram also shows that four
+Indicators are not expected to advance if the project was to proceed.
+Commercial Readiness Index – Renewable Energy Sectors                                                          page    8
+
+End Notes:
+1. Jim Banke (2010) Technology Readiness Levels Demystified
+
+2. J. Fitzgerald (2011) Technology Readiness Level definitions through a private communication, Ireland.
+
+3. ARENA Emerging Reneables Program use of TRL framework http://www.arena.gov.au/_documents/erp/ERP-Tech-Readiness-
+   Level.pdf
+
+4. Simon Müller, Adam Brown, and Samantha Ölz (2011) Renewable Energy: Policy Considerations for Deploying Renewables by
+   IEA; International Renewable Energy Agency (2013) Renewables Readiness Assessment Process; Baker & McKenzie (2010),
+   Global Benchmarking Report on Solar R&D Funding Sources and Models Report for the Australian Solar Institute; Jochem
+   Weber (2012) WEC Technology Readiness and Performance Matrix – finding the best research technology development
+   trajectory, 4th International Conference on Ocean Energy.
+Commercial Readiness Index – Renewable Energy Sectors                                                       page       9
+
+
+Appendix A: Descriptions of Indicators
+Commercial Readiness Indicator Descriptions
+
+Regulatory Environment
+
+ Level         Summary of Indicator
+
+               Regulatory, planning and permitting process documented and defined with ongoing process of
+ 6
+               review and refinement. Investment markets see policy settings long term, robust and proven.
+
+               Regulatory, planning and permitting challenges understood and under review, yet some
+ 5
+               unresolved and becoming critical as penetration grows.
+               Key findings published on planning, permitting and regulatory challenges based on actual
+ 4             evidence. Multiple jurisdictions with experience leading to emergence of national standards. Policy
+               settings moving to “Market pull”.
+               Draft recommendations emerging to address key barriers. Early developers investing in process
+ 3
+               development in order to gain certification. Policy settings focused on “project/technology push”.
+
+ 2             Key regulatory barriers emerging that often require project specific consideration.
+
+               Regulatory processes including planning, permitting, OH&S, and specific Australian standards
+ 1             such as electrical connection are undefined. Timing and cost of network connection and/or fuel
+               certification assumed in modelling but not known.
+
+
+
+
+Stakeholder Acceptance
+
+ Level         Summary of Indicator
+
+
+ 6             Established process understood and expected by all parties, used to gain stakeholder acceptance.
+
+
+ 5             Transparent process using discoverable evidence used to engage stakeholders.
+
+
+ 4             Evidence and experience is available to inform stakeholders increasing their acceptance.
+
+               Broader stakeholder support issues emerging. Stakeholder concerns & addressing these become
+ 3
+               key considerations in project development timelines and future commercial uptake scenarios.
+               Stakeholder support or opposition is on a case-by-case basis with project developer skills a critical
+ 2
+               success factor.
+
+ 1             Stakeholder support or opposition is hypothetical.
+Commercial Readiness Index – Renewable Energy Sectors                                                        page 10
+
+Technical Performance
+ Level         Summary of Indicator
+
+               Secondary markets exist to access externally verified performance information for routine due
+ 6
+               diligence. Performance review and warranty credit rating transparent.
+               Multiple data sets discoverable on commercial projects operating in range of operating
+               environments. Performance evaluation methodology and warranties defined and driven by project
+ 5
+               financing requirements. Renewable resource forecasts highly sophisticated based on experience
+               from wide range of sources.
+               Performance yield, efficiency vs. forecasts published and key drivers understood. Performance
+ 4             evaluation methodology and warranties becoming standard with key risk allocation process driving
+               equity and debt return expectations. High confidence in expected renewable resource.
+               Performance and yield forecasts based on extrapolation from reduced scale sites or similar
+               applications or similar pathways. Credit rating of project performance warranties become a key
+ 3
+               factor in bankability of project. Renewable resource forecasts driven by site-specific data capture.
+               International evidence key in investment.
+               Performance forecasts based on simulation models referenced to evidence from research &
+ 2             development or pilot scale demonstration. Renewable resource forecasts driven by site-specific
+               data capture. International evidence often used to support investment case.
+
+ 1             Performance forecasts based on proponent modelling.
+
+
+
+
+Financial Proposition – Costs
+
+ Level         Summary of Indicator
+
+               System cost sufficiently reliable and competitive to drive uptake. Cost detail widely published and
+ 6             accepted for multiple similar applications. Global and/or local price indices established and
+               reported.
+               Price and value proposition clear and attractive with open access to cost trends and projections
+ 5
+               based on actual project data from wide range of applications.
+
+               Key cost elements of projects in public domain. Commoditisation of major components occurring.
+ 4
+               Cost drivers are understood with roadmaps in place to bring costs to being market competitive
+               Costs data based on projections from single site or comparable site or comparable pathway. Key
+ 3
+               cost drivers are understood enabling broader market to judge long-term prospects of technology.
+
+ 2             Key costs based on projections with little actual data available to verify.
+
+               Cost data (if available) based on projections and forecasts with little or no prior data to
+ 1
+               substantiate.
+Commercial Readiness Index – Renewable Energy Sectors                                                          page 11
+
+Financial Proposition – Revenue
+
+ Level         Summary of Indicator
+
+               Revenue forecasting proven and accepted by finance industry with transparent benchmarking
+ 6             evident. Examples of different forms of market participation strategies with debt finance willing to
+               back merchant risk.
+               Revenue projections based on proven forecasts and accepted commercial data. Greater PPA or
+ 5             contract optionality for large scale developers, with investors comfortable with underlying value of
+               proposed asset.
+               Revenue projections backed by commercial data. Price gaps understood and roadmaps in place to
+ 4
+               address. Long term PPAs or contracts or offtake agreements required to secure debt.
+               Revenue projections being tested in commercial context, highly discounted by investors with
+ 3
+               requirements for long term PPAs or contracts or offtake agreements for large scale applications.
+
+ 2             Revenue projections highly discounted by investors.
+
+
+ 1             Revenue data based on projections and forecasts with little or no prior data to substantiate.
+
+
+
+
+Industry Supply Chain and Skills
+
+ Level         Summary of Indicator
+
+
+ 6             Multiple alternatives with proven capability. Project and service differentiation key selection factor.
+
+               Specialisation occurring along supply chain with standards defined and supplier performance
+ 5
+               externally benchmarked.
+
+               Key skills demonstrated with replicable results. Limited supply options proven. Time to build a key
+ 4
+               driver of future efficiencies.
+               Project by project approach from engineering, procuring, construction and transportation providers
+               with limited prior experience. Limited availability of key components and EPC and/or O&M skills.
+ 3
+               Major supply chain participants may not support development due to conflicts with their current
+               business model.
+               Supply chain not available or not willing to participate for many key components. Project developer
+               typically designing and procuring multiple elements to own specification. Engineering, procuring,
+ 2
+               construction and transportation costs often based on time and materials with high degree of risk
+               loading.
+               Supply chain not fully considered with key elements typically from specialist source, often under
+ 1
+               technology proponent specification.
+Commercial Readiness Index – Renewable Energy Sectors                                                        page 12
+
+Market Opportunities
+
+ Level         Summary of Indicator
+
+
+ 6
+               Market driving the investment process with little or no concessional policy support. External factors
+               may slow down or accelerate ongoing deployment. Market opportunities clear and understood.
+ 5
+
+               Market demand primary driver of the investment case with clarity on market segments and industry
+               supply chain and/or market channels to deliver. Market size widely available and verified by third
+ 4             parties. Funding gaps between net present value of revenue and cost understood, with target
+               segment customers a key stakeholder in the investment decision process. Some concessional
+               policy support required to drive uptake.
+               Focus moving from proving commercial performance to optimising project cost and revenue
+               structures and lowering $/unit of energy support required in the target market segment. Detailed
+ 3
+               market research to understand the size, interest and readiness of the market available. Post
+               subsidy revenues generating sufficient cash flow to service debt and equity expectations.
+               Commercial trial has identified target market segment for a trial with goal of proving to future
+               investors that the technology can operate reliably and generate predictable revenue from a cost
+               base that is understood, even if still uneconomic. Market research has been done to enable
+ 2
+               proponents to estimate the market size locally and internationally. The commercial trial does not
+               seek to optimise $/unit of energy but seeks to balance the absolute cost of the trial with the scale
+               required to demonstrate basic commercial performance.
+               Critical stage for a technology to move from a promising technical solution to a prospective
+               commercial opportunity. Investment case for commercial trials supported by evidence of peer
+ 1             reviewed business plans with verifiable cost and revenue estimates, market size and early channel
+               to market identified. Key risks identified both within and external to the proponents sphere of
+               control.
+
+
+
+
+Company Maturity
+
+ Level         Summary of Indicator
+
+               Leading proponents are major, public companies with large balance sheets. Management
+ 6
+               capability is no longer a consideration for most projects, as proponents have strong track records.
+               Leading players in sector have significant balance sheets and wide management experience in
+ 5
+               energy and delivery of technology and/or project class.
+               Established energy players now also considered part of the sector (although at the edge). Balance
+ 4             sheets and the influence of technology proponents increasing. Capability of management is still a
+               significant factor in project selection.
+               Industry bodies in place and strongly representing sector to external stakeholders. Industry still
+ 3
+               driven by technology proponents.
+
+ 2             Industry bodies have formed but are weaker than contract counterparts.
+
+               Established energy players not yet part of sector. Management capability is dependent on
+ 1
+               individual proponents.
+Commercial Readiness Index – Renewable Energy Sectors                                                        page 13
+
+Appendix B: Template for using Commercial Readiness Index
+
+
+
+
+                     1. Position the circle symbol to indicate where your project is located on the Status
+                        Summary axis.
+
+                     2. Position the coloured bars within the Indicators to identify where your project is
+                        currently positioned.
+                     3. Use arrow symbol where appropriate to demonstrate progress of a project towards
+                        an Indicator.
+                     A project status example is shown at Figure 4 on page 8.
+Commercial Readiness Index – Renewable Energy Sectors                                                        page 14
+
+Explanation of Index
+
+
+  EVIDENCE OF STATUS SUMMARY
+
+  Status Summary:           [Insert overall Level 1 to 6]
+
+  Market Position           [Insert information on rationale for Status Summary]
+  Identified (1–6)          •       [Up to 3 dot points are sufficient]
+
+
+
+  Rationale                 [Insert domestic or international examples to substantiate the Status Summary]
+                            Project name
+                            •       [Insert project specifics]
+                            •       [Up to 1/2 page]
+
+
+
+
+  EVIDENCE OF INDICATORS
+
+  Indicator:                [Insert indicator name, for example regulatory environment]
+
+  Indicator Level (1–6)     [Insert project indicator level, for example Level 3]
+
+  Movement                  No Change ☐ Improvement ☐
+
+  Rationale                 [Insert specific project rationale for level and change]
+                            •       [Insert specifics]
+                            •       [Up to 1/2 page]
+
+
+
+
+This box is repeated for all eight Indicators.
+Commercial Readiness Index – Renewable Energy Sectors                                                        page 15
+
+Copyright
+
+This work is copyright, the copyright being owned by the Commonwealth of Australia.
+
+With the exception of the Commonwealth Coat of Arms, the logo of ARENA and other third party material, which is
+protected by intellectual property law, this copyright work is licensed under the Creative Commons Attribution 3.0
+Australia Licence.
+
+Under this licence, you are free to copy, communicate and adapt the work, so long as you attribute the work to the
+Commonwealth of Australia (Australian Renewable Energy Agency) and abide by the other licence terms.
+
+This work should be attributed in the following way:
+
+
+
+
+© Commonwealth of Australia (Australian Renewable Energy Agency) 2014
+
+To view a copy of this license, visit http://creativecommons.org/licenses/by/3.0/au/
+
+For terms of use of Coat of Arms visit It’s an Honour at http://www.itsanhonour.gov.au/coat-arms/index.cfm
+
+Requests and inquiries concerning reproduction and rights should be addressed to arena@arena.gov.au
+
+
+
+
+Published February 2014
+

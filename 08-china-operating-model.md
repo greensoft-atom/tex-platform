@@ -1,32 +1,34 @@
-# 08 — Final Operating Model for the China Technology Exchange
+# 08 — China Operating Model: Legal Boundary, Venue Route, Deals and Money
 
 > **About this document**
 >
-> - **Purpose:** Define the final operating model for launching in China: legal boundaries, user groups and authority, deal types, the end-to-end workflow with approvals, contracts, funds handling, fees, disputes, required modules and the launch checklist.
+> - **Purpose:** Define how the platform operates in China: legal boundaries, the route through a licensed trading venue, user groups and authority, deal types, the end-to-end workflow with approvals, contracts, funds handling, fees, disputes, required modules and the launch checklist.
 > - **Audience:** Founders, product owner, architects, finance and compliance leads, and the Chinese legal counsel and payment partner who must validate it.
-> - **Status:** Final operating model. Implementation baseline: [06](06-implementation-design-v1.md); role and money concepts: [07](07-roles-workflows-and-money.md).
+> - **Status:** Operating-model baseline for the China launch. Implementation baseline: [06](06-implementation-design-v1.md); role and money concepts: [07](07-roles-workflows-and-money.md); real venue rules: [09](09-reference-platform-features.md); numbered requirements (FR-VEN, FR-DEAL, FR-CMP …) and open decisions D-01 … D-08: [10](10-product-requirements.md).
 > - **Not legal advice.** Every item marked *legal validation required* must be confirmed by PRC counsel, the relevant regulator or the payment partner before launch.
-> - **Previous:** [07 — Roles, workflows and money movement](07-roles-workflows-and-money.md) · **Index:** [README](README.md)
+> - **Previous:** [07 — Roles, workflows and money movement](07-roles-workflows-and-money.md) · **Next:** [09 — Reference platforms](09-reference-platform-features.md) · **Index:** [README](README.md)
 
 ---
 
 ## Summary
 
-The platform is a **managed technology exchange**: controlled introductions, negotiated contracts, milestone-based delivery, and **funds handling backed by a licensed bank or payment institution**.
+The platform is a demand-driven **matching and service platform with managed transfer workflows**: verified organizations, controlled introductions, negotiated contracts, milestone-based delivery, and **funds handling backed by a licensed bank or payment institution**. It is **not** itself a licensed exchange.
 
-There is one critical qualification. The business wants funds held until contractual conditions are met. The **business process** we want must be separated from the **financial activity the platform is legally permitted to perform** in China:
+Two legal boundaries shape the model:
 
-- The State Council's **Regulations on the Supervision and Administration of Non-bank Payment Institutions** (《非银行支付机构监督管理条例》, State Council Decree No. 768, published December 2023, effective **1 May 2024**) require payment business to be carried out only by institutions licensed by the People's Bank of China (PBOC). They regulate payment processing and customer reserve funds, and prohibit misappropriating reserve funds.
-- Shanghai's 2025 rules for licensed technology trading venues likewise require **third-party settlement** through a bank or licensed non-bank payment institution, with segregated client accounts (see [01 §1.3](01-shanghai-landscape.md)).
+1. **Exchange functions are licensed.** Formal listing (挂牌), competitive bidding, auction and tender, third-party settlement of deposits and prices, and rights-registration and transaction certificates are **venue functions**: the Shanghai rules list them as duties of licensed venues (Art. 11), and the national rules on trading venues bar unapproved operators from centralized competitive trading (国发〔2011〕38号; how they apply to this platform is a legal-validation item, D-03). In Shanghai, technology trading venues (技术交易场所) are approved by the municipal government under total-quantity control (《上海市技术交易场所管理细则》, 沪科规〔2025〕2号, in force 1 May 2025 – 30 April 2030). The platform therefore performs these steps **through a licensed venue (STEX or CTEX), as a registered practising agent** (执业类交易服务机构) of its clients (§1.3).
+2. **Money handling is licensed.** The business wants funds held until contractual conditions are met. The **business process** we want must be separated from the **financial activity the platform is legally permitted to perform**:
+   - The State Council's **Regulations on the Supervision and Administration of Non-bank Payment Institutions** (《非银行支付机构监督管理条例》, State Council Decree No. 768, published December 2023, effective **1 May 2024**) require payment business to be carried out only by institutions licensed by the People's Bank of China (PBOC). They regulate payment processing and customer reserve funds (备付金), and prohibit misappropriating reserve funds.
+   - Shanghai's 2025 venue rules likewise require **third-party settlement** through a bank or licensed non-bank payment institution, with separate accounts per client (Art. 12; see [01 §1.3](01-shanghai-landscape.md)).
 
-**Recommendation:** make conditional payment and release part of the product, but **never assume the exchange itself can receive, pool, safeguard or release customer money**. Use a legally reviewed arrangement with a qualified payment institution or bank. The platform coordinates deal conditions and records verified payment events. Whether a provider supports the exact conditional-holding arrangement for each transaction type must be confirmed **before** implementation commits to it.
+**Recommendation:** make conditional payment and release part of the product, but **never assume the platform itself can receive, pool, safeguard or release customer money**. Money is held and released only by a licensed bank or payment institution (or, for venue-routed deals, through the venue's third-party settlement). The platform coordinates deal conditions and records verified payment events. Whether a provider supports the exact conditional-holding arrangement for each transaction type must be confirmed **before** implementation commits to it (decision D-02 in [10 §12](10-product-requirements.md)).
 
 This document separates three kinds of statement:
 
 | Label | Meaning |
 | --- | --- |
 | **Evidence** | What official regulations or established technology-transfer practice support |
-| **Proposed policy** | How this exchange should operate |
+| **Proposed policy** | How this platform should operate |
 | **Legal validation required** | What PRC counsel, the regulator or the payment partner must confirm before launch |
 
 ---
@@ -39,27 +41,34 @@ The platform supports all requested deal types, but the transaction engine appli
 
 | Area | Evidence (Chinese source) | Required product decision |
 | --- | --- | --- |
-| Platform operation | **E-Commerce Law** (《电子商务法》): platform rules, security measures, and preservation of transaction information for **at least three years** after transaction completion (Art. 31), subject to other rules | Publish platform service agreement and transaction rules; keep immutable, exportable records with retention policies per record category |
-| Internet operation | **ICP filing / licensing** for websites in mainland China; online transaction-processing platforms with third-party participants typically need a value-added telecom licence for **online data processing and transaction processing ("EDI")** | Decide the licensing path with counsel before public launch (*legal validation required*) |
-| Cybersecurity | **Cybersecurity Law**: classified protection of information systems (网络安全等级保护, "MLPS 2.0") | Plan the grading, filing and assessment of the platform's systems |
-| Payment handling | **Non-bank Payment Institution Regulations** (Decree No. 768, effective 1 May 2024): PBOC authorization; regulated payment processing and reserve funds | No general-purpose wallet or pooled balance. Choose a bank or licensed payment institution that confirms it can legally support the exact flow |
+| Platform operation | **E-Commerce Law** (《电子商务法》): an e-commerce platform operator must publish platform rules, take security measures, and keep transaction information for **at least three years** after transaction completion (Art. 31), unless other laws require longer | Publish a platform service agreement and transaction rules; keep immutable, exportable records with retention policies per record category. Whether the platform counts as an e-commerce platform operator for each service is *legal validation required*; design as if it does |
+| Internet operation | **ICP filing** (ICP备案) for any website in mainland China; an **ICP licence** (ICP经营许可证) for commercial internet information services; online platforms on which third parties transact typically need a value-added telecom licence for **online data processing and transaction processing** (在线数据处理与交易处理, "EDI") | Decide the licensing path with counsel before public launch (*legal validation required*; decision D-04) |
+| Cybersecurity | **Cybersecurity Law**: classified protection of information systems (网络安全等级保护, "MLPS 2.0") | Plan the grading, filing and assessment of the platform's systems (level 2 at launch, NFR-08; decision D-05) |
+| Payment handling | **Non-bank Payment Institution Regulations** (Decree No. 768, effective 1 May 2024): PBOC authorization; regulated payment processing and reserve funds | No general-purpose wallet or pooled balance. Choose a bank or licensed payment institution that confirms it can legally support the exact flow (decision D-02) |
 | Technology contracts | **Civil Code**, Book III, Chapter 20: technology **development** (commissioned or cooperative), technology **transfer** and **licensing**, technology **consulting** and **services** are distinct contract types | Make deal type, IP rights, scope, deliverables, consideration and acceptance rules explicit in each contract |
 | Patent transfer formalities | **Patent Law** Art. 10: assignment of a patent (or application) needs a written contract **registered with CNIPA**, and takes effect **on registration**. Assignment to foreign parties also follows technology-export rules. Licence contracts are normally filed (备案) with CNIPA | "Assignment completed" requires CNIPA registration evidence; track licence filing |
 | Public-institution transfers | **Law on Promoting the Transformation of Scientific and Technological Achievements** (《促进科技成果转化法》) Art. 18: state-funded universities and institutes may decide to transfer, license or invest results, pricing by **negotiation (with public notice of the name and proposed price), listing on a technology market, or auction**. Art. 45: absent internal rules or agreement, **at least 50%** of net transfer or licence income goes to the contributing researchers | Support public-notice periods, listing and auction pricing, and income-distribution records for university sellers |
 | Technology import/export | **Regulations on Technology Import and Export Administration** and the **Catalogue of Technologies Prohibited or Restricted from Export** (revised 2023): prohibited, restricted and free categories. Free-category contracts are **registered**; restricted technologies need **prior licensing**. Registration certificates are used for foreign-exchange, banking, tax and customs procedures | Screen technology and parties **before** disclosure, signing, delivery and payment; block prohibited transfers; gate restricted ones on approvals |
 | Export control | **Export Control Law** (2020): dual-use items and controlled technical data | Flag dual-use and controlled technical data in compliance screening |
-| Electronic contracts | **Electronic Signature Law**: a *reliable* electronic signature has the same legal effect as a handwritten signature or seal, under specified conditions | Keep the exact signed version, signer identity and authority, timestamps and integrity evidence. Use a qualified e-signature provider (licensed certification authority) and support company seals (电子印章) |
+| Electronic contracts | **Electronic Signature Law**: a *reliable* electronic signature has the same legal effect as a handwritten signature or seal, under specified conditions | Keep the exact signed version, signer identity and authority, timestamps and integrity evidence. Use an e-signature provider whose certificates come from a licensed electronic certification service provider (电子认证服务机构), and support company e-seals (电子印章) (decision D-06) |
 | Personal information and data | **PIPL**, **Data Security Law** and the 2024 **Provisions on Promoting and Regulating Cross-border Data Flows** | China-based data storage and access controls from day one; assess before sending personal or important data overseas (including to AI providers) |
 | Technology-contract registration | Revised **Measures for the Administration of the Recognition and Registration of Technology Contracts** (《技术合同认定登记管理办法》, issued by MIIT, effective **1 March 2026**). Registration is generally voluntary, but in practice it unlocks tax incentives; records are generally kept five years | Generate registration-ready contract packages and track registration status (see §5.5) |
-| Licensed trading venues (Shanghai) | 《上海市技术交易场所管理细则》 (2025): venues approved by the municipal government under total-quantity control (Art. 6); rights registration, transaction certification, disclosure, third-party settlement are venue duties. STEX rules require buyers to act through a registered agent, who verifies materials with joint liability | Default route: become a **registered practising agent** of STEX (≥ 2 years registered, capital ≥ RMB 1 M, ≥ 2 recognised practitioners, clean 24-month record) or CTEX, and route formal listing, bidding, settlement and certificates through the venue ([09 §2.1](09-reference-platform-features.md)) |
+| Trading venues (national) | State Council **Decision on Cleaning Up and Rectifying Trading Venues** (《国务院关于清理整顿各类交易场所切实防范金融风险的决定》, 国发〔2011〕38号): a trading venue that uses "交易所" (exchange) in its name needs approval (provincial government, unless approved by the State Council or a financial regulator); unapproved venues may not split rights into equal shares for public sale or trade them by centralized bidding (集中竞价) or market making. Shanghai applies this through 《上海市交易场所管理暂行办法》 (沪府规〔2025〕2号) | Do not use 交易所 in the Chinese company or platform name, do not present the platform as a licensed venue, and run no binding bidding on the platform itself. Whether non-binding price indications (意向报价) on the platform are acceptable is open (*legal validation required*; decision D-03) |
+| Licensed trading venues (Shanghai) | 《上海市技术交易场所管理细则》 (沪科规〔2025〕2号): venues approved by the municipal government under total-quantity control (Art. 6); rights registration, transaction certification, disclosure and settlement are venue duties (Art. 11), with third-party settlement (Art. 12). STEX rules require intended buyers to submit through a registered agent, who verifies their materials and bears **joint liability** (连带责任) (STEX rule 82) | Default route: act as a **registered practising agent** of STEX (≥ 2 years registered, registered capital ≥ RMB 1 million, ≥ 2 recognised practitioners, clean 24-month record; STEX rule 105) or of CTEX, and route formal listing, bidding, settlement and certificates through the venue (§1.3; [09 §2.1](09-reference-platform-features.md); decision D-01) |
 
 > This table is an implementation baseline, not a legal opinion that a particular holding structure, company licence or cross-border transaction is permitted. Before production, PRC counsel and the proposed financial institution must validate the legal entities, funds flow, contract wording, regulated activities, tax and foreign-exchange handling.
 
 ### 1.2 Money-handling model approved for development
 
+Money moves on one of three routes, and on none of them does the platform hold client funds (route table in [07 §6](07-roles-workflows-and-money.md)):
+
+- **Direct payment between the parties** (from R2, before a payment partner is integrated): the platform records obligations and the payment evidence the parties provide, and never shows such payments as provider-confirmed.
+- **Payment partner** (R3, after decision D-02): the model below, for deals the platform manages itself.
+- **Venue settlement** (R3): venue-routed deals settle through the venue's third-party settlement account (§1.3).
+
 ```mermaid
 flowchart LR
-    subgraph EXCH["Technology exchange (our company)"]
+    subgraph EXCH["Our platform (operator)"]
         E1["Listings, introductions, negotiations"]
         E2["Contract conditions and milestone evidence"]
         E3["Disputes and payment instructions"]
@@ -84,11 +93,45 @@ This is a proposed architecture. It does **not** claim that any Chinese provider
 
 **Do not make any user-facing "escrow" promise until that validation is complete.** If the partner can only process ordinary payments and payouts, the system must describe exactly that.
 
+### 1.3 Venue route: what runs through STEX or CTEX
+
+Some steps are **venue functions** under the Shanghai rules (Arts. 11–13): formal listing and disclosure, buyer registration and qualification, competitive methods (online bidding, auction, tender, competitive negotiation), third-party settlement of deposits and prices, and certificates: the rights-registration certificate (技术权益登记凭证), the transaction certificate (技术交易凭证) and the no-objection certificate for a public notice (公示无异议证明). The platform does not perform them itself. As its client's **agent of record**, it prepares, verifies, submits and tracks them, and records the venue's results (FR-VEN-01 … FR-VEN-10, release R3 in [10](10-product-requirements.md)).
+
+**When a deal uses the venue route**
+
+| Situation | Venue product |
+| --- | --- |
+| The seller wants open competition among buyers | Formal listing (正式挂牌), with buyer registration and the pre-announced competitive method if two or more buyers qualify |
+| The seller wants to test interest before fixing price or method | Intent listing (意向挂牌) |
+| A state-funded university or institute prices a service invention by listing or auction (§5.4), or wants the Shanghai due-diligence exemption for a negotiated price (notice published in the institution **and** on a trading market) | Formal listing or auction; transfer notice (科技成果转化公示) with a no-objection certificate |
+| Parties agreed a deal off-venue but need venue settlement, a transaction certificate or venue evidence | Private agreement (非公开协议成交) |
+| State-owned enterprise property rights are transferred | State-owned property-rights listing (FR-CMP-07) |
+
+Any deal type in §3 can use the venue route. Deals that need none of these products stay on the platform's own managed workflow (§4) and its payment partner (§1.2).
+
+**Who does what**
+
+| Step | Our platform (agent of record) | Venue |
+| --- | --- | --- |
+| Submission | Collects the application, agency contract, identity documents, decision documents, ownership proof and commitment letter; checks completeness; records the agent's verification opinion under maker-checker (FR-VEN-01, FR-ADM-02) | Completeness check, then compliance review within 3 working days (WD) |
+| Disclosure | Builds the announcement; tracks the minimum period (≥ 5 WD on STEX, ≥ 10 WD on CTEX) on the official working-day calendar (FR-VEN-02, FR-VEN-03, FR-ADM-09) | Publishes; restarts the period after any change |
+| Buyer registration | Submits the buyer's intent form, risk statement and the agent's verification opinion; the agent bears **joint liability** for the buyer's materials (STEX rule 82; FR-VEN-04) | Reviews within 3 WD; asks the seller to confirm qualification (silence within 3 WD = consent) |
+| Competition | Prepares bidding plans and documents; supports the client (FR-VEN-05, FR-VEN-06) | Runs online bidding, auction (through a licensed auction house), tender or competitive negotiation |
+| Contract | Drafts the contract with the 12 mandatory clauses and tracks the 5 WD signing deadline (FR-DEAL-03, FR-DEAL-05) | Reviews and certifies the contract |
+| Money | Shows the venue-reported status of deposits and prices; **never receives the funds** (FR-VEN-08) | Settles deposits and prices through its third-party settlement account (Art. 12) |
+| Certificates | Stores certificate numbers and PDFs and links them to deals, notices and reward records (FR-VEN-09) | Issues the certificates |
+
+Exact STEX rules and time limits: [09 §2.3–§2.4](09-reference-platform-features.md).
+
+**Becoming an agent** (STEX rule 105, [09 §2.1](09-reference-platform-features.md)): an independent legal entity registered for at least 2 years, registered capital of at least RMB 1 million, at least 2 practitioners recognised by STEX, and no major violations, dishonesty records or administrative penalties in the last 24 months. Agents face an annual review each July and report changes within 10 WD. A newly formed operating company cannot meet the 2-year rule, so the options (decision D-01) are: partner with an existing registered agent first, register as a STEX (or CTEX) agent once eligible, or apply for venue status (long and uncertain under total-quantity control).
+
+*Legal validation required:* the scope of the agent's joint liability, the agency-contract terms with clients, insurance, and internal controls for verification opinions.
+
 ---
 
 ## 2. User groups and authorization model
 
-The exchange needs **organization-level identity, deal-specific roles and platform staff roles**. A user can hold different roles in different organizations and deals.
+The platform needs **organization-level identity, deal-specific roles and platform staff roles**. A user can hold different roles in different organizations and deals.
 
 ### 2.1 Organization and deal participants
 
@@ -115,6 +158,7 @@ The exchange needs **organization-level identity, deal-specific roles and platfo
 | Case manager | Coordinates introductions, discussions, milestones and deadlines | Cannot rewrite agreed terms |
 | Compliance officer | Reviews technology-control, sanctions, fraud and escalation flags | Cannot bypass mandatory legal gates |
 | Financial operations officer | Reconciles provider transactions, investigates failures, prepares payout actions | Cannot create provider confirmations or alter financial history |
+| Venue submission officer (agent of record) | Prepares venue submissions and buyer registrations; drafts the agent's verification opinion (§1.3) | Cannot submit alone: a second reviewer approves (maker-checker, FR-ADM-02), because the company bears joint liability for what it verifies |
 | Dispute reviewer | Manages evidence and the dispute process | Must follow agreed rules and disclose conflicts of interest |
 | System administrator | Accounts, configuration and system health | Admin access never grants business approval rights |
 | Auditor | Reviews authorized records and logs | Read-only by default |
@@ -132,7 +176,7 @@ In a small team, one employee may perform several functions. The application mus
 - Every payout or refund needs a recorded authorization **and** a matching provider transaction result.
 - Where one user acts for several parties, the system detects and flags the conflict.
 
-Use explicit **organization mandates**, permission scopes, approval limits and expiry dates (`organization_authorizations`). For larger transactions, require **two-person approval** inside the paying organization for payments and for changes to payout destinations.
+Use explicit **organization mandates**, permission scopes, approval limits and expiry dates (`organization_authorizations`, FR-ORG-04). For larger transactions, require **two-person approval** inside the paying organization for payments and for changes to payout destinations. Conflict detection is FR-ORG-07.
 
 ---
 
@@ -152,7 +196,7 @@ All deal types are supported in the data model. Each has its own contract templa
 | Investment (incl. technology-for-equity, 作价投资) | Company-law and investment documents | Instrument, valuation, approvals, conditions precedent, equity or rights, disclosures, closing documents | Funds at closing or in tranches | Closing conditions, documents and registration of share changes completed |
 | Joint venture / consortium | Company-law or consortium agreement | Structure, contributions, governance, IP, liabilities, exit and deadlock rules | Capital contributions on schedule | Formation and closing conditions met; ongoing obligations tracked |
 
-Cross-border deals add the import/export requirements in §5.3.
+Cross-border deals add the import/export requirements in §5.3. Any deal type can also use the venue route (§1.3) when it needs formal listing, competition among buyers, venue settlement or a venue certificate.
 
 ### 3.1 Launch policy: three implementation tiers
 
@@ -168,7 +212,7 @@ All deal types can be **listed** at launch, but workflows are implemented in thr
 
 ## 4. End-to-end business workflow and required approvals
 
-The recommended state machine for the managed exchange. Every arrow is a business transition with its own authorization checks.
+The recommended end-to-end workflow for a deal the platform manages. Every arrow is a business transition with its own authorization checks.
 
 ```mermaid
 flowchart TD
@@ -202,12 +246,14 @@ flowchart TD
 
 Some contracts use a different order: an upfront licence fee may be due **before** technical handover, and an R&D project may have several funding tranches. The workflow engine therefore supports **configurable rules per deal type**, not one hard-coded sequence.
 
+**How this maps to the records.** Steps up to "Managed introduction" live on the technology, demand and introduction records ([06 §6.1–§6.3](06-implementation-design-v1.md)). From then on the deal record moves through its own status (06 §6.4; the `ready_to_complete` step is detailed in [05](05-system-design-blueprint.md)): `opportunity` → `qualified` → `due_diligence` (evaluation) → `negotiation` (proposal versions) → `contract_draft` → `approval` → `signed` → `conditions_pending` (legal gates, funding, milestones) → `ready_to_complete` → `completed`, with `on_hold`, `lost` and `disputed` as side states. Proposals, contracts, compliance gates, milestones and every payment object keep **separate** statuses (§6.2); the deal status never replaces them.
+
 ### 4.1 Transition specification
 
 | Transition | Who can initiate? | Required evidence | What becomes true? |
 | --- | --- | --- | --- |
 | Register organization | Authorized applicant | Business registration (unified social credit code 统一社会信用代码) and representative details | Organization record exists; verification pending |
-| Verify organization | Verification officer | Identity and organization evidence (e.g. checked against the National Enterprise Credit Information Publicity System) | A defined verification level is recorded |
+| Verify organization | Verification officer | Identity and organization evidence (e.g. checked against the National Enterprise Credit Information Publicity System, 国家企业信用信息公示系统) | A defined verification level is recorded (L0–L4, FR-ACC-05) |
 | Submit listing | Authorized provider representative | Required listing fields and rights declaration | A version is submitted for review |
 | Publish listing | Listing reviewer / authorized workflow | Completeness and policy checks | That version becomes searchable |
 | Express interest | Buyer or authorized representative | Use case, intended collaboration, information requested | A non-binding enquiry exists |
@@ -263,7 +309,7 @@ Each proposal is an **immutable version**. Negotiable items:
 
 Example (amounts illustrative only):
 
-| Step | Action | Proposal status |
+| Step | Action | Resulting status |
 | --- | --- | --- |
 | 1 | Provider proposes a non-exclusive licence for RMB 300,000 | v1 open |
 | 2 | Buyer counters: RMB 200,000 upfront + RMB 100,000 after a technical milestone | v1 superseded, v2 open |
@@ -314,7 +360,7 @@ flowchart TD
 
 China's technology import/export framework requires **licensing for restricted technologies**, **prohibits** exports of prohibited technologies, and provides **contract registration** for free-category technologies.
 
-**System policy:** a compliance flag **blocks** the relevant action until the required review is complete. No platform employee can bypass a mandatory legal gate by changing a deal status.
+**System policy:** a compliance flag **blocks** the relevant action until the required review is complete (FR-CMP-05). No platform employee can bypass a mandatory legal gate by changing a deal status.
 
 ### 5.4 University and public-institution transfers
 
@@ -324,19 +370,25 @@ When the seller is a state-funded university or research institute, the transfer
 flowchart TD
     A["Researcher discloses the invention to the TTO"] --> B["Institution decides to transfer, license<br/>or invest (internal approval)"]
     B --> C{"Pricing method"}
-    C -->|"Negotiated price"| D["Public notice of result name<br/>and proposed price at the institution"]
-    C -->|"Listing"| E["List on a technology market / exchange"]
-    C -->|"Auction"| F["Auction"]
+    C -->|"Negotiated price"| D["Public notice of result name<br/>and proposed price at the institution<br/>(at least 15 days)"]
+    C -->|"Listing"| E["List on a licensed technology<br/>trading venue (via agent)"]
+    C -->|"Auction"| F["Auction through the venue<br/>and a licensed auction house"]
     D --> G{"Objection upheld?"}
     G -->|"Yes"| E
     G -->|"No"| H["Sign contract"]
     E --> H
     F --> H
     H --> I["Technology-contract recognition and<br/>registration (技术合同认定登记)"]
-    I --> J["Income received and distributed to the research team<br/>(at least 50% of net income by default)"]
+    I --> J["Income received; rewards to the research team<br/>under the institution's rules<br/>(statutory default: at least 50% of net income)"]
 ```
 
-The platform supports public-notice periods with evidence, listing and auction pricing (directly or with a licensed venue), contract registration and income-distribution records.
+Notes on the rules behind this flow (details and sources in [09 §5](09-reference-platform-features.md)):
+
+- The negotiated-price notice runs for **at least 15 days** with an objection procedure (国发〔2016〕16号). Under Shanghai's due-diligence exemption guideline (尽职免责, written for the city's reform-pilot units; other public research units may follow it), staff are not held liable if the result's value later changes, provided the price was set by listing or auction on a technology market, or the negotiated price was published **both in the institution and on a technology trading market**. The venue issues a no-objection certificate for the market-side notice (§1.3).
+- Listing and auction pricing run **through a licensed venue** (§1.3), not on the platform.
+- Shanghai's regulation on promoting the transformation of results (Art. 34) allows universities and institutes to set, by internal rule or agreement, researcher rewards of at least 70% of net transfer or licence income. Without a rule or agreement, the national default of at least 50% applies.
+
+The platform supports public-notice periods with evidence (FR-UNI-03), dual publication through the venue (FR-UNI-04), the pricing-method record (FR-UNI-05), contract registration (FR-DEAL-08) and income-distribution records (FR-UNI-06).
 
 ### 5.5 Technology-contract registration and tax incentives
 
@@ -345,7 +397,7 @@ The platform supports public-notice periods with evidence, listing and auction p
 | Rule | Revised 《技术合同认定登记管理办法》 (MIIT), effective 1 March 2026 |
 | Who applies | In principle the selling or performing party, at the registration office where it is located |
 | Why it matters | Registration is generally voluntary, but needed in practice for incentives: VAT exemption for technology transfer and development and directly related consulting or services; corporate income tax relief on technology transfer income (resident enterprises: the first RMB 5 million per year exempt, the excess halved); enhanced R&D deductions; preferential individual income tax treatment for researchers' rewards at universities and non-profit institutes |
-| Product feature | Generate a registration-ready package (contract text, attachments, party data), track the registration number and status, and remind sellers |
+| Product feature | Generate a registration-ready package (contract text, attachments, party data), track the registration number and status, and remind sellers (FR-DEAL-08) |
 
 *Legal and tax validation required:* VAT rules changed with the VAT Law effective 1 January 2026. Confirm the current exemption notice and procedure (a 2026 notice reportedly covers 2026–2027) and all thresholds with a tax adviser before advertising any benefit.
 
@@ -379,6 +431,8 @@ flowchart TD
 ```
 
 The system never represents an ordinary payment as held funds. If the chosen bank or payment institution does not provide conditional holding for a deal type, use a legally approved alternative or keep that deal **outside** the platform-controlled funds workflow.
+
+**Venue-routed deals** do not use this lifecycle. Deposits and prices are settled by the venue's third-party settlement account (§1.3). The platform records the venue-reported status only (FR-VEN-08) and never creates provider-held-funds or release records for them.
 
 ### 6.2 Payment statuses
 
@@ -460,13 +514,13 @@ Licensing and commercialization deals carry obligations long after the initial t
 - Contract amendments and renewal dates.
 - Audit rights where the contract provides them.
 
-A deal can be closed for initial delivery while its royalty schedule stays active. **`deal_closed` never cancels future contractual obligations.**
+A deal can be closed for initial delivery while its royalty schedule stays active (FR-DEAL-10). **Moving a deal to `completed` never cancels future contractual obligations.**
 
 ---
 
 ## 7. Fee model
 
-Fees are a **commercial decision**, not something set by technology-transfer law. Support a configurable fee schedule.
+Fees are a **commercial decision**, not something set by technology-transfer law. Support a configurable fee schedule (FR-ADM-04). The schedule and plan pricing are decision D-07; benchmark fees of other venues are in [09 §2.6](09-reference-platform-features.md).
 
 ### 7.1 Recommended fee policy
 
@@ -481,6 +535,8 @@ Fees are a **commercial decision**, not something set by technology-transfer law
 | Payment-provider fee | Passed through or allocated under disclosed terms | Provider transaction |
 | Refund / reversal cost | Allocated only under disclosed terms and applicable law | Actual refund or reversal |
 | Royalty administration | Optional, if the platform provides ongoing reporting or collection | Contractually defined reporting period or service milestone |
+| Venue fees (venue-routed deals) | Charged by the venue under its own schedule; shown to the client in advance and not mixed with platform revenue | The venue's fee notice |
+| Agent service fee (venue-routed deals) | Quoted fee for acting as agent of record (preparation, verification, buyer registration) | Accepted agency contract or service order |
 
 ### 7.2 Required fee rules
 
@@ -501,7 +557,7 @@ If parties agree a success fee based on the amount **actually received** by the 
 
 ## 8. Disputes, rejection and refunds
 
-A managed exchange needs a structured dispute process, but it must not promise that the platform can decide every legal dispute or reverse every payment.
+A managed transfer platform needs a structured dispute process (FR-CMP-04), but it must not promise that the platform can decide every legal dispute or reverse every payment.
 
 ### 8.1 Dispute categories
 
@@ -550,28 +606,29 @@ flowchart TD
 
 A dispute flag in our database does **not** freeze money at a bank or payment provider. The provider must support the hold, and a contractual and legal basis must exist.
 
-Describe the platform's service as **case management, facilitated resolution or mediation**, depending on what is actually provided. Never present it as a court or binding arbitral tribunal. Contracts should name an external forum, for example an arbitration institution (such as CIETAC or the Shanghai International Arbitration Center) or a competent people's court.
+Describe the platform's service as **case management, facilitated resolution or mediation**, depending on what is actually provided. Never present it as a court or binding arbitral tribunal. Contracts should name an external forum, for example an arbitration institution (such as CIETAC or the Shanghai International Arbitration Center) or a competent people's court (人民法院). For venue-routed deals, the venue can also mediate: the Shanghai rules make dispute mediation a venue duty (Art. 11).
 
 ---
 
 ## 9. Required database and backend modules
 
-The existing technology, demand, organization, introduction and deal records ([06 §4](06-implementation-design-v1.md)) remain. Add or formalize:
+The existing technology, demand, organization, introduction and deal collections ([06 §4.3, §4.9](06-implementation-design-v1.md)) remain. The table groups them with the records this operating model adds; names already defined in 06 are used as they are there. Collections are MongoDB collections with Mongoose models.
 
 | Module | Core records | Main purpose |
 | --- | --- | --- |
 | Identity and authority | `users`, `organizations`, `organization_memberships`, `organization_authorizations` | Who the user is and what they may do for an organization |
-| Technology and IP | `technologies`, `ip_assets`, `ownership_evidence`, `technology_offers`, `technology_versions` | What is offered, who claims rights, which evidence supports them |
-| Discovery | `demands`, `matches`, `shortlists`, `introductions` | Buyer needs, candidates, consent to introductions |
-| Negotiation | `deal_proposals`, `proposal_versions`, `proposal_responses`, `approval_requests` | Versioned offers, counter-offers, authorized decisions |
+| Technology and IP | `technologies`, `technology_versions`, `ip_assets`, `ip_asset_evidence`, `rights_claims`, `technology_offers` | What is offered, who claims rights, which evidence supports them |
+| Discovery | `demands`, `demand_versions`, `matches`, `shortlists`, `introduction_requests` | Buyer needs, candidates, consent to introductions |
+| Negotiation | `deals` (parties embedded), `proposal_versions`, `proposal_responses`, `approval_requests` | Versioned offers, counter-offers, authorized decisions |
 | Contracts | `contracts`, `contract_versions`, `contract_parties`, `contract_signatures`, `contract_conditions`, `contract_registrations` | Executed agreements, amendments, conditions precedent, CNIPA / technology-contract registrations |
 | Compliance | `compliance_cases`, `technology_control_reviews`, `regulatory_documents`, `cross_border_reviews` | Legal and regulatory gates |
-| Delivery | `milestones`, `deliverables`, `acceptance_cases`, `delivery_evidence` | Work, evidence, acceptance, corrections |
+| Venue route (R3) | `venue_submissions`, `buyer_registrations`, `venue_certificates` | Agent-of-record submissions, buyer registrations, venue-reported settlement status and certificates (§1.3) |
+| Delivery | `deal_milestones`, `deliverables`, `acceptance_cases`, `delivery_evidence` | Work, evidence, acceptance, corrections |
 | Payment obligations | `payment_obligations`, `invoices`, `fee_assessments` | Contractual amounts due and platform charges |
 | Provider integration | `payment_transactions`, `provider_events`, `funding_allocations`, `release_instructions`, `payouts`, `refunds` | External payment operations and verified outcomes |
 | Accounting | `ledger_accounts`, `ledger_entries`, `reconciliations` | Auditable accounting and reconciliation |
 | Disputes | `disputes`, `dispute_evidence`, `dispute_decisions`, `settlements` | Contested obligations and recorded outcomes |
-| Security and audit | `document_access_grants`, `document_access_events`, `audit_events`, `notifications` | Confidentiality, accountability, communication |
+| Security and audit | `documents`, `document_access_grants`, `document_access_events`, `audit_events` (in the separate, insert-only `tex_audit` database), `notifications` | Confidentiality, accountability, communication |
 
 ### 9.1 Financial database rules
 
@@ -587,24 +644,25 @@ The existing technology, demand, organization, introduction and deal records ([0
 - No arbitrary edits to ledger entries by administrators.
 - Keep immutable versions of contracts, proposals and approval decisions.
 
-For the self-hosted first version, keep the **Node.js (Express) modular monolith + MongoDB replica set + private file storage** architecture on the given servers ([06](06-implementation-design-v1.md), [11](11-target-runtime-node12-mongodb.md)). Every financial state change runs in a MongoDB transaction with write concern `majority`, together with its ledger entries, transition record and outbox event. Use separate modules for deals, compliance and payments instead of introducing microservices early. Host data inside mainland China.
+For the self-hosted first version, keep the **Node.js (Express) modular monolith + MongoDB replica set + private file storage** architecture on the given servers (Node.js 12.4, MongoDB 4.4 / 5.0, Mongoose 5.13) ([06](06-implementation-design-v1.md), [11](11-target-runtime-node12-mongodb.md)). Every financial state change runs in a MongoDB transaction with write concern `majority`, together with its ledger entries, transition record and outbox event. Use separate modules for deals, compliance and payments instead of introducing microservices early. Host data inside mainland China.
 
 ---
 
 ## 10. China launch checklist
 
-These are **release gates**, not optional enhancements.
+These are **release gates**, not optional enhancements. Where relevant, an item names the release in [10 §9](10-product-requirements.md) it gates and the open decision in [10 §12](10-product-requirements.md) it depends on.
 
 ### A. Platform registration and operating model
 
-- [ ] Chinese operating entity, business scope and platform service agreements confirmed.
-- [ ] Provider and seller verification, transaction rules and platform obligations under the E-Commerce Law in place.
-- [ ] ICP filing and any required value-added telecom licence (e.g. EDI) obtained (*legal validation required*).
-- [ ] Cybersecurity classified-protection (MLPS) grading and filing planned.
+- [ ] Chinese operating entity, business scope and platform service agreements confirmed (R1).
+- [ ] Provider and seller verification, transaction rules and platform obligations under the E-Commerce Law in place (R1).
+- [ ] ICP filing and any required value-added telecom licence (e.g. EDI) obtained (*legal validation required*; D-04; before R1 launch).
+- [ ] Cybersecurity classified-protection (MLPS) grading and filing planned (D-05; before R1 launch).
+- [ ] Platform name and public wording checked: no "交易所", no claim to perform venue functions (*legal validation required*; D-03).
 
 ### B. Payment and conditional holding
 
-- [ ] Written confirmation from the bank or payment institution **and** PRC counsel on: who receives and holds funds; who controls release; whether the arrangement is permitted for each deal type; how refunds, disputes and payouts work.
+- [ ] Written confirmation from the bank or payment institution **and** PRC counsel on: who receives and holds funds; who controls release; whether the arrangement is permitted for each deal type; how refunds, disputes and payouts work (D-02; before R3).
 - [ ] Confirmation of whether any additional licence or approval is required.
 
 ### C. Technology transfer and IP
@@ -623,26 +681,27 @@ These are **release gates**, not optional enhancements.
 
 ### E. Contracts and electronic signatures
 
-- [ ] Contract templates per deal type validated.
-- [ ] Authority checks, signature and seal process, document integrity and evidence retention validated.
-
-### F0. Venue route
-
-- [ ] Decision taken: register as a STEX (or CTEX) practising agent, partner with an existing agent, or apply for venue status ([10 §12 D-01](10-product-requirements.md)).
-- [ ] Agent obligations understood: verification opinion and joint liability for submissions, annual review, change reports within 10 working days.
+- [ ] Contract templates per deal type validated (R2).
+- [ ] E-signature provider selected; authority checks, signature and seal process, document integrity and evidence retention validated (D-06; R2).
 
 ### F. Technology-contract registration and tax
 
-- [ ] Registration-package generation and tracking in place under the 2026 Measures.
+- [ ] Registration-package generation and tracking in place under the 2026 Measures (R2).
 - [ ] Tax incentives and invoicing confirmed with a tax adviser.
+
+### G. Venue route
+
+- [ ] Decision taken: register as a STEX (or CTEX) practising agent, partner with an existing agent, or apply for venue status (D-01; before R3 design).
+- [ ] Agent obligations understood: verification opinion and joint liability for submissions, annual review, change reports within 10 working days (§1.3).
+- [ ] Data interface with the venue agreed (API or file exchange, FR-VEN-10).
 
 ### Data retention
 
-The E-Commerce Law requires covered transaction information to be kept for **at least three years** after transaction completion. Three years is **not** enough for every record: contracts, accounting records (accounting-archive rules require much longer retention for vouchers and ledgers), IP disputes, regulatory filings and legal claims may need more. Apply a retention schedule per record category, and preserve evidence under legal hold.
+The E-Commerce Law requires covered transaction information to be kept for **at least three years** after transaction completion. Three years is **not** enough for every record: contracts, accounting records (accounting-archive rules require much longer retention for vouchers and ledgers), IP disputes, regulatory filings and legal claims may need more. STEX itself keeps deal dossiers permanently or for 20, 10 or 5 years by class ([09 §2.5](09-reference-platform-features.md)). Apply a retention schedule per record category (FR-CMP-06, FR-DEAL-09), and preserve evidence under legal hold.
 
 ### Cross-border technology contract registration
 
-MOFCOM's **Measures for the Administration of Registration of Technology Import and Export Contracts** cover specified technology import and export contracts and set registration processes for free-category technologies. The 2009 text provides registration within 60 days after the contract takes effect, with royalty-based contracts counting from the first determination of the royalty base. Restricted technologies follow a separate licensing path. *Confirm the current text before relying on these deadlines.*
+MOFCOM's **Measures for the Administration of Registration of Technology Import and Export Contracts** cover specified technology import and export contracts and set registration processes for free-category technologies. The 2009 text provided registration within 60 days after the contract takes effect, with royalty-based contracts counting from the first determination of the royalty base. Restricted technologies follow a separate licensing path. The WIPO Lex record now marks the 2009 text as repealed (废止), so *confirm the rules currently in force before relying on any deadline*.
 
 Track a **regulatory case** for each cross-border contract with:
 
@@ -672,15 +731,17 @@ flowchart LR
     P6 --> P7["Phase 7<br/>Complex deal<br/>types"]
 ```
 
-| Phase | Scope |
-| --- | --- |
-| 1 — Organizations and roles | Identity, organization verification, membership, delegated authority, audit events |
-| 2 — Technology and demand | Listings, structured demands, review, publication, evidence, search |
-| 3 — Introductions and confidentiality | Expressions of interest, consent, controlled disclosure, NDA tracking, communications |
-| 4 — Proposals and contracts | Immutable proposal versions, counter-offers, approval routing, contract versions, signature evidence, compliance gates, contract registration |
-| 5 — Delivery and disputes | Milestones, acceptance criteria, evidence, correction cycles, dispute cases, termination |
-| 6 — Payment-provider integration | Payment requests, verified provider events, funding allocation, eligible release instructions, payouts, fees, refunds, reconciliation |
-| 7 — Complex deal types | Investment, joint ventures, royalties, cross-border contracts, specialized regulatory workflows |
+| Phase | Scope | Release in [10 §9](10-product-requirements.md) |
+| --- | --- | --- |
+| 1 — Organizations and roles | Identity, organization verification, membership, delegated authority, audit events | R0–R1 (delegated authority FR-ORG-04 in R2) |
+| 2 — Technology and demand | Listings, structured demands, review, publication, evidence, search | R1 |
+| 3 — Introductions and confidentiality | Expressions of interest, consent, controlled disclosure, NDA tracking, communications | R1 (NDAs and data rooms in R2) |
+| 4 — Proposals and contracts | Immutable proposal versions, counter-offers, approval routing, contract versions, signature evidence, compliance gates, contract registration | R2 |
+| 5 — Delivery and disputes | Milestones, acceptance criteria, evidence, correction cycles, dispute cases, termination | R2 (basic complaints from R1) |
+| 6 — Payment-provider integration | Payment requests, verified provider events, funding allocation, eligible release instructions, payouts, fees, refunds, reconciliation | R3, after decision D-02 |
+| 7 — Complex deal types | Investment, joint ventures, royalties, cross-border contracts, specialized regulatory workflows | R3 and later (cross-border screening FR-CMP-05 from R2) |
+
+The venue route (§1.3, FR-VEN) is built in R3, after decision D-01, in parallel with phase 6.
 
 ### 11.2 Minimum acceptance tests before launch
 
@@ -697,6 +758,8 @@ flowchart LR
 - [ ] Royalties and other continuing obligations survive closure of the initial delivery workflow.
 - [ ] An administrator cannot rewrite an executed contract, remove financial history or bypass a mandatory regulatory gate.
 - [ ] A patent assignment cannot be marked "completed" without CNIPA registration evidence.
+- [ ] A venue submission cannot be sent without the agent's verification opinion and approval by a second reviewer.
+- [ ] Deposits and prices of a venue-routed deal appear only as venue-reported status, never as funds held by the platform or its payment partner.
 
 ---
 
@@ -711,14 +774,20 @@ flowchart LR
 ```
 
 - Support **all deal types** in the architecture, but apply different contract, compliance, funding and acceptance rules to each, and keep investment and complex cross-border deals under specialist review.
+- Route formal listing, competitive bidding, venue settlement and certificates **through a licensed venue** as agent of record (§1.3); the platform prepares, verifies, tracks and records, but never performs venue functions itself.
 - Above all, treat platform-controlled holding of funds as a **legal and payment-provider dependency**, not as a feature that can be built safely with a database balance and a release button. That decision drives the payment integration, accounting design, dispute workflow and launch readiness.
 
 ---
 
 ## Sources
 
+Notes, excerpts and saved copies of these sources (with retrieval dates and archived links) are in [`references/`](references/README.md).
+
 - State Council, 《非银行支付机构监督管理条例》 (Decree No. 768), text as published: <https://www.pds.gov.cn/upload/files/2023/12/18/%E9%9D%9E%E9%93%B6%E8%A1%8C%E6%94%AF%E4%BB%98%E6%9C%BA%E6%9E%84%E7%9B%91%E7%9D%A3%E7%AE%A1%E7%90%86%E6%9D%A1%E4%BE%8B.pdf>; People's Daily report: <https://paper.people.com.cn/rmrb/html/2023-12/18/nw.D110000renmrb_20231218_1-17.htm>
 - STCSM, 《上海市技术交易场所管理细则》 (沪科规〔2025〕2号): <https://www.shanghai.gov.cn/nw12344/20250414/7d1e61e9a2de431aa524cb2f817845cf.html>
+- State Council, 《国务院关于清理整顿各类交易场所切实防范金融风险的决定》 (国发〔2011〕38号): <https://www.gov.cn/zwgk/2011-11/24/content_2002092.htm>
+- STEX rules on buyer registration (rule 82) and service institutions (rule 105), Internet Archive copies: <http://web.archive.org/web/20240718134706/https://www.stte.com/articles/82>, <http://web.archive.org/web/20240624032021/https://www.stte.com/articles/105> (all STEX rule sources: [09 Sources](09-reference-platform-features.md#sources))
+- State Council, 国发〔2016〕16号 (negotiated-price notice ≥ 15 days): <https://www.gov.cn/zhengce/content/2016-03/02/content_5048192.htm>
 - MOFCOM, Measures for the Administration of Registration of Technology Import and Export Contracts (WIPO Lex): <https://www.wipo.int/wipolex/en/text/199778>
 - China Law & Practice, MIIT revised technology-contract registration measures (2026): <https://www.chinalawandpractice.com/2026/02/27/ministry-of-industry-and-information-technology-measures-for-the-administration-of-the-recognition-and-registration-of-technology-contracts-revised/>
 - Ecovis, China updates technology contract registration rules for 2026: <https://www.ecovis.com/heidelberg-en/china-tech-contract-registration-2026/>

@@ -1,0 +1,749 @@
+
+
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>公示</title>
+    
+
+
+
+
+
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+
+
+
+
+
+<title></title>
+
+
+
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+
+<link rel="icon" href="/res/prj/images/favicon.ico" type="image/x-icon"/>
+<link rel="shortcut icon" href="/res/prj/images/favicon.ico" type="image/x-icon"/>
+<link rel="stylesheet" type="text/css" href="/res/prj/layui/css/layui.css"/>
+
+
+
+
+
+    
+        
+            
+            <link rel="stylesheet" type="text/css" href="/res/prj/css/all.min.c05424ab.css?uris=%2Fres%2Fprj%2Fcss%2Fall.csss&alias=%2Fres%2Fprj%2Fcss%2Fall.csss&isCompress=true&token=58bf026ce10cb8d7f9a7759543718a00" />
+        
+        
+    
+
+<script type="text/javascript" src="/res/prj/js/jquery-3.4.1.min.js?t=1767679686527"></script>
+<script type="text/javascript" src="/res/prj/js/jquery-migrate.min.js?t=1767679686527"></script>
+<script type="text/javascript" src="/res/prj/js/vue.js?t=1767679686527"></script>
+
+<script type="text/javascript">
+    window["P_basePath"] = "";
+    window["DesKey"] = "37A20F8339202630B40E3685395615D7";
+    window["enableWebSocket"] = "true" == "true";
+    window["P_connectWSSyncTime"] = parseInt("10");
+    window["P_connectWSLimit"] = parseInt("-1");
+    window["P_connectWSTimeout"] = parseInt("0");
+    // 设置token
+    window["Token"] = '5IHHMxKtlwfnyITQqFiVxnyzeK6milrjPxihSynel19kXotVnVs0YGv1EW9XbSgR3pyqRpEiQoFvf9fO+wIDsw==';
+</script>
+
+<link rel="stylesheet" href="/res/plugin/jbox/css/jbox.css?t=1767679686527" type="text/css"/>
+<script type="text/javascript" src="/res/plugin/jbox/js/jquery.jBox.js?t=1767679686527"></script>
+
+
+<link rel="stylesheet" href="/res/plugin/layer/skin/layer.css?t=1767679686527" type="text/css"/>
+<script type="text/javascript" src="/res/plugin/layer/layer.min.js?t=1767679686527"></script>
+<script type="text/javascript" src="/res/prj/layui/layui.js"></script>
+
+
+
+<script type="text/javascript" src="/res/js/des.js?t=1767679686527"></script>
+<script type="text/javascript" src="/res/js/utils-base-all.js?t=1767679686527"></script>
+<script type="text/javascript" src="/res/js/dialog.js?t=1767679686527"></script>
+<script type="text/javascript" src="/res/plugin/autocomplete/jquery.autocomplete.js?t=1767679686527"></script>
+<link rel="stylesheet" href="/res/plugin/autocomplete/jquery.autocomplete.css?t=1767679686527" type="text/css"/>
+
+<script type="text/javascript">
+    window["P_basePath"] = "";
+    window["DesKey"] = "37A20F8339202630B40E3685395615D7";
+    window["enableWebSocket"] = "true" == "true";
+    window["P_connectWSSyncTime"] = parseInt("10");
+    window["P_connectWSLimit"] = parseInt("-1");
+    window["P_connectWSTimeout"] = parseInt("0");
+
+    function P_checkIsLogin() {
+        if("false" != "true"){
+            Base.Tip.confirm("温馨提示","您还未登录，是否现在登录？",
+                function () {
+                    var reqUri = location.pathname + location.search;
+                    reqUri = reqUri.substr("".length);
+                    location.href="/page/login?reqUri=" + encodeURIComponent(reqUri);
+                }, function () {
+
+                }
+            );
+            return false;
+        }
+        return true;
+    }
+
+    $(function(){
+        if("false" == "true"){
+            isLogin();
+        }
+        //设置图片访问失败的错误图片
+        $('img').error(function(){
+            if($(this).attr('src').indexOf("/editorUpload/image") != -1){
+                $(this).attr('src',"/res/prj/images/bd_default.jpg");
+            }
+        });
+    });
+    function isLogin() {
+        Base.Ajax.post("/service/psncenter/account/session_sx",
+            true,
+            {
+            },
+            "json",
+            function (json, status) {
+                if (json.success) {
+                    setTimeout(function () {
+                        isLogin();
+                    }, 10000);
+                }else{
+                    window.location='/page/login';
+                }
+            }
+        );
+
+    }
+</script>
+
+
+
+
+
+    
+    <script type="text/javascript">
+        $(function(){
+            //设置标杆
+            var _line=parseInt($(window).height()/10);
+            $(window).scroll(function(){
+                //滚动，导航固定定位
+                if ($(window).scrollTop()>$(".default_detail_box").offset().top) {
+                    $('.monitor_tab').css({'margin':'0 auto','border-bottom:':'none'});
+                    $('.monitor_detail_top').css({'position':'fixed','top':'0', 'width':'100%','border-bottom':'solid 1px #e5e5e5'})
+                }else{
+                    $('.monitor_tab').css({'border-bottom':'solid 1px #e5e5e5'});
+                    $('.monitor_detail_top').css({'position':'','width':'','border-bottom':'none',})
+                };
+                $('.monitor_tab li').eq(0).addClass('current');
+                //滚动到标杆位置,导航加current
+                $('.monitor_tab_cont li').each(function(){
+                    var _target=parseInt($(this).offset().top-$(window).scrollTop()-_line);
+                    var _i=$(this).index();
+                    if (_target<=0) {
+                        $('.monitor_tab li').removeClass('current');
+                        $('.monitor_tab li').eq(_i).addClass('current');
+                    }
+                    //如果到达页面底部，给左侧导航最后一个加active
+                    else if($(document).height()==$(window).scrollTop()+$(window).height()){
+                        $('.monitor_tab li').removeClass('current');
+                        $('.monitor_tab li').eq($('.monitor_tab_cont li').length-1).addClass('current');
+                    }
+                });
+            });
+            $('.monitor_tab li').click(function(){
+                $(this).addClass('current').siblings().removeClass('current');
+                var _i=$(this).index();
+                $('body, html').animate({scrollTop:$('.monitor_tab_cont li').eq(_i).offset().top-_line},500);
+            });
+        });
+    </script>
+</head>
+
+
+<body>
+<div class="main">
+    <div class="project_detail_head">
+        <div class="detail_head_box">
+            <div class="project_detail_top">
+                <p class="title">上国会报废资产（555项设备）处置</p>
+                <div class="num">
+                    项目编号：ZZC20260001
+                </div>
+                <div class="clear"></div>
+            </div>
+            <div class="project_detail_cont">
+                <div class="project_price_box">
+                    <span class="project_price_name">竞标价格</span>
+							<span class="project_price_num">
+								<span class="fs30">
+
+                                   
+                                       
+                                       
+                                           0.0001万元
+                                       
+                                   
+
+
+
+                                </span>
+							</span>
+                </div>
+
+                <div class="xmjs_infor_box">
+                    <div class="xmjs_detail_label">
+                        <i class="xmjs_detail_click_icon"></i>
+                        <div class="xmjs_detail_label_infor">
+                            <span class="xmjs_detail_label_name">点击数</span>
+                            <span class="xmjs_detail_label_cont" id="wgcs"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="detail_info">
+                    <table class="table_info">
+                        <col width="10">
+                        <col width="10">
+                        <tbody>
+                        <tr>
+                            <th>信息披露起始日期</th>
+                            <td>
+                                
+                                    
+                                        
+                                        2026-01-05
+                                    
+                                    
+                                
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>信息披露截止日期</th>
+                            <td>
+                                
+                                    
+                                        
+                                        2026-01-12
+                                    
+                                    
+                                
+                            </td>
+                        </tr>
+                        </tbody>
+
+                    </table>
+                </div>
+                <div class="clear"></div>
+            </div>
+
+            
+                <table class="swzc_table_sm">
+                    <tbody>
+                    <tr>
+                        <th width="16%" rowspan="2">
+                            交易服务机构
+                        </th>
+                        <td width="30%" colspan="2" class="ptpb10 lh26">
+                            机构名称：简管（上海）信息科技有限公司
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="30%" class="ptpb10 lh26">
+                            项目经办人：钱雯寅
+                        </td>
+                        <td width="30%" class="ptpb10 lh26">
+                            联系方式：13774218166
+                        </td>
+                    </tr>
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                    </tbody>
+                </table>
+            
+            
+                <table class="swzc_table_sm">
+                    <tbody>
+                    <tr>
+                        <th width="16%" rowspan="2">
+                            交易机构
+                        </th>
+                        <td width="30%" colspan="2" class="ptpb10 lh26">
+                            交易机构部门：交易部
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="30%" class="ptpb10 lh26">
+                            交易机构业务负责人：赵一凡
+                        </td>
+                        <td width="30%" class="ptpb10 lh26">
+                            交易机构联系方式：15502172518
+                        </td>
+                    </tr>
+
+                    </tbody>
+                </table>
+            
+
+
+
+            <div class="clear"></div>
+        </div>
+
+        <div class="clear"></div>
+    </div>
+    <div class="default_detail_box">
+        <div class="monitor_detail_top">
+            <ul class="monitor_tab">
+                <li class="current">
+                    <a>资产信息</a>
+                </li>
+                <li>
+                    <a>看样及竞价时间安排</a>
+                </li>
+                <li>
+                    <a>标的底价及评估备案情况</a>
+                </li>
+                <li>
+                    <a>在线竞价说明</a>
+                </li>
+                <li>
+                    <a>意向受让方资格条件</a>
+                </li>
+                <li>
+                    <a>标的看样规范</a>
+                </li>
+                <li>
+                    <a>保证金/价款说明</a>
+                </li>
+                <li>
+                    <a>安全责任</a>
+                </li>
+                <li>
+                    <a>标的照片</a>
+                </li>
+            </ul>
+        </div>
+
+        <ul class="monitor_tab_cont">
+            <li>
+                <div class="tab_title">
+                    <div class="fl">告知与承诺</div>
+                    <div class="clear"></div>
+                </div>
+                <table class="xm_tab " cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    <tr>
+                        <td class="xmtd2"><pre style="font-family: microsoft yahei">    参与本次资产交易的意向受让方，如首次参与，需向上海技术交易所提交开户申请。因相关物品系废旧资产，转让方不提供材质单、质量保证书、使用说明书等相关资料文件，不做任何质保承诺，意向受让方一经提交受让申请，即表明已完全了解与认可标的资产的现状及瑕疵，愿意承担由此产生的商业风险。以现场看样状况作为标的资产交割条件，无论相关资产是否能够经过维修继续发挥其原有作用，受让方承诺不会就相关资产的质量对转让方寻求赔偿。</pre>
+                        </td>
+                    </tr>
+
+                    </tbody>
+                </table>
+            </li>
+            <li>
+                <div class="tab_title">
+                    <div class="fl">资产信息</div>
+                    <div class="clear"></div>
+                </div> <pre style="font-family: microsoft yahei">报废资产一批</pre>
+
+
+                <table class="xm_tab tc" cellspacing="0" cellpadding="0" width="100%" style="display: none">
+                    <tbody>
+                    <tr>
+                        <td class="xmtd1" width="6%">序号</td>
+                        <td class="xmtd1" width="8%">资产编号</td>
+                        <td class="xmtd1" width="8%">资产名称</td>
+                        <td class="xmtd1" width="8%">规格型号</td>
+                        <td class="xmtd1" width="8%">计量单位</td>
+                        <td class="xmtd1" width="6%">数量</td>
+                        <td class="xmtd1" width="8%">面积</td>
+                        <td class="xmtd1" width="8%">购置日期</td>
+                        <td class="xmtd1" width="8%">账面原值</td>
+                        <td class="xmtd1" width="6%">累计折旧</td>
+                        <td class="xmtd1" width="6%">账面净值</td>
+                        <td class="xmtd1" width="8%">评估价值</td>
+                    </tr>
+
+                    
+
+                    </tbody>
+                </table>
+            </li>
+            <li>
+                <div class="tab_title">
+                    <div class="fl">看样及竞价时间安排</div>
+                    <div class="clear"></div>
+                </div>
+                <table class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    <tr>
+                        <td class="xmtd1" style="width: 30%">看样报名</td>
+                        <td class="xmtd2" colspan="3"><pre style="font-family: microsoft yahei">已开户的意向受让方在公告期内自行或委托交易服务机构向上海技术交易所提交《意向受让申请书》及《业务经办人授权书》，经上技所资格审核通过后参与看样。</pre>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1" style="width: 30%">看样组织方</td>
+                        <td class="xmtd2" colspan="3"><pre style="font-family: microsoft yahei">简管（上海）信息科技有限公司，联系人：钱雯寅 联系方式：13774218166</pre>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1" style="width: 30%">竞价时间</td>
+                        <td class="xmtd2" colspan="3"><pre style="font-family: microsoft yahei">以交易所竞价公告为准</pre>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1" style="width: 30%">竞价结果公示时间</td>
+                        <td class="xmtd2" colspan="3"><pre style="font-family: microsoft yahei">以交易所竞价公告为准</pre>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+
+            </li>
+            <li>
+                <div class="tab_title">
+                    <div class="fl">标的底价及评估备案情况</div>
+                    <div class="clear"></div>
+                </div>
+                <table class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    <tr>
+                        <td class="xmtd1" width="20%">竞标底价</td>
+                        <td class="xmtd2" colspan="2">
+
+                            
+                                
+                                
+                                    0.0001万元
+                                
+                            
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1" rowspan="5">标的资产评估情况</td>
+                        <td class="xmtd1" width="20%">账面值（万元）</td>
+                        <td class="xmtd2" width="60%">145.121164</td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1">估值（万元）</td>
+                        <td class="xmtd2"></td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1">估值依据类别</td>
+                        <td class="xmtd2"></td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1">估值机构</td>
+                        <td class="xmtd2"></td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1">基准日</td>
+                        <td class="xmtd2"></td>
+                    </tr>
+
+                    </tbody>
+                </table>
+            </li>
+            <li>
+                <div class="tab_title">
+                    <div class="fl">在线竞价说明</div>
+                    <div class="clear"></div>
+                </div>
+                <table class="xm_tab " cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    <tr>
+                        <td class="xmtd2"><pre style="font-family: microsoft yahei">1.竞价保证金金额及支付时间详见公告第十条。
+2.竞价时间：以交易所竞价公告为准
+3.竞价结果公示时间：以交易所竞价公告为准
+4.竞价说明：
+上海技术交易所组织竞买人通过在线竞价-多次报价的方式确定受让方和最终成交价格，竞价时间由上技所通过书面函件、电子邮件或在官网发布公告的方式告知竞买人，竞买人应当严格按照规定的程序参与竞价。本项目在线竞价活动分为两个竞价期，即定时报价期和连续报价期，均采用加价的方式进行。未按照竞价程序及时间安排表规定的时间登陆上技所官网在线竞价系统的竞买人自动失去竞买资格，不得再参与竞价。通过上技所官网在线竞价系统，确定报价最高的竞买人为受让方。
+定时报价期不设置限时竞价周期，对竞买人可提交的有效报价次数不做限制。竞买人首次报价不得低于挂牌底价，有效报价不低于该次竞价活动设定的加价幅度的整数倍，且不高于设定的最高加价幅度，若某报价人为当前最高有效报价的报价人，则该报价人必须等到其他报价人报出新的有效报价后，方可在其他报价人报出的最高有效报价基础上继续加价。在定时报价期限内未出现有效报价则本次竞价终结。
+定时报价期结束后自动进入连续报价期，遵循“价格优先、时间优先”的原则，根据定时报价结果系统自动确定连续报价的起始金额。连续报价期由多个限时竞价周期组成，每个限时竞价周期为5分钟，周期内如出现有效报价，则进入新的报价周期；在一个限时竞价周期内如未出现有效报价，则当前的最新有效报价方即成为受让人，竞价终结。
+当仅有一家竞买人参与竞价时，该竞买人通过上海技术交易所官网在线竞价系统在规定的时间内一次性输入有效报价，成为受让方。
+5.加价幅度：首次报价不得低于挂牌底价，下一轮报价应高于上一轮报价。每次报价的加价幅度为人民币 100.00元或 100.00元的整数倍。最低加价幅度为人民币 100.00元，最高加价幅度为人民币 1,000.00元。
+6.当出现以下几种情况时，本次竞价活动中止或终结：
+6.1当出现下列情况之一时，本次竞价活动中止：
+(1)在竞价过程中出现不可抗力或网络系统故障或其他因素，导致竞价活动无法正常进行的，组织方可根据上述情况决定竞价活动予以中止（暂停）；
+(2)组织方确定应当中止竞价活动的其他情形。
+6.2竞价中止的，当导致竞价活动无法正常进行的因素消除后，组织方在调整时间后继续开展竞价活动。若竞价记录可以恢复的，在原基础上继续竞价；若竞价记录无法恢复的，重新竞价。转让方和组织方不就竞价活动中止承担任何责任。
+6.3当出现下列情况之一时，本次竞价活动终结：
+(1)应价时间截止，没有竞买人报价的，本次竞价活动终结；
+(2)最终确定的受让方放弃受让的，本次竞价活动终结；
+(3)在竞价过程中出现不可抗力或其它因素，导致竞价活动无法正常进行的，组织方认为需要终结的。
+7.组织方出具竞价结果通知书后，本次竞价活动结束。
+8. 交易双方应于上技所官网发布的在线竞价程序及时间安排表规定的时间内签署《资产交易合同》。</pre>
+                        </td>
+                    </tr>
+
+                    </tbody>
+                </table>
+            </li>
+            <li>
+                <div class="tab_title">
+                    <div class="fl">意向受让方资格条件</div>
+                    <div class="clear"></div>
+                </div>
+                <table class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    <tr>
+                        <td class="xmtd2"><pre style="font-family: microsoft yahei">1、依法设立并有效存续的境内注册企业法人，财务状况良好、有信誉，以及足够的支付能力；
+2、从事再生资源或废旧物资回收的企业，具有独立承担民事责任的能力，经营范围包括废旧物资回收等； 
+3、近三年在经营活动中无重大违法记录； 
+4、不得为“信用中国”网站中列入失信被执行人名单、重大税收违法案件当事人、政府采购严重违法失信行为记录名单的供应商。
+5、其他：</pre>
+                        </td>
+                    </tr>
+
+                    </tbody>
+                </table>
+            </li>
+            <li>
+                <div class="tab_title">
+                    <div class="fl">标的看样规范</div>
+                    <div class="clear"></div>
+                </div>
+                <table class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    <tr>
+                        <td class="xmtd2"> <pre style="font-family: microsoft yahei">1.上海技术交易所不提供纸质看样清单明细，意向受让方自行在官网下载《废旧资产信息表》；
+2.上海技术交易所通知意向受让方标的看样时间和地点，意向受让方自行前往；
+3.意向受让方仅允许安排1人参与看样，服从上海技术交易所现场安排；
+4.到看样现场，中心看样联系人未到场时，不要主动联系转让方；无法及时抵达看样地点，提前联系中心看样联系人，获知动向；违规者下次不再安排看样；
+5.其他： </pre>
+                        </td>
+                    </tr>
+
+                    </tbody>
+                </table>
+            </li>
+            <li>
+                <div class="tab_title">
+                    <div class="fl">保证金/价款说明</div>
+                    <div class="clear"></div>
+                </div>
+                <table class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    <tr>
+                        <td class="xmtd1" width="20%">保证金设定及处置</td>
+                        <td class="xmtd2" width="80%">
+												<pre style="font-family: microsoft yahei">1.竞价保证金：  2,000.00   元。
+2.保证金缴纳时间：本项目信息发布公告期内，意向受让方将竞价保证金支付至上海技术交易所保证金结算账户，逾期无效。
+3.竞价保证金以竞价企业账户转账为准，不接受个人账户。
+友情提示：竞买人请注意网银或转账到账所需时间，以免未能按时到账影响参与竞价。
+4.为保护交易各方合法利益，转让方在此做出特别提示，意向受让方一旦通过资格确认且交纳保证金，即成为竞买人，并对如下内容作出承诺：如竞买人存在以下任何一种情形，将承担缔约过失责任，转让方和上海技术交易所可扣除该竞买人的保证金，作为对相关方的补偿；该保证金不足以补偿的，相关方可按实际损失继续追偿。转让方同时承诺，如因转让方原因，导致项目无法正常推进或者发生其他违规违约行为时，以对竞买人设定的承诺条件承担同等损害赔偿责任。
+1）竞价方撤销竞价的；
+2）受让方未在5个工作日内签订合同（合同范本见附件）的；
+3）违反交易保证金的有关规定或其他违规违约情形的。
+5.未成交的意向受让方的竞价保证金，将在开标结束后3个工作日无息退还。受让方的竞价保证金，在签订合同后转为履约保证金，完成商品交割后3个工作日内退还。如不履行合同，上海技术交易所有权扣除其履约保证金，不予退还。
+6.上海技术交易所保证金结算账户：
+户名：上海技术交易所有限公司
+帐号：98300078801000003988
+开户行：上海浦东发展银行徐汇支行</pre>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1">交易价款及服务费支付要求</td>
+                        <td class="xmtd2"> <pre style="font-family: microsoft yahei">1.交易价款支付及票据
+全部交易价款由受让方在资产交易合同签订之日起3个工作日内支付至上海技术交易所价款结算账户，上海技术交易所开具收据。
+2.交易服务费支付及票据
+受让方在资产交易合同签订之日起3个工作日内，按照成交价格的5%向上海技术交易所支付交易服务费。上海技术交易所开具增值税普通发票。
+3.上海技术交易所交易价款结算账户：
+户名：上海技术交易所有限公司
+帐号：98300078801000003988
+开户行：上海浦东发展银行徐汇支行
+4.上海技术交易所交易服务费结算账户：
+户名：上海技术交易所有限公司
+帐号：31001512200055713224
+开户行：中国建设银行上海徐汇支行</pre>
+                        </td>
+                    </tr>
+
+
+                    </tbody>
+                </table>
+            </li>
+            <li>
+                <div class="tab_title">
+                    <div class="fl">安全责任</div>
+                    <div class="clear"></div>
+                </div>
+                <table class="xm_tab " cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    <tr>
+                        <td class="xmtd2">
+                            
+                                
+                                
+<pre style="font-family: microsoft yahei">是否需要签订《安全责任承诺书》:否</pre>
+                                
+                            
+                        </td>
+                    </tr>
+
+                    </tbody>
+                </table>
+            </li>
+
+            <li>
+                <div class="tab_title">
+                    <div class="fl">资产交付</div>
+                    <div class="clear"></div>
+                </div>
+                <table class="xm_tab " cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    <tr>
+                        <td class="xmtd2"><pre style="font-family: microsoft yahei">受让方支付全部交易价款及交易服务费后，上海技术交易所向受让方出具《资产交易提货单》，转让方依据受让方出示的提货单予以交付资产。
+完成资产的交接手续后，交易双方应当在《资产交付确认书》上签字确认，并由受让方将资产交付确认书报送上技所核查。经核查无误后，上技所将在5个工作日向转让方划出交易价款，并向受让方无息退还履约保证金和安全责任保证金。</pre>
+                        </td>
+                    </tr>
+
+                    </tbody>
+                </table>
+            </li>
+
+            <li>
+                <div class="tab_title">
+                    <div class="fl">标的图片 </div>
+                    <div class="clear"></div>
+                </div>
+                
+                    <div class="layui-carousel" id="test10">
+                        <div carousel-item class="tc">
+                            
+                                <div>
+                                    <img style="height:100%" src="/LbFiles/ZS?type=swzc_bdtp&id=7321&index=3&fname=2adb1e41f5c5da5c6d4025329c6e253b.jpg" />
+                                </div>
+                            
+                                <div>
+                                    <img style="height:100%" src="/LbFiles/ZS?type=swzc_bdtp&id=7321&index=4&fname=34fd4e17da229fa341765600274a3cfa.jpg" />
+                                </div>
+                            
+                                <div>
+                                    <img style="height:100%" src="/LbFiles/ZS?type=swzc_bdtp&id=7321&index=5&fname=59ce04e4d3564b9527b2755869a6d1cf.jpg" />
+                                </div>
+                            
+                        </div>
+                    </div>
+                
+
+            </li>
+
+            <li>
+                <div class="tab_title">
+                    <div class="fl">公示附件 </div>
+                    <div class="clear"></div>
+                </div>
+                
+                    
+                        
+                            <div>
+                                <a href="/LbFiles?type=swzc_gsfj&id=7321&fname=%E8%B5%84%E4%BA%A7%E6%B8%85%E5%8D%95%EF%BC%88%E6%96%B0%EF%BC%89.xls&index=1" target="_blank" >资产清单（新）.xls</a>
+                            </div>
+                        
+                    
+                    
+                
+
+            </li>
+        </ul>
+    </div>
+    <div class="clear"></div>
+</div>
+
+
+
+
+</body>
+
+<script>
+    $(function () {
+
+        Base.Ajax.post('/service/s/prjs/real_right/getWGCS', true,
+                {
+                    id: '9348'
+                },
+                'json',
+                function (json) {
+                    if (json.success) {
+                        $('#wgcs').html(json.object.data.WGCS);
+                    } else {
+                        $('#wgcs').html('0');
+                    }
+                }
+        )
+
+    });
+</script>
+<style type="text/css">
+    .monitor_tab li a{
+        padding: 0 8px;
+    }
+    .layui-carousel{
+        margin: 0 auto;
+    }
+    .monitor_tab_cont .layui-carousel-ind li{
+        margin-bottom: auto;
+    }
+</style>
+<script>
+    layui.use(['form', 'element', 'carousel'], function() {
+        var $ = layui.jquery,
+                element = layui.element; //Tab的切换功能，切换事件监听等，需要依赖element模块
+
+        var form = layui.form,
+                layer = layui.layer;
+
+        var carousel = layui.carousel;
+
+
+
+        //图片轮播banner
+        carousel.render({
+            elem: '#test10',
+            anim: 'fade',
+            full: false,
+            interval: 4000,
+            width: '100%',
+            height: '500px'
+        });
+
+        //图片轮播gsfj_img
+        carousel.render({
+            elem: '#gsfj_img',
+            anim: 'fade',
+            full: false,
+            interval: 4000,
+            width: '100%',
+            height: '500px'
+        });
+
+    });
+
+</script>
+
+
+</html>

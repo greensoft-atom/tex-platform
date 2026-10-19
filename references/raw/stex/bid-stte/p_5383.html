@@ -1,0 +1,729 @@
+
+
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>意向披露</title>
+    
+
+
+
+
+
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+
+
+
+
+
+<title></title>
+
+
+
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+
+<link rel="icon" href="/res/prj/images/favicon.ico" type="image/x-icon"/>
+<link rel="shortcut icon" href="/res/prj/images/favicon.ico" type="image/x-icon"/>
+<link rel="stylesheet" type="text/css" href="/res/prj/layui/css/layui.css"/>
+
+
+
+
+
+    
+        
+            
+            <link rel="stylesheet" type="text/css" href="/res/prj/css/all.min.c05424ab.css?uris=%2Fres%2Fprj%2Fcss%2Fall.csss&alias=%2Fres%2Fprj%2Fcss%2Fall.csss&isCompress=true&token=58bf026ce10cb8d7f9a7759543718a00" />
+        
+        
+    
+
+<script type="text/javascript" src="/res/prj/js/jquery-3.4.1.min.js?t=1772821016708"></script>
+<script type="text/javascript" src="/res/prj/js/jquery-migrate.min.js?t=1772821016708"></script>
+<script type="text/javascript" src="/res/prj/js/vue.js?t=1772821016708"></script>
+
+<script type="text/javascript">
+    window["P_basePath"] = "";
+    window["DesKey"] = "E2CBA5A55B4D154CC7BD1157875A9E07";
+    window["enableWebSocket"] = "true" == "true";
+    window["P_connectWSSyncTime"] = parseInt("10");
+    window["P_connectWSLimit"] = parseInt("-1");
+    window["P_connectWSTimeout"] = parseInt("0");
+    // 设置token
+    window["Token"] = 'PCnYA9u1585JfoH5Kua2cIY5jB29ZF4t6S+SEjPnqKuX7d046OCby2r7XUzHgxV578f1J3gN1N0dlKL6iPcD3g==';
+</script>
+
+<link rel="stylesheet" href="/res/plugin/jbox/css/jbox.css?t=1772821016708" type="text/css"/>
+<script type="text/javascript" src="/res/plugin/jbox/js/jquery.jBox.js?t=1772821016708"></script>
+
+
+<link rel="stylesheet" href="/res/plugin/layer/skin/layer.css?t=1772821016708" type="text/css"/>
+<script type="text/javascript" src="/res/plugin/layer/layer.min.js?t=1772821016708"></script>
+<script type="text/javascript" src="/res/prj/layui/layui.js"></script>
+
+
+
+<script type="text/javascript" src="/res/js/des.js?t=1772821016708"></script>
+<script type="text/javascript" src="/res/js/utils-base-all.js?t=1772821016708"></script>
+<script type="text/javascript" src="/res/js/dialog.js?t=1772821016708"></script>
+<script type="text/javascript" src="/res/plugin/autocomplete/jquery.autocomplete.js?t=1772821016708"></script>
+<link rel="stylesheet" href="/res/plugin/autocomplete/jquery.autocomplete.css?t=1772821016708" type="text/css"/>
+
+<script type="text/javascript">
+    window["P_basePath"] = "";
+    window["DesKey"] = "E2CBA5A55B4D154CC7BD1157875A9E07";
+    window["enableWebSocket"] = "true" == "true";
+    window["P_connectWSSyncTime"] = parseInt("10");
+    window["P_connectWSLimit"] = parseInt("-1");
+    window["P_connectWSTimeout"] = parseInt("0");
+
+    function P_checkIsLogin() {
+        if("false" != "true"){
+            Base.Tip.confirm("温馨提示","您还未登录，是否现在登录？",
+                function () {
+                    var reqUri = location.pathname + location.search;
+                    reqUri = reqUri.substr("".length);
+                    location.href="/page/login?reqUri=" + encodeURIComponent(reqUri);
+                }, function () {
+
+                }
+            );
+            return false;
+        }
+        return true;
+    }
+
+    $(function(){
+        if("false" == "true"){
+            isLogin();
+        }
+        //设置图片访问失败的错误图片
+        $('img').error(function(){
+            if($(this).attr('src').indexOf("/editorUpload/image") != -1){
+                $(this).attr('src',"/res/prj/images/bd_default.jpg");
+            }
+        });
+    });
+    function isLogin() {
+        Base.Ajax.post("/service/psncenter/account/session_sx",
+            true,
+            {
+            },
+            "json",
+            function (json, status) {
+                if (json.success) {
+                    setTimeout(function () {
+                        isLogin();
+                    }, 10000);
+                }else{
+                    window.location='/page/login';
+                }
+            }
+        );
+
+    }
+</script>
+
+
+
+
+
+    
+    <script type="text/javascript">
+        $(function(){
+            //设置标杆
+            var _line=parseInt($(window).height()/10);
+            $(window).scroll(function(){
+                //滚动，导航固定定位
+                if ($(window).scrollTop()>$(".default_detail_box").offset().top) {
+                    $('.monitor_tab').css({'margin':'0 auto','border-bottom:':'none'});
+                    $('.monitor_detail_top').css({'position':'fixed','top':'0', 'width':'100%','border-bottom':'solid 1px #e5e5e5'})
+                }else{
+                    $('.monitor_tab').css({'border-bottom':'solid 1px #e5e5e5'});
+                    $('.monitor_detail_top').css({'position':'','width':'','border-bottom':'none',})
+                };
+                $('.monitor_tab li').eq(0).addClass('current');
+                //滚动到标杆位置,导航加current
+                $('.monitor_tab_cont li').each(function(){
+                    var _target=parseInt($(this).offset().top-$(window).scrollTop()-_line);
+                    var _i=$(this).index();
+                    if (_target<=0) {
+                        $('.monitor_tab li').removeClass('current');
+                        $('.monitor_tab li').eq(_i).addClass('current');
+                    }
+                    //如果到达页面底部，给左侧导航最后一个加active
+                    else if($(document).height()==$(window).scrollTop()+$(window).height()){
+                        $('.monitor_tab li').removeClass('current');
+                        $('.monitor_tab li').eq($('.monitor_tab_cont li').length-1).addClass('current');
+                    }
+                });
+            });
+            $('.monitor_tab li').click(function(){
+                $(this).addClass('current').siblings().removeClass('current');
+                var _i=$(this).index();
+                $('body, html').animate({scrollTop:$('.monitor_tab_cont li').eq(_i).offset().top-_line},500);
+            });
+        });
+    </script>
+</head>
+
+<body>
+
+
+
+<div class="main">
+    <div class="project_detail_head">
+
+        <div class="detail_head_box">
+            <div class="project_detail_top">
+                <p class="title">
+                    
+                《二十四节气亲子读本》</p>
+                <div class="num">
+                    项目编号：20240034
+
+                </div>
+                <div class="clear"></div>
+            </div>
+            <div class="project_detail_cont">
+                <div class="project_price_box">
+                    <span class="project_price_name">交易价格</span>
+                    <span class="project_price_num">
+								<span class="fs30">
+                                    
+                                        
+                                        
+                                        价格面议(场外结算)
+                                        
+                                    
+                                </span>
+							</span>
+                </div>
+
+                <div class="xmjs_infor_box">
+                    <div class="xmjs_detail_label">
+                        <i class="xmjs_detail_category_icon"></i>
+                        <div class="xmjs_detail_label_infor">
+                            <span class="xmjs_detail_label_name">标的类型</span>
+                            <span class="xmjs_detail_label_cont">技术服务</span>
+                        </div>
+                    </div>
+                    <div class="xmjs_detail_label">
+                        <i class="xmjs_detail_click_icon"></i>
+                        <div class="xmjs_detail_label_infor">
+                            <span class="xmjs_detail_label_name">点击数</span>
+                            <span class="xmjs_detail_label_cont" id="wgcs">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="detail_info">
+                    <table class="table_info">
+                        <col width="10">
+                        <col width="10">
+                        <tbody>
+                        <tr>
+                            <th>信息披露起始日期</th>
+                            <td>
+                                
+                                
+                                    
+                                    2024-03-15
+                                
+                                
+                                
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>信息披露截止日期</th>
+                            <td>
+                                
+                                
+                                    
+                                    2025-03-19
+                                
+                                
+                                
+                            </td>
+                        </tr>
+                        </tbody>
+
+                    </table>
+                </div>
+                <div class="clear"></div>
+            </div>
+            
+                <table class="swzc_table_sm" >
+                    
+                        
+                        
+                            <tbody>
+                                <tr>
+                                    <th width="16%" rowspan="2">
+                                        技术服务机构
+                                    </th>
+                                    <td width="60%" colspan="2" class="ptpb10 lh26">
+                                        机构名称：上海华云实业有限公司
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td width="30%" class="ptpb10 lh26">
+                                        项目经办人：繆春燕
+                                    </td>
+                                    <td width="30%" class="ptpb10 lh26">
+                                        联系方式：13512131478
+                                    </td>
+                                </tr>
+                                </tbody>
+                        
+                    
+                </table>
+            
+            
+                <table class="swzc_table_sm" >
+                    <tbody>
+                    <tr>
+                        <th width="16%" rowspan="2">
+                            交易机构
+                        </th>
+                        <td width="60%" colspan="2" class="ptpb10 lh26">
+                            交易机构部门：交易部
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="30%" class="ptpb10 lh26">
+                            交易机构业务负责人：朱思聪
+                        </td>
+                        <td width="30%" class="ptpb10 lh26">
+                            交易机构联系方式：15900572944
+                        </td>
+                    </tr>
+
+                    </tbody>
+                </table>
+            
+            <div class="clear"></div>
+        </div>
+
+
+
+    </div>
+    <div class="default_detail_box">
+        <div class="monitor_detail_top">
+            <ul class="monitor_tab">
+                <li class="current">
+                    <a>项目基本情况</a>
+                </li>
+                <li>
+                    <a>挂牌信息</a>
+                </li>
+                <li>
+                    <a>申请方主体信息</a>
+                </li>
+                <li>
+                    <a>意向交易条件</a>
+                </li>
+                <li>
+                    <a>申请方承诺函</a>
+                </li>
+                <li>
+                    <a>公示附件</a>
+                </li>
+            </ul>
+        </div>
+
+        <ul class="monitor_tab_cont">
+            <li>
+                <div class="tab_title">
+                    <div class="fl">项目基本情况</div>
+                    <div class="clear"></div>
+                </div>
+                <table class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    <tr>
+                        <td class="xmtd1" width="25%">项目名称</td>
+                        <td class="xmtd2" width="25%">《二十四节气亲子读本》</td>
+                        <td class="xmtd1" width="25%">项目编号</td>
+                        <td class="xmtd2" width="25%">20240034</td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1">项目类型</td>
+                        <td class="xmtd2">技术服务</td>
+                        <td class="xmtd1">交易专板</td>
+                        <td class="xmtd2">气象技术交易专板;科普专板</td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1">挂牌起始日</td>
+                        <td class="xmtd2">2024-03-15</td>
+                        <td class="xmtd1">挂牌截止日</td>
+                        <td class="xmtd2">2025-03-19</td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1">技术领域</td>
+						
+							
+							
+							
+								<td class="xmtd2" colspan="3">气象</td>
+							
+						
+                  
+                        
+                    </tr>
+                    
+                        
+                        
+                        
+                        
+                            
+                            
+
+                            <tr>
+                                <td class="xmtd1" rowspan="2">服务的内容方式和要求</td>
+                                <td class="xmtd1">服务内容</td>
+                                <td class="xmtd2" colspan="2">
+                                    信息服务;供应服务;技术文献服务;气象服务
+                                    
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td class="xmtd1">简介</td>
+                                <td class="xmtd2" colspan="2">
+                                    <pre><p><span style=";font-family:宋体;font-size:16px"><span style="font-family:宋体">《二十节气亲子读本》以二十四节气为时间线索，将中华民族传统的劳动习俗串联起来，以童趣盎然的插画让孩子们认识趣味的二十四节气，激发学生对二十四节气的学习兴趣，</span> <span style="font-family:宋体">课程中还囊括了二十四节气中的民间习俗，配有全面的实践过程指导，引导学生和家长一同体验二十四节气民俗。</span></span></p><p><span style=";font-family:宋体;font-size:16px"><span style="font-family:宋体"></span></span></p><p><img src="/UserFiles/Image/3221/ss_1713420457522.png"/></p><p><img src="/UserFiles/Image/3221/ss_1713420457618.png"/></p><p><img src="/UserFiles/Image/3221/ss_1713420457659.png"/></p><p><span style=";font-family:宋体;font-size:16px"><span style="font-family:宋体"><br/></span></span><br/></p></pre>
+                                </td>
+                            </tr>
+                        
+                        
+                        
+                        
+                        
+                    
+
+
+                    </tbody>
+                </table>
+            </li>
+            <li>
+                <div class="tab_title">
+                    <div class="fl">挂牌信息</div>
+                    <div class="clear"></div>
+                </div>
+                <table  class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    <tr>
+                        <td class="xmtd1" width="25%">信息发布公告期（工作日）</td>
+                        <td class="xmtd2" width="75%" colspan="3">256</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </li>
+            <li>
+                <div class="tab_title">
+                    <div class="fl">申请方主体信息</div>
+                    <div class="clear"></div>
+                </div>
+                
+                    <table  class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                        <tbody>
+                        
+                            
+                                <tr>
+                                    <td width="25%" class="xmtd1">转让方类型</td>
+                                    <td width="25%" class="xmtd2">法人</td>
+                                    <td width="25%" class="xmtd1">法人名称</td>
+                                    <td width="25%" class="xmtd2">上海市闵行区气象局</td>
+                                </tr>
+                                <tr>
+                                    <td width="25%" class="xmtd1">法定代表人或负责人</td>
+                                    <td width="25%" class="xmtd2">倪春欢</td>
+                                    <td width="25%" class="xmtd1">注册地(地址)</td>
+                                    <td width="25%" class="xmtd2">上海市闵行区莘浜路555号</td>
+                                </tr>
+                                <tr>
+                                    <td width="25%" class="xmtd1">注册资本(万元)</td>
+                                    <td width="25%" class="xmtd2">109.000000</td>
+                                    <td width="25%" class="xmtd1">企业类型</td>
+                                    <td width="25%" class="xmtd2">其他组织机构</td>
+                                </tr>
+                                <tr>
+                                    <td width="25%" class="xmtd1">经济类型</td>
+                                    <td width="25%" class="xmtd2">国有事业单位，国有社团等</td>
+                                    <td width="25%" class="xmtd1">经营规模</td>
+                                    <td width="25%" class="xmtd2">小型</td>
+                                </tr>
+                                <tr>
+                                    <td width="25%" class="xmtd1">所属行业</td>
+                                    <td width="25%" class="xmtd2"></td>
+                                    <td width="25%" class="xmtd1">统一社会信用代码</td>
+                                    <td width="25%" class="xmtd2">12310000425013309U</td>
+                                </tr>
+                                <tr>
+                                    <td width="25%" class="xmtd1">联系人</td>
+                                    <td width="25%" class="xmtd2">柏桦</td>
+                                    <td width="25%" class="xmtd1">电话</td>
+                                    <td width="25%" class="xmtd2">18918206027</td>
+                                </tr>
+                                <tr>
+                                    <td width="25%" class="xmtd1">邮箱</td>
+                                    <td width="25%" class="xmtd2"></td>
+                                    <td width="25%" class="xmtd1">联系地址</td>
+                                    <td width="25%" class="xmtd2"></td>
+                                </tr>
+                                
+                                
+                            
+                            
+                        
+                        </tbody>
+                    </table>
+                
+            </li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            <li>
+                <div class="tab_title">
+                    <div class="fl">意向交易条件</div>
+                    <div class="clear"></div>
+                </div>
+                <table  class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    
+                        
+                        
+                        
+                        
+                            <tr>
+                                <td width="25%" class="xmtd1" rowspan="2">
+                                    意向合作方式
+                                </td>
+                                <td width="25%" class="xmtd2" colspan="3">
+                                        许可使用
+                                    
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="xmtd1">
+                                    简介
+                                </td>
+                                <td class="xmtd2" colspan="3">1、本项目公告期即为尽职调查期，意向被许可方在挂牌公告期间，有权利和义务自行对标的进行全面了解。
+2、意向被许可方在充分了解标的情况下，在挂牌公告期内向上海技术交易所递交受让申请，申请材料包括但不限于：主体资格证明、《意向受让登记表》等。意向被许可方应在《意向受让登记表》中明确其受让意向、交易方式、拟交易金额及付款条件等内容，交易金额应包含入门费及提成，付款条件应明确是否为里程碑式付款，以及相关里程碑阶段。
+3、挂牌到期后，上海技术交易所向许可方出具书面函件告知受让被许可方征集情况，反馈受让意向及方式，并安排后续交易流程。</td>
+                            </tr>
+                            <tr>
+                                <td class="xmtd1" rowspan="3">拟投入资金额度及方式</td>
+                                <td width="25%" class="xmtd1" colspan="">资金额度</td>
+                                <td width="50%" class="xmtd2" colspan="2">
+                                    
+                                        
+                                        
+                                            面议
+                                        
+                                        
+                                    
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="xmtd1">投入方式</td>
+                                <td class="xmtd2" colspan="2">
+                                        
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="xmtd1">资金用途</td>
+                                <td class="xmtd2" colspan="2">
+                                        
+                                </td>
+                            </tr>
+                        
+                        
+                        
+
+                    
+
+
+                    </tbody>
+                </table>
+            </li>
+            <li>
+                <div class="tab_title">
+                    <div class="fl">申请方承诺函</div>
+                    <div class="clear"></div>
+                </div>
+                <table class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    <tr >
+                        <td class="xmtd2 pd20 lh22" width="100%">
+                            <div style="height: 70px;overflow: hidden" id="cnhnr">
+                                 <pre>
+                                     <p style="margin: 5px 0px; color: rgb(0, 0, 0); text-transform: none; line-height: 21px; text-indent: 51px; letter-spacing: normal; font-family: 宋体, Arial, Verdana, sans-serif; font-size: 14px; font-style: normal; font-weight: 400; word-spacing: 0px; white-space: normal; orphans: 2; widows: 2; font-variant-ligatures: normal; font-variant-caps: normal; -webkit-text-stroke-width: 0px; text-decoration-style: initial; text-decoration-color: initial;"><span style="line-height: 24px; letter-spacing: 2px; font-family: 宋体; font-size: 16px;"><span style="font-family: 宋体; font-size: 16px; letter-spacing: 2px; text-indent: 51px;"></span></span></p><p style="margin: 5px 0px; color: rgb(0, 0, 0); text-transform: none; line-height: 21px; text-indent: 51px; letter-spacing: normal; font-family: 宋体, Arial, Verdana, sans-serif; font-size: 14px; font-style: normal; font-weight: 400; word-spacing: 0px; white-space: normal; orphans: 2; widows: 2; font-variant-ligatures: normal; font-variant-caps: normal; -webkit-text-stroke-width: 0px; text-decoration-style: initial; text-decoration-color: initial;"><span style="line-height: 24px; letter-spacing: 2px; font-family: 宋体; font-size: 16px;"><span style="font-family: 宋体; font-size: 16px; letter-spacing: 2px; text-indent: 51px;"></span></span><span style="font-family: 宋体; font-size: 16px; letter-spacing: 2px;">我方拟转让所持标的的项目，通过上海技术交易所（以下简称“技交所”）公开披露项目信息和组织交易活动，依照公开、公平、公正和诚信的原则作如下承诺：</span></p><p style="margin: 5px 0px; color: rgb(0, 0, 0); text-transform: none; line-height: 21px; text-indent: 37px; letter-spacing: normal; font-family: 宋体, Arial, Verdana, sans-serif; font-size: 14px; font-style: normal; font-weight: 400; word-spacing: 0px; white-space: normal; orphans: 2; widows: 2; font-variant-ligatures: normal; font-variant-caps: normal; -webkit-text-stroke-width: 0px; text-decoration-style: initial; text-decoration-color: initial;"><span style="line-height: 24px; letter-spacing: 2px; font-family: 宋体; font-size: 16px;">1、我方意向发布的项目权属关系清晰，我方对该项目具有完全处置权，且该处置权的实施已不存在任何限制条件。</span></p><p style="margin: 5px 0px; color: rgb(0, 0, 0); text-transform: none; line-height: 21px; text-indent: 37px; letter-spacing: normal; font-family: 宋体, Arial, Verdana, sans-serif; font-size: 14px; font-style: normal; font-weight: 400; word-spacing: 0px; white-space: normal; orphans: 2; widows: 2; font-variant-ligatures: normal; font-variant-caps: normal; -webkit-text-stroke-width: 0px; text-decoration-style: initial; text-decoration-color: initial;"><span style="line-height: 24px; letter-spacing: 2px; font-family: 宋体; font-size: 16px;"><span style="font-family: 宋体; font-size: 16px; letter-spacing: 2px; text-indent: 37px;">2、我方对所填写内容及递交材料的真实性、合法性承担责任。</span></span></p><p style="margin: 5px 0px; color: rgb(0, 0, 0); text-transform: none; line-height: 21px; text-indent: 37px; letter-spacing: normal; font-family: 宋体, Arial, Verdana, sans-serif; font-size: 14px; font-style: normal; font-weight: 400; word-spacing: 0px; white-space: normal; orphans: 2; widows: 2; font-variant-ligatures: normal; font-variant-caps: normal; -webkit-text-stroke-width: 0px; text-decoration-style: initial; text-decoration-color: initial;"><span style="line-height: 24px; letter-spacing: 2px; font-family: 宋体; font-size: 16px;">3、如我方征集到意向受让方，将按照技术交易的有关规定及按照技交所的交易规则，优先在技交所完成项目交易。</span></p><p style="margin: 5px 0px; color: rgb(0, 0, 0); text-transform: none; line-height: 21px; text-indent: 37px; letter-spacing: normal; font-family: 宋体, Arial, Verdana, sans-serif; font-size: 14px; font-style: normal; font-weight: 400; word-spacing: 0px; white-space: normal; orphans: 2; widows: 2; font-variant-ligatures: normal; font-variant-caps: normal; -webkit-text-stroke-width: 0px; text-decoration-style: initial; text-decoration-color: initial;"><span style="line-height: 24px; letter-spacing: 2px; font-family: 宋体; font-size: 16px;">4、我方同意技交所通过网络、报纸或其他方式对本项目进行对外推介。</span></p><p style="margin: 5px 0px; color: rgb(0, 0, 0); text-transform: none; text-indent: 0px; letter-spacing: normal; font-family: 宋体, Arial, Verdana, sans-serif; font-size: 14px; font-style: normal; font-weight: 400; word-spacing: 0px; white-space: normal; orphans: 2; widows: 2; font-variant-ligatures: normal; font-variant-caps: normal; -webkit-text-stroke-width: 0px; text-decoration-style: initial; text-decoration-color: initial;"><span style="letter-spacing: 2px; font-family: 宋体; font-size: 16px;">如我方有违以上承诺或违反技术交易有关法律法规政策，自行承担相关的经济和法律责任。</span></p><p><br/></p>
+                                 </pre>
+                            </div>
+                            <a onclick="lookCNH()" id="lookCnh">点击查看承诺全文</a>
+                            <a onclick="closeCNH()" id="closeCnh" style="display: none">点击收起承诺全文</a>
+
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </li>
+            <li>
+                <div class="tab_title">
+                    <div class="fl">相关附件</div>
+                    <div class="clear"></div>
+                </div>
+                <table class="xm_tab mb10" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    
+                    </tbody>
+                </table>
+                
+            </li>
+        </ul>
+    </div>
+    <div class="clear"></div>
+</div>
+
+</body>
+<script>
+    layui.use(['form', 'element', 'carousel'], function() {
+        var $ = layui.jquery,
+            element = layui.element; //Tab的切换功能，切换事件监听等，需要依赖element模块
+
+        var form = layui.form,
+            layer = layui.layer;
+
+        var carousel = layui.carousel;
+
+        //图片轮播gsfj_img
+        carousel.render({
+            elem: '#gsfj_img',
+            anim: 'fade',
+            full: false,
+            interval: 4000,
+            width: '100%',
+            height: '500px'
+        });
+
+    });
+
+</script>
+<script>
+
+    $(function(){
+
+        Base.Ajax.post('/service/s/prjs/real_right/getWGCS', true,
+            {
+                id: '5383'
+            },
+            'json',
+            function(json){
+                if(json.success){
+                    $('#wgcs').html(json.object.data.WGCS);
+                }else{
+                    $('#wgcs').html('0');
+                }
+            }
+        )
+
+    });
+
+    function checkStatus(){
+        Base.Tip.showLoading($(document.body), true);
+        var status = false;
+        Base.Ajax.post('/service/signup/real_right/checkStatus'
+            ,false
+            ,
+            {
+                id: '4569'
+            }
+            ,'json'
+            ,function(json){
+                Base.Tip.showLoading($(document.body), false);
+                if (json.success){
+                    var num = json.object.NUM;
+                    if (num > 0){
+                        //审核中
+                        Base.Tip.error('您已提交意向申请,请到<a href="/page/psncenter/signup/index?jypl=SWZC">我的报名</a>查看');
+                    }else {
+                        status = true;
+                    }
+
+                } else{
+                    Base.Tip.error(json.msg);
+                }
+            }
+        )
+        return status;
+    }
+
+    function signup(){
+        
+        
+        Base.Tip.alert('您尚未登录, 请登录后操作');
+        
+        
+        
+    }
+</script>
+<script>
+    
+    function lookCNH(){
+        $("#cnhnr").show();
+        $("#cnhnr").css("height","auto");
+        $("#closeCnh").show();
+        $("#lookCnh").hide();
+    }
+    function closeCNH(){
+        $("#cnhnr").css("height","70px");
+        $("#closeCnh").hide();
+        $("#lookCnh").show();
+    }
+</script>
+
+</html>

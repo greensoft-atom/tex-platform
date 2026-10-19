@@ -1,0 +1,815 @@
+ 
+
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" style="overflow-y: scroll;">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>上海技术交易所-产业洞见</title>
+    
+
+
+
+
+
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+
+
+
+
+
+<title></title>
+
+
+
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+
+<link rel="icon" href="/res/prj/images/favicon.ico" type="image/x-icon"/>
+<link rel="shortcut icon" href="/res/prj/images/favicon.ico" type="image/x-icon"/>
+<link rel="stylesheet" type="text/css" href="/res/prj/layui/css/layui.css"/>
+
+
+
+
+
+    
+        
+            
+            <link rel="stylesheet" type="text/css" href="/res/prj/css/all.min.c05424ab.css?uris=%2Fres%2Fprj%2Fcss%2Fall.csss&alias=%2Fres%2Fprj%2Fcss%2Fall.csss&isCompress=true&token=58bf026ce10cb8d7f9a7759543718a00" />
+        
+        
+    
+
+<script type="text/javascript" src="/res/prj/js/jquery-3.4.1.min.js?t=1783844346949"></script>
+<script type="text/javascript" src="/res/prj/js/jquery-migrate.min.js?t=1783844346949"></script>
+<script type="text/javascript" src="/res/prj/js/vue.js?t=1783844346949"></script>
+
+<script type="text/javascript">
+    window["P_basePath"] = "";
+    window["DesKey"] = "6E0FED8EEA1100C380C2D4F59663C7B0";
+    window["enableWebSocket"] = "true" == "true";
+    window["P_connectWSSyncTime"] = parseInt("10");
+    window["P_connectWSLimit"] = parseInt("-1");
+    window["P_connectWSTimeout"] = parseInt("0");
+    // 设置token
+    window["Token"] = 'M+Dd2Lm4eTV3K89pnkhmp2hfFNc3802Ses9RWqDzNtROtjjT7ED5Fy19B3BX6A1m76QUbKEm9VyRcgUGCy4/3A==';
+</script>
+
+<link rel="stylesheet" href="/res/plugin/jbox/css/jbox.css?t=1783844346949" type="text/css"/>
+<script type="text/javascript" src="/res/plugin/jbox/js/jquery.jBox.js?t=1783844346949"></script>
+
+
+<link rel="stylesheet" href="/res/plugin/layer/skin/layer.css?t=1783844346949" type="text/css"/>
+<script type="text/javascript" src="/res/plugin/layer/layer.min.js?t=1783844346949"></script>
+<script type="text/javascript" src="/res/prj/layui/layui.js"></script>
+
+
+
+<script type="text/javascript" src="/res/js/des.js?t=1783844346949"></script>
+<script type="text/javascript" src="/res/js/utils-base-all.js?t=1783844346949"></script>
+<script type="text/javascript" src="/res/js/dialog.js?t=1783844346949"></script>
+<script type="text/javascript" src="/res/plugin/autocomplete/jquery.autocomplete.js?t=1783844346949"></script>
+<link rel="stylesheet" href="/res/plugin/autocomplete/jquery.autocomplete.css?t=1783844346949" type="text/css"/>
+
+<script type="text/javascript">
+    window["P_basePath"] = "";
+    window["DesKey"] = "6E0FED8EEA1100C380C2D4F59663C7B0";
+    window["enableWebSocket"] = "true" == "true";
+    window["P_connectWSSyncTime"] = parseInt("10");
+    window["P_connectWSLimit"] = parseInt("-1");
+    window["P_connectWSTimeout"] = parseInt("0");
+
+    function P_checkIsLogin() {
+        if("false" != "true"){
+            Base.Tip.confirm("温馨提示","您还未登录，是否现在登录？",
+                function () {
+                    var reqUri = location.pathname + location.search;
+                    reqUri = reqUri.substr("".length);
+                    location.href="/page/login?reqUri=" + encodeURIComponent(reqUri);
+                }, function () {
+
+                }
+            );
+            return false;
+        }
+        return true;
+    }
+
+    $(function(){
+        if("false" == "true"){
+            isLogin();
+        }
+        //设置图片访问失败的错误图片
+        $('img').error(function(){
+            if($(this).attr('src').indexOf("/editorUpload/image") != -1){
+                $(this).attr('src',"/res/prj/images/bd_default.jpg");
+            }
+        });
+    });
+    function isLogin() {
+        Base.Ajax.post("/service/psncenter/account/session_sx",
+            true,
+            {
+            },
+            "json",
+            function (json, status) {
+                if (json.success) {
+                    setTimeout(function () {
+                        isLogin();
+                    }, 10000);
+                }else{
+                    window.location='/page/login';
+                }
+            }
+        );
+
+    }
+</script>
+
+
+
+
+
+
+    <script type="text/javascript">
+        $(function () {
+            //选中导航菜单
+            $(".nav .info_3").addClass("current");
+        })
+    </script>
+</head>
+<body>
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+        
+
+
+
+
+
+
+
+
+<div class="side">
+    <ul>
+        <li>
+            <a href="/page/building">
+                <div class="sidebox"><i class="side_icon_1"></i>服务经纪</div>
+            </a>
+        </li>
+        <li>
+            <a href="/page/building">
+                <div class="sidebox"><i class="side_icon_2"></i>技术市场</div>
+            </a>
+        </li>
+        <li>
+            <a href="/page/building">
+                <div class="sidebox"><i class="side_icon_3"></i>活动日程</div>
+            </a>
+        </li>
+        <li>
+            <a href="/page/building">
+                <div class="sidebox"><i class="side_icon_4"></i>会员组织</div>
+            </a>
+        </li>
+        <li>
+            <a href="/info/detail/56.html">
+                <div class="sidebox"><i class="side_icon_5"></i>关于技交所</div>
+            </a>
+        </li>
+    </ul>
+
+</div>
+<div class="header_bar_bg">
+    <div class="header_bar">
+
+        <div class="fl">
+            您好，欢迎来到上海技术交易所！
+        </div>
+
+        <div class="fr">
+            
+                
+                
+                    <a class="header_bar_login" href="javascript:void(0)" onclick="toLogin()">登录</a>
+                    
+                
+            
+
+        </div>
+        <div class="clear"></div>
+    </div>
+</div>
+<div class="header_bg">
+    <div class="header">
+        <div class="header_lf">
+            <a href="/" class="header_logo">
+                <img src="/res/prj/images/logo/logo_default.png">
+            </a>
+        </div>
+        <div class="header_ce">
+            <ul class="header_nav" id="head_menu_bar">
+                <li class="current">
+                    <a class="title" href="/">首页</a>
+                </li>
+                <li class="header_nav_on">
+                    <a class="title" href="/page/s/prjs/real_right/index?type=1">交易中心</a>
+                    <div class="header_nav_box">
+                        <p>
+                            <a href="/page/s/prjs/real_right/index?type=1">项目供给</a>
+                        </p>
+                        <p>
+                            <a href="/page/s/prjs/real_right/index?type=2">项目需求</a>
+                        </p>
+
+
+
+                        <p>
+                            <a href="/page/s/prjs/real_right/cjjl/index">成交公告</a>
+                        </p>
+                        <p>
+                            <a href="/page/s/prjs/real_right/cggs/index">成果公示</a>
+                        </p>
+                        <p>
+                            <a href="/page/s/prjs/real_right/fjzc_index">资产交易</a>
+                        </p>
+                        <p>
+                            <a href="/page/s/prjs/cqzr/index">产权转让</a>
+                        </p>
+                    </div>
+                </li>
+                <li class="header_nav_on">
+                    <a class="title" href="/info/list/12.html">媒体中心</a>
+                    
+                    <div class="header_nav_box" v-if="plList.length > 0">
+                        <p v-for="item in plList">
+                            <a v-bind:href="'/info/list/'+item.ID+'.html'">{{item.NAME}}</a>
+                        </p>
+                    </div>
+                </li>
+                <li class="header_nav_on">
+                    
+                    
+                    <a class="title" onclick="toLogin()">数据</a>
+                </li>
+                
+                    
+                    
+                    
+                
+                <li class="header_nav_on">
+                    
+                    <a class="title" onclick="toLogin()">服务</a>
+
+                </li>
+                <li class="header_nav_on" data-infoId="4">
+                    <a class="title" href="/info/list/4.html">规则</a>
+                    <div class="header_nav_box" v-if="gzList.length > 0">
+                        <p v-for="item in gzList">
+                            <a v-bind:href="'/info/list/'+item.ID+'.html'">{{item.NAME}}</a>
+                        </p>
+                    </div>
+                </li>
+                <li class="header_nav_on">
+                    
+                    
+                    <a class="title" href="/page/biding/hall/bid_system">在线竞价</a>
+                </li>
+                <li class="header_nav_on" data-infoId="3">
+                    <a class="title" href="/info/list/3.html">焦点</a>
+                    <div class="header_nav_box" v-if="jdList.length > 0">
+                        <p v-for="item in jdList">
+                            <a v-bind:href="'/info/list/'+item.ID+'.html'">{{item.NAME}}</a>
+                        </p>
+                    </div>
+                </li>
+                <li class="header_nav_on" data-infoId="2">
+                    <a class="title" href="/info/list/2.html">关于</a>
+                    <div class="header_nav_box" v-if="gyList.length > 0">
+                        <p v-for="item in gyList">
+                            <a v-bind:href="'/info/list/'+item.ID+'.html'">{{item.NAME}}</a>
+                        </p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="header_rt">
+            <div class="header_search">
+                <input type="text" class="header_search_input" placeholder="" value="" id="searchKey">
+                <a class="header_search_btn" id="searchButton">
+                    <i></i>
+                </a>
+            </div>
+        </div>
+        <div class="clear"></div>
+    </div>
+</div>
+
+
+<script>
+
+    function toLogin(){
+        if(location.pathname.indexOf("logout") != -1){
+            location.href = '/page/login';
+        }else {
+            location.href = '/page/login?reqUri=' + location.pathname;
+        }
+    }
+
+    $(function() {
+
+
+        $('#otherKey').val($('#searchKey').val());
+
+        $("#searchKey").autocomplete('/service/keywordSearch', {
+            //$("#search").autocomplete(array, {
+            width: 735,
+            dataType: "json",
+            minChars: 2,
+            max: 12,
+            cacheLength: 0,
+            matchSubset: true,
+            matchContains: true,
+            matchCase: true,
+            autoFill: false,
+            selectFirst: false,
+            parse: function (data) {
+                if (typeof data.object == "object") {
+                    data = data.object;
+                }
+                return $.map(data, function (row) {
+                    return {
+                        data: row,
+                        value: row.ProjectName,
+                        result: row.ProjectName
+                    }
+                });
+            },
+            formatMatch: function (row, i, max) {
+                return row.content;      //与这些相匹配
+            },
+            formatItem: function (row, i, max, term) {
+                return row.content;
+            },
+            formatResult: function (data, value) {
+                return data.content;
+            }
+        });
+
+    });
+
+
+    $(function(){
+        var selIndex = '7';
+        $('.header_nav').find("li").siblings().removeClass('current').eq(selIndex).addClass('current');
+
+
+        $("#searchButton").click(function () {
+            headSearch($.trim($("#searchKey").val()));
+        });
+
+
+        function headSearch(keyWord) {
+            window.location.href = "/page/searchProject?keyWord=" + encodeURIComponent(keyWord);
+        }
+
+        $("#searchKey").bind('keypress',function(event){
+            if (event.keyCode == 13) {
+                return $("#searchButton").click();
+            }
+        })
+
+    });
+</script>
+
+
+<script type="text/javascript">
+    $(window).scroll(function() {
+        var oTop = $(document).scrollTop() + 180;
+        $(".side").stop().animate({
+            top: oTop
+        });
+    });
+    $(document).ready(function() {
+
+        $(".side ul li").hover(function() {
+
+            $(this).find(".sidebox").stop().animate({
+                "width": "150px"
+            }, 200).css({
+                "opacity":"1",
+                "filter": "Alpha(opacity=100)",
+                "background": "#33579E"
+            });
+            $(this).find(".tips span").css({
+                "background":"#fff",
+                "border":"solid 1px #fff",
+                "color":"#33579E"
+            })
+
+        }, function() {
+
+            $(this).find(".sidebox").stop().animate({
+                "width": "60px"
+            }, 200).css({
+                "opacity":".8",
+                "filter": "Alpha(opacity=80)",
+                "background": "#33579E"
+            });
+            $(this).find(".tips span").css({
+                "background":"#33579E",
+                "border":"solid 1px #fff",
+                "color":"#fff"
+            })
+
+        });
+
+    });
+
+    //回到顶部
+
+    function goTop() {
+
+        $('html,body').animate({
+            'scrollTop': 0
+        }, 600);
+
+    }
+</script>
+
+    <script>
+        var head_menu_bar = new Vue({
+            el:"#head_menu_bar",
+            data:{
+                plList:[],
+                gzList:[],
+                jdList:[],
+                gyList:[]
+            },
+            mounted: function(){
+                //挂载vm完成
+                this.plList = this.getInfoMenuList(12);
+                this.gzList = this.getInfoMenuList(4);
+                this.jdList = this.getInfoMenuList(3);
+                this.gyList = this.getInfoMenuList(2);
+            },
+            methods:{
+                getInfoMenuList:function (id) {
+                    var _this=this;
+                    var menulist = [];
+                    Base.Ajax.post(
+                        "/service/s/info/app_menu",
+                        false,
+                        {id:id},
+                        "json",
+                        function (json,status) {
+                            if(json.success){
+                                menulist = json.object["app_menuList"];
+
+
+                            }else{
+                                Base.Logger.log(json.msg);
+                            }
+                        });
+                    return menulist;
+
+                }
+            }
+        })
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+    
+
+
+
+
+
+    
+
+
+
+<div class="nav_sup_box">
+    <div class="nav_sup_list">
+        <div class="nav_sup_title">焦点</div>
+        <ul>
+            
+            
+                <li class="li_34"><a href="/info/list/34.html">产业洞见</a></li>
+            
+                <li class="li_35"><a href="/info/list/35.html">投资观察</a></li>
+            
+                <li class="li_36"><a href="/info/list/36.html">人物聚焦</a></li>
+            
+            <div class="clear"></div>
+        </ul>
+        <div class="clear"></div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function () {
+
+
+        /*通过id选中菜单*/
+        // detail的menu id
+        
+        // list的menu id
+        
+        if ($(".li_" +34).length > 0) {
+            $(".li_" +34).addClass("current");
+        } else {
+            //默认选中第一个
+            $(".left_nav ul li:first").addClass("current");
+        }
+        
+    })
+
+</script>
+
+<div class="main">
+    <div class="cont_box_addside">
+
+        <div class="main_right" style="margin-left:0px">
+            <div class="insidepage_title">
+                <div class="fl">产业洞见</div>
+                <div class="clear"></div>
+            </div>
+            <div class="news_list">
+                <ul id="li_container">
+                    
+
+
+
+
+
+
+
+    
+        
+            <li><span class="fl">
+        <a id="113" category="34"  href="/info/detail/113.html">上海技术交易市场跨越式发展的新起点</a> </span>
+        <span class="news_time fr">
+            
+            2020-04-27
+        </span>
+            </li>
+        
+            <li><span class="fl">
+        <a id="111" category="34"  href="/info/detail/111.html">趁东风，加快发展技术要素市场</a> </span>
+        <span class="news_time fr">
+            
+            2020-04-27
+        </span>
+            </li>
+        
+            <li><span class="fl">
+        <a id="107" category="34"  href="/info/detail/107.html">科技中介机构是成果转化的关键“药方”</a> </span>
+        <span class="news_time fr">
+            
+            2020-04-27
+        </span>
+            </li>
+        
+            <li><span class="fl">
+        <a id="105" category="34"  href="/info/detail/105.html">中共中央国务院关于构建更加完善的要素市场化配置体制机制的意见（节选）</a> </span>
+        <span class="news_time fr">
+            
+            2020-04-27
+        </span>
+            </li>
+        
+            <li><span class="fl">
+        <a id="54" category="34"  href="/info/detail/54.html">世界五大专利局2019年授权了这些专利</a> </span>
+        <span class="news_time fr">
+            
+            2020-02-26
+        </span>
+            </li>
+        
+            <li><span class="fl">
+        <a id="52" category="34"  href="/info/detail/52.html">国家知识产权局发布2019年度主要工作统计数据——我国知识产权质量效益持续提升</a> </span>
+        <span class="news_time fr">
+            
+            2020-02-26
+        </span>
+            </li>
+        
+            <li><span class="fl">
+        <a id="42" category="34"  href="/info/detail/42.html">新时期我国技术交易服务的六大趋势</a> </span>
+        <span class="news_time fr">
+            
+            2020-02-26
+        </span>
+            </li>
+        
+    
+    
+
+
+
+
+
+
+                </ul>
+            </div>
+            <div id="pagebar" class="list_page"></div>
+        </div>
+        <div class="clear"></div>
+    </div>
+</div>
+
+
+
+<div class="footer_bg">
+    <div class="footer">
+        
+            
+                
+                    
+                        
+                    
+                    
+                
+            
+            
+        
+        <div class="footer_team_box">
+            <div class="footer_team footer_team_first">
+                <div class="footer_team_title">技术交易所</div>
+                <div class="footer_team_cat">
+                    <p><a href="/info/detail/56.html">关于我们</a></p>
+                    <p><a href="/info/list/30.html">政策法规</a></p>
+                    <p><a href="/info/list/31.html">交易规则</a></p>
+                </div>
+            </div>
+            
+
+
+<div class="footer_team">
+    <div class="footer_team_title">友情链接</div>
+    <div class="footer_team_cat">
+        
+            
+                
+                     
+                
+            
+        
+            <p>
+                <a href="http://stcsm.sh.gov.cn" target="_blank">上海市科委</a>
+            </p>
+            <p>
+                <a href="http://jrj.sh.gov.cn/index.html" target="_blank">上海市地方金融监督管理局</a>
+            </p>
+            
+                
+            
+            <p>
+                <a href="http://www.shtic.com/structure/index.htm" target="_blank">上海科技创业中心</a>
+            </p>
+            <p>
+                <a href="https://www.ypbase.com/" target="_blank">杨浦科技创业中心</a>
+            </p>
+            <p>
+                <a href="http://www.netcchina.com/" target="_blank">国家技术转移东部中心</a>
+            </p>
+            <p>
+                <a href="http://www.gaoxiaotech.com/" target="_blank">上海全国高校技术市场</a>
+            </p>
+            
+                
+            
+    </div>
+</div>
+
+            <div class="footer_team footer_team_last">
+                <div class="footer_team_title">联系我们</div>
+                <div class="footer_team_cat">
+                    <p>
+                        地址：上海杨浦区国权北路1600号湾谷科技园B5号楼2层
+                    </p>
+                    <p>
+                        邮箱：jsjy@ypbase.com
+                    </p>
+                </div>
+            </div>
+            <div class="footer_link">
+                <div class="footer_link_title">媒体中心</div>
+                <div class="footer_link_sup">上海技术交易所</div>
+                <ul>
+                    <li>
+                        <a>
+                            <i class="icon_wx"></i>
+                        </a>
+                        <div class="footer_link_img">
+                            <img src="/res/prj/images/QRcode/QRcode.png" />
+                        </div>
+                    </li>
+                    <li>
+                        <a>
+                            <i class="icon_fb"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a>
+                            <i class="icon_dy"></i>
+                        </a>
+                    </li>
+                    <!-- <li>
+                        <a>
+                            <i class="icon_tw"></i>
+                        </a>
+                    </li> -->
+                </ul>
+                <div class="clear"></div>
+                <div class="footer_link_a">
+                    <a>新闻动态</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="clear"></div>
+    </div>
+    
+
+<div class="copyright">
+    <div class="fl">
+        ©上海技术交易所版权所有 <a href="http://www.beian.miit.gov.cn">沪ICP备2023015760号-6</a> <a href="http://www.beian.gov.cn/portal/registerSystemInfo">31011002007288</a>
+    </div>
+    <div class="fzp">
+        <img src="/res/prj/images/fzp.png" />
+    </div>
+    <div class="fr">
+        <a>Cookies条款</a>
+        <a>隐私政策</a>
+        <a>安全</a>
+        <a>数据保护</a>
+    </div>
+    <div class="clear"></div>
+</div>
+</div>
+<script>
+    $(function () {
+        //处理a标签跳转站外
+        var urlregex =/http[s]?:\/\/[^\s]*/
+        var middlePage = "/page/jump?address=";
+        pageJump = function(){
+            var href = $(this).attr("href");
+            if(href!=null && href.match(urlregex)){
+                window.open(middlePage+href);
+                return false;
+            }
+        };
+        $("a").click(pageJump);
+    })
+</script>
+
+</body>
+
+</html>

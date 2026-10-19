@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en" page-name="services">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui, viewport-fit=cover" />
+    <title></title>
+    <meta name="keywords" content="" />
+    <meta name="description" content="" />
+    <link rel="icon" href="/favico.ico" type="image/x-icon" />
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="/vendors/bootstrap4/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/vendors/swiper/css/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="//at.alicdn.com/t/font_2112192_befum94ez48.css?t=istte" />
+    <link rel="stylesheet" href="//g.alicdn.com/de/prismplayer/2.8.2/skins/default/aliplayer-min.css" />
+    <link rel="stylesheet" href="/css/base.css?v=1726282468223" />
+    <script src="/vendors/jquery/jquery-3.3.1.min.js"></script>
+    <script>
+        var _hmt = _hmt || [];
+        (function () {
+            var hm = document.createElement('script');
+            hm.src = 'https://hm.baidu.com/hm.js?d2abd86cb7400a2fec2242bf9f9c85be';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+</head>
+
+<body>
+    
+    <header>
+        <div class="container top d-none d-md-flex">
+            <div class="logo mr-auto">
+                <a href="/"><img src="/img/logo.svg" alt="上海技术交易所" /></a>
+            </div>
+            <div class="search">
+                <form action="/search" method="get">
+                    <div class="input-group input-group-sm search-input-group">
+                        <input type="text" name="keyword" class="form-control" placeholder="输入关键字,搜技术,服务...."
+                            value="" />
+                        <div class="input-group-append">
+                            <button class="btn" type="submit">
+                                <i class="istte-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="tel ml-4">4000-211-365</div>
+            <div class="logo ml-4">
+                <a href="/"><img src="/img/exc.svg" alt="上海市公共资源交易中心" /></a>
+            </div>
+
+            <div class="ml-4">
+                <a href="https://english.stte.com/" target="_blank">
+                    <button class="btn-english">STEX-English</button>
+                </a>
+            </div>
+
+        </div>
+        <nav class="navbar navbar-expand-md navbar-light navbar-md-dark">
+            <div class="container">
+                <span class="navbar-brand d-inline-block d-md-none">
+                    <img src="/img/logo.svg" height="40" alt="上海技术交易所" />
+                </span>
+
+                <div class="ml-4 navbar-toggler">
+                    <a href="https://english.stte.com/" target="_blank">
+                        <button class="btn-english">STEX-English</button>
+                    </a>
+                </div>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-toggler">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbar-toggler">
+                    <ul class="navbar-nav d-none d-md-flex">
+                        
+                        
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">首页</a>
+                        </li>
+                        
+                        
+                        
+                        
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">交易</a>
+                            <div class="dropdown-menu">
+                                
+                                
+                                <a class="dropdown-item" href="/transactions">上海技术交易所</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/transactions/ctex">信息互联</a>
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/transactions/openLic">开放许可</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/transactions/gjcg2">国际成果</a>
+                                
+                                
+                                
+                                
+                            </div>
+                        </li>
+                        
+                        
+                        
+                        
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">机构</a>
+                            <div class="dropdown-menu">
+                                
+                                
+                                <a class="dropdown-item" href="/organizations/agency">执业机构名录</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/organizations/law-fin">专业机构名录</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/organizations/procedure">机构规则</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/organizations/comm">机构通知资讯</a>
+                                
+                                
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/keshang">科商</a>
+                                
+                                
+                            </div>
+                        </li>
+                        
+                        
+                        
+                        
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">专板</a>
+                            <div class="dropdown-menu">
+                                
+                                
+                                <a class="dropdown-item" href="http://www.simets.cn/">气象技术交易专板</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="https://hkp.stte.com">科普专板</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="https://atex.stte.com">农业科技专板</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="https://carbon.stte.com/">绿色技术交易专板</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="https://ip.stte.com">数字IP专板</a>
+                                
+                                
+                                
+                                
+                            </div>
+                        </li>
+                        
+                        
+                        
+                        
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">区域</a>
+                            <div class="dropdown-menu">
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/region/ecology">服务生态网络</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/region/innovate">创新服务中心</a>
+                                
+                                
+                            </div>
+                        </li>
+                        
+                        
+                        
+                        
+                        
+                        <li class="nav-item active dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">服务</a>
+                            <div class="dropdown-menu">
+                                
+                                
+                                <a class="dropdown-item" href="/services">科研端服务</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/services/business">企业端服务</a>
+                                
+                                
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/services/gov">区域端服务</a>
+                                
+                                
+                                
+                                <a class="dropdown-item active" href="/services/right">知识产权鉴定服务</a>
+                                
+                                
+                            </div>
+                        </li>
+                        
+                        
+                        
+                        
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">规则</a>
+                            <div class="dropdown-menu">
+                                
+                                
+                                <a class="dropdown-item" href="/policies/national">全国政策</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/policies/local">上海政策</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/policies/rules">交易规则</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/policies/guide">相关指引</a>
+                                
+                                
+                            </div>
+                        </li>
+                        
+                        
+                        
+                        
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="/bidding">竞价</a>
+                        </li>
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">关于</a>
+                            <div class="dropdown-menu">
+                                
+                                
+                                <a class="dropdown-item" href="/about">简介</a>
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/about/jobs">加入我们</a>
+                                
+                                
+                                
+                                
+                            </div>
+                        </li>
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                    </ul>
+                    <ul class="navbar-nav d-flex d-md-none">
+                        
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">首页</a>
+                        </li>
+                        
+                        
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="/transactions">交易</a>
+                        </li>
+                        
+                        
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="/organizations">机构</a>
+                        </li>
+                        
+                        
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="http://www.simets.cn/">专板</a>
+                        </li>
+                        
+                        
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="/region">区域</a>
+                        </li>
+                        
+                        
+                        
+                        <li class="nav-item active">
+                            <a class="nav-link" href="/services">服务</a>
+                        </li>
+                        
+                        
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="/policies/national">规则</a>
+                        </li>
+                        
+                        
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="/bidding">竞价</a>
+                        </li>
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="/about">关于</a>
+                        </li>
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+</body>
+
+</html>
+<section class="tab-banner" style="background-image: url(/upload/banner/20201009/fb86e597-731f-4340-8ac8-9fc743a902a6.png)"></section>
+<section class="tab-panel-section">
+  <div class="container">
+    <div class="tab-panel">
+      <div class="tab-nav">
+        <div class="nav-items">
+          
+          
+          <a href="/services" class="">科研端服务</a>
+          
+          
+          
+          <a href="/services/business" class="">企业端服务</a>
+          
+          
+          
+          
+          
+          <a href="/services/gov" class="">区域端服务</a>
+          
+          
+          
+          <a href="/services/right" class="active">知识产权鉴定服务</a>
+          
+          
+        </div>
+      </div>
+      <div class="tab-content">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="services-introduction">
+  <h1 style="color: #828282; text-align: left; font-size: 1rem">
+    如果您是公、检、法机关以及仲裁机构、企事业单位、社会团体或个人，对知识产权鉴定相关业务有需求，我们可以为您提供如下专业服务：
+  </h1>
+  <h6 style="color: #828282">一、商业秘密鉴定服务</h6>
+  <div>
+    <table border="1" cellpadding="20">
+      <tr style="background-color: #0071c1; color: #fff; font-size: 1rem">
+        <th style="width: 30%; text-align: center">服务名称</th>
+        <th style="width: 40%; text-align: center">服务内容</th>
+        <th style="width: 30%; text-align: center">客户价值</th>
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">
+          商业秘密鉴定服务
+        </td>
+        <td style="width: 40%; text-align: left">对权利人主张的秘密信息是否不为公众所知悉进行鉴定；对被控侵权方的信息与权利人的非公知信息是否相同或实质相同进行鉴定；对权利人主张的秘密信息是否具有经济性、实用性进行鉴定等。</td>
+        <td style="width: 30%; text-align: left">为企业提供高水平的知识产权服务；以客观、科学、公正的鉴定意见，为公检法等办案机关提供技术支持。</td>
+      </tr>
+      
+    </table>
+  </div>
+
+  <h6 style="color: #828282">二、发明和实用新型鉴定</h6>
+  <div>
+    <table border="1" cellpadding="20">
+      <tr style="background-color: #0071c1; color: #fff; font-size: 1rem">
+        <th style="width: 30%; text-align: center">服务名称</th>
+        <th style="width: 40%; text-align: center">服务内容</th>
+        <th style="width: 30%; text-align: center">客户价值</th>
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">
+          发明专利和实用新型专利鉴定服务
+        </td>
+        <td style="width: 40%; text-align: left">对被控侵权产品或方法的技术特征与专利技术特征是否相同或等同进行鉴定；对被控侵权产品或方法的技术方案是否属于专利申请日之前的公知技术进行鉴定；对发明专利或实用新型专利是否具备新颖性、创造性进行鉴定；对发明专利或实用新型专利说明书是否充分公开技术方案，是否支持权利要求书进行鉴定；对标准技术方案、专利技术方案及产品技术方案是否相同或实质相同进行鉴定；对专利权属纠纷案件进行技术分析等。</td>
+        <td style="width: 30%; text-align: left">为企业提供高水平的知识产权服务；以客观、科学、公正的鉴定意见，为公检法等办案机关提供技术支持。</td>
+      </tr>
+      
+    </table>
+  </div>
+
+  <h6 style="color: #828282">三、外观设计鉴定</h6>
+  <div>
+    <table border="1" cellpadding="20">
+      <tr style="background-color: #0071c1; color: #fff; font-size: 1rem">
+        <th style="width: 30%; text-align: center">服务名称</th>
+        <th style="width: 40%; text-align: center">服务内容</th>
+        <th style="width: 30%; text-align: center">客户价值</th>
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">
+          外观设计专利鉴定服务
+        </td>
+        <td style="width: 40%; text-align: left">对被控侵权产品的外观与外观设计专利的设计方案是否相同或相近似进行鉴定；对被控侵权产品的外观设计是否为现有设计进行鉴定等。</td>
+        <td style="width: 30%; text-align: left">为企业提供高水平的知识产权服务；以客观、科学、公正的鉴定意见，为公检法等办案机关提供技术支持。</td>
+      </tr>
+      
+    </table>
+  </div>
+
+  <h6 style="color: #828282">四、著作权鉴定</h6>
+  <div>
+    <table border="1" cellpadding="20">
+      <tr style="background-color: #0071c1; color: #fff; font-size: 1rem">
+        <th style="width: 30%; text-align: center">服务名称</th>
+        <th style="width: 40%; text-align: center">服务内容</th>
+        <th style="width: 30%; text-align: center">客户价值</th>
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">
+          著作权鉴定服务
+        </td>
+        <td style="width: 40%; text-align: left">对软件著作权中源代码与可执行代码是否为同一软件进行鉴定；对软件著作权中代码之间是否具有关联性进行鉴定；对软件著作权中源代码与目标代码的同一性进行鉴定；对美术作品、文字作品的独创性或同一性进行鉴定等。</td>
+        <td style="width: 30%; text-align: left">为企业提供高水平的知识产权服务；以客观、科学、公正的鉴定意见，为公检法等办案机关提供技术支持。</td>
+      </tr>
+      
+    </table>
+  </div>
+
+  <h6 style="color: #828282">五、商标鉴定</h6>
+  <div>
+    <table border="1" cellpadding="20">
+      <tr style="background-color: #0071c1; color: #fff; font-size: 1rem">
+        <th style="width: 30%; text-align: center">服务名称</th>
+        <th style="width: 40%; text-align: center">服务内容</th>
+        <th style="width: 30%; text-align: center">客户价值</th>
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">
+          商标鉴定服务
+        </td>
+        <td style="width: 40%; text-align: left">对商品或服务的各要素是否相同进行鉴定；对商标标志相同或相似进行鉴定；对假冒注册商标罪中的“同一种商品”及“相同商标”进行鉴定等。</td>
+        <td style="width: 30%; text-align: left">为企业提供高水平的知识产权服务；以客观、科学、公正的鉴定意见，为公检法等办案机关提供技术支持。</td>
+      </tr>
+      
+    </table>
+  </div>
+
+  <h6 style="color: #828282">六、其他关于知识产权的鉴定</h6>
+  <div>
+    <table border="1" cellpadding="20">
+      <tr style="background-color: #0071c1; color: #fff; font-size: 1rem">
+        <th style="width: 30%; text-align: center">服务名称</th>
+        <th style="width: 40%; text-align: center">服务内容</th>
+        <th style="width: 30%; text-align: center">客户价值</th>
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">
+          其他知识产权相关鉴定服务
+        </td>
+        <td style="width: 40%; text-align: left">包括对电路设计与集成电路布图设计是否相同或实质相同进行鉴定；对被控侵权产品的名称、包装、装潢与权利人产品的名称、包装、装潢相同或相近似进行鉴定；对技术合同技术成果是否达到合同约定的技术标准或存在重大技术缺陷进行鉴定等。</td>
+        <td style="width: 30%; text-align: left">为企业提供高水平的知识产权服务；以客观、科学、公正的鉴定意见，为公检法等办案机关提供技术支持。</td>
+      </tr>
+      
+    </table>
+  </div>
+
+  <h6 style="color: #828282">七、商业秘密资产确权管理指引培训课程</h6>
+  <div>
+    <table border="1" cellpadding="20">
+      <tr style="background-color: #0071c1; color: #fff; font-size: 1rem">
+        <th style="width: 30%; text-align: center">服务名称</th>
+        <th style="width: 40%; text-align: center">服务内容</th>
+        <th style="width: 30%; text-align: center">客户价值</th>
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">
+          商业秘密法律基础概念
+        </td>
+        <td style="width: 40%; text-align: left">针对近年关键政策、法律基础、案例解读、密点与载体概念、合理保护措施要求、竞业限制、互联网存证的法律概念等讲解。</td>
+        
+        <td
+          style="width: 30%; text-align: left"
+          rowspan="4"
+        >
+          帮助企业掌握商业秘密资产管理的知识
+        </td>
+        
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">
+          商业秘密资产盘点
+        </td>
+        <td style="width: 40%; text-align: left">针对资产盘点概念、互联网存证概念、企业实施流程建议、行业案例分享、盘点模板分享等知识进行讲解。</td>
+        
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">
+          商业秘密资产存证实操
+        </td>
+        <td style="width: 40%; text-align: left">课程包括：1.1.商业秘密存证工具落地；2.2.商业秘密管理制度案例展示；3.商业秘密保密软件案例展示；4.工具帐号开通、系统教学等。</td>
+        
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">
+          商业秘密确权成果管理
+        </td>
+        <td style="width: 40%; text-align: left">课程包括：1.企业商业秘密资产盘点成果展示；2.企业互联网存证工具成果展示；3.企业商业秘密确权管理流程展示。</td>
+        
+      </tr>
+      
+    </table>
+  </div>
+
+  <h6 style="color: #828282">八、商业秘密合规审查服务</h6>
+  <div>
+    <table border="1" cellpadding="20">
+      <tr style="background-color: #0071c1; color: #fff; font-size: 1rem">
+        <th style="width: 30%; text-align: center">服务名称</th>
+        <th style="width: 40%; text-align: center">服务内容</th>
+        <th style="width: 30%; text-align: center">客户价值</th>
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">
+          商业秘密资产确权管理指引专项实施
+        </td>
+        <td style="width: 40%; text-align: left">1.顾问团队初步调查、了解企业目前商业秘密管理现状，如知识产权、保密与协议、系统及研发等情况。2.顾问团队宣讲与培训，协助技术部门进行商业秘密盘点、归档、存证。3.顾问团队管理制度设计、公示与培训，拟定计划实施，商业秘密盘点同步推进。4.顾问团队对商业秘密保护项目总结验收，产出盘点报告、制度与软件导入成果报告。5.商密自运行，顾问团队针对管理制度实施情况、保密软件落地检讨与优化建议，商业秘密盘点工作收尾。顾问团队进行保密软件的确定、操作培训、试运行、协助各部门全面实行、商业秘密盘点工作继续优化。</td>
+        <td style="width: 30%; text-align: left">帮助企业提高商业秘密管理实施能力，建立合规的商业秘密审查体系。</td>
+      </tr>
+      
+    </table>
+  </div>
+</div>
+
+</div>
+    </div>
+  </div>
+</section>
+<!--
+ * @Description: 
+ * @Author: doris_xu
+ * @Date: 2023-03-21 15:11:19
+ * @LastEditTime: 2024-09-14 09:53:21
+-->
+<div class="back-to-top d-none">
+    <i class="istte-top"></i>
+</div>
+<div id="to-other-link">
+    <!-- <div class="to-other-link">
+        <div class="to-link-img">
+            <a href="http://121.37.152.231:8080/webroot/decision/link/el3d" target="_blank">
+                <img src="/img/market-link.png" />
+                <div class="text">找行情</div>
+            </a>
+        </div>
+        <div class="to-link-img">
+            <a href="https://www.t2radar.cn/tf" target="_blank">
+                <img src="/img/tech-link.png" />
+                <div class="text">找技术</div>
+            </a>
+        </div>
+        <div class="to-link-img">
+            <a href="http://stexfin.stte.com/" target="_blank">
+                <img src="/img/fund-link.png" />
+                <div class="text">找资金</div>
+            </a>
+        </div>
+        <div class="to-link-img">
+            <a href="https://admin.qiliance.com/#/login?name=%E4%B8%8A%E6%B5%B7%E6%8A%80%E6%9C%AF%E4%BA%A4%E6%98%93%E6%89%80"
+                target="_blank">
+                <img src="/img/policy-link.png" />
+                <div class="text">找政策</div>
+            </a>
+        </div>
+    </div> -->
+</div>
+<div class="QRcode-wp" id="QRcode-wp">
+    <i class="close-icon"></i>
+    <img src="/img/sideCode.png" class="qrcode" />
+</div>
+<footer>
+    <section class="main">
+        <div class="container">
+            <div class="footer-row">
+                <div class="col1" style="height: 139px;overflow: hidden;">
+                    <div class="wrapper">
+                        <h3>上海技术交易所</h3>
+                        <div class="list-one-col" style="width: 520px;">
+                            <a href="/about">关于我们</a>
+                            <div style="color: #333;"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- <div class="col2">
+          <div class="wrapper">
+            <h3>友情链接</h3>
+            <div class="list-two-cols">
+              
+            </div>
+          </div>
+        </div> -->
+                <div class="col3">
+                    <div class="wrapper">
+                        <h3 class="d-none d-md-block">联系我们</h3>
+                        <div class="list-two-cols">
+                            <div>
+                                <div>交易热线：4000-211-365</div>
+                                <div>
+                                    <a rel="nofollow" href="mailto:marketing@stte.com">marketing@stte.com</a>
+                                </div>
+                                <div>上海杨浦区国权北路1600号<br />湾谷科技园B5号楼</div>
+                            </div>
+                            <div class="text-left text-lg-right d-block d-md-none d-lg-block">
+                                <img src="/img/applet.png" class="qrcode" />
+                                <img src="/img/qrcode.png" class="qrcode" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="ext">
+        <div class="container">
+            <div class="d-flex flex-wrap">
+                <div>
+                    &copy;上海技术交易所有限公司版权所有
+                    <a rel="nofollow" href="http://beian.miit.gov.cn" target="_blank">沪ICP备18013364号-5
+                    </a>
+                    <a rel="nofollow" href="http://www.beian.gov.cn/portal/registerSystemInfo" target="_blank">
+                        31011002002706
+                        <img src="/img/ga.png" />
+                    </a>
+                    <img src="/img/962110.png" height="30">
+                </div>
+                <div class="ml-0 ml-lg-auto">
+                    
+                    <a href="/articles/43">Cookies条款</a>
+                    
+                    <a href="/articles/44">隐私政策</a>
+                    
+                    <a href="/articles/45">安全</a>
+                    
+                    <a href="/articles/46">数据保护</a>
+                    
+                </div>
+            </div>
+        </div>
+    </section>
+</footer>
+<script src="/vendors/jquery/jquery.clamp.min.js"></script>
+<script src="/vendors/jquery/jquery.cookie.min.js"></script>
+<script src="/vendors/jquery/jquery.smooth-scroll.min.js"></script>
+<script src="/vendors/bootstrap4/js/bootstrap.bundle.min.js"></script>
+<script src="/vendors/swiper/js/swiper-bundle.min.js"></script>
+<script src="//g.alicdn.com/de/prismplayer/2.8.2/aliplayer-min.js"></script>
+<script src="/js/base.js?v=1726282468223"></script>
+<script>
+    const isOther = JSON.parse(localStorage.getItem("isOther"));
+    if (isOther) {
+        document.getElementById('to-other-link').style.display = 'block';
+        document.getElementById('QRcode-wp').style.bottom = '335px';
+    } else {
+        document.getElementById('to-other-link').style.display = 'none';
+    }
+</script>
+</body>
+
+</html>
+
+<style scoped>
+  h6 {
+    font-size: 1.1rem !important;
+  }
+
+  table tbody tr th {
+    line-height: 0.6;
+  }
+</style>

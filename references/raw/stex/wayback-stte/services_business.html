@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en" page-name="services">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui, viewport-fit=cover" />
+    <title></title>
+    <meta name="keywords" content="" />
+    <meta name="description" content="" />
+    <link rel="icon" href="/favico.ico" type="image/x-icon" />
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="/vendors/bootstrap4/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/vendors/swiper/css/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="//at.alicdn.com/t/font_2112192_befum94ez48.css?t=istte" />
+    <link rel="stylesheet" href="//g.alicdn.com/de/prismplayer/2.8.2/skins/default/aliplayer-min.css" />
+    <link rel="stylesheet" href="/css/base.css?v=1726282468223" />
+    <script src="/vendors/jquery/jquery-3.3.1.min.js"></script>
+    <script>
+        var _hmt = _hmt || [];
+        (function () {
+            var hm = document.createElement('script');
+            hm.src = 'https://hm.baidu.com/hm.js?d2abd86cb7400a2fec2242bf9f9c85be';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+</head>
+
+<body>
+    
+    <header>
+        <div class="container top d-none d-md-flex">
+            <div class="logo mr-auto">
+                <a href="/"><img src="/img/logo.svg" alt="上海技术交易所" /></a>
+            </div>
+            <div class="search">
+                <form action="/search" method="get">
+                    <div class="input-group input-group-sm search-input-group">
+                        <input type="text" name="keyword" class="form-control" placeholder="输入关键字,搜技术,服务...."
+                            value="" />
+                        <div class="input-group-append">
+                            <button class="btn" type="submit">
+                                <i class="istte-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="tel ml-4">4000-211-365</div>
+            <div class="logo ml-4">
+                <a href="/"><img src="/img/exc.svg" alt="上海市公共资源交易中心" /></a>
+            </div>
+
+            <div class="ml-4">
+                <a href="https://english.stte.com/" target="_blank">
+                    <button class="btn-english">STEX-English</button>
+                </a>
+            </div>
+
+        </div>
+        <nav class="navbar navbar-expand-md navbar-light navbar-md-dark">
+            <div class="container">
+                <span class="navbar-brand d-inline-block d-md-none">
+                    <img src="/img/logo.svg" height="40" alt="上海技术交易所" />
+                </span>
+
+                <div class="ml-4 navbar-toggler">
+                    <a href="https://english.stte.com/" target="_blank">
+                        <button class="btn-english">STEX-English</button>
+                    </a>
+                </div>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-toggler">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbar-toggler">
+                    <ul class="navbar-nav d-none d-md-flex">
+                        
+                        
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">首页</a>
+                        </li>
+                        
+                        
+                        
+                        
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">交易</a>
+                            <div class="dropdown-menu">
+                                
+                                
+                                <a class="dropdown-item" href="/transactions">上海技术交易所</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/transactions/ctex">信息互联</a>
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/transactions/openLic">开放许可</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/transactions/gjcg2">国际成果</a>
+                                
+                                
+                                
+                                
+                            </div>
+                        </li>
+                        
+                        
+                        
+                        
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">机构</a>
+                            <div class="dropdown-menu">
+                                
+                                
+                                <a class="dropdown-item" href="/organizations/agency">执业机构名录</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/organizations/law-fin">专业机构名录</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/organizations/procedure">机构规则</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/organizations/comm">机构通知资讯</a>
+                                
+                                
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/keshang">科商</a>
+                                
+                                
+                            </div>
+                        </li>
+                        
+                        
+                        
+                        
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">专板</a>
+                            <div class="dropdown-menu">
+                                
+                                
+                                <a class="dropdown-item" href="http://www.simets.cn/">气象技术交易专板</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="https://hkp.stte.com">科普专板</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="https://atex.stte.com">农业科技专板</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="https://carbon.stte.com/">绿色技术交易专板</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="https://ip.stte.com">数字IP专板</a>
+                                
+                                
+                                
+                                
+                            </div>
+                        </li>
+                        
+                        
+                        
+                        
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">区域</a>
+                            <div class="dropdown-menu">
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/region/ecology">服务生态网络</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/region/innovate">创新服务中心</a>
+                                
+                                
+                            </div>
+                        </li>
+                        
+                        
+                        
+                        
+                        
+                        <li class="nav-item active dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">服务</a>
+                            <div class="dropdown-menu">
+                                
+                                
+                                <a class="dropdown-item" href="/services">科研端服务</a>
+                                
+                                
+                                
+                                <a class="dropdown-item active" href="/services/business">企业端服务</a>
+                                
+                                
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/services/gov">区域端服务</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/services/right">知识产权鉴定服务</a>
+                                
+                                
+                            </div>
+                        </li>
+                        
+                        
+                        
+                        
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">规则</a>
+                            <div class="dropdown-menu">
+                                
+                                
+                                <a class="dropdown-item" href="/policies/national">全国政策</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/policies/local">上海政策</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/policies/rules">交易规则</a>
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/policies/guide">相关指引</a>
+                                
+                                
+                            </div>
+                        </li>
+                        
+                        
+                        
+                        
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="/bidding">竞价</a>
+                        </li>
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">关于</a>
+                            <div class="dropdown-menu">
+                                
+                                
+                                <a class="dropdown-item" href="/about">简介</a>
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                <a class="dropdown-item" href="/about/jobs">加入我们</a>
+                                
+                                
+                                
+                                
+                            </div>
+                        </li>
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                    </ul>
+                    <ul class="navbar-nav d-flex d-md-none">
+                        
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">首页</a>
+                        </li>
+                        
+                        
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="/transactions">交易</a>
+                        </li>
+                        
+                        
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="/organizations">机构</a>
+                        </li>
+                        
+                        
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="http://www.simets.cn/">专板</a>
+                        </li>
+                        
+                        
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="/region">区域</a>
+                        </li>
+                        
+                        
+                        
+                        <li class="nav-item active">
+                            <a class="nav-link" href="/services">服务</a>
+                        </li>
+                        
+                        
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="/policies/national">规则</a>
+                        </li>
+                        
+                        
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="/bidding">竞价</a>
+                        </li>
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="/about">关于</a>
+                        </li>
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+</body>
+
+</html>
+<section class="tab-banner" style="background-image: url(/upload/banner/20201009/fb86e597-731f-4340-8ac8-9fc743a902a6.png)"></section>
+<section class="tab-panel-section">
+  <div class="container">
+    <div class="tab-panel">
+      <div class="tab-nav">
+        <div class="nav-items">
+          
+          
+          <a href="/services" class="">科研端服务</a>
+          
+          
+          
+          <a href="/services/business" class="active">企业端服务</a>
+          
+          
+          
+          
+          
+          <a href="/services/gov" class="">区域端服务</a>
+          
+          
+          
+          <a href="/services/right" class="">知识产权鉴定服务</a>
+          
+          
+        </div>
+      </div>
+      <div class="tab-content">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="services-introduction">
+  <h1 style="color: #828282; text-align: left; font-size: 1rem">
+    如果您来自于科创企业＼国企＼央企，我们可以为您提供如下服务：
+  </h1>
+  <h6 style="color: #828282">一、企业会员服务</h6>
+  <div>
+    <table border="1" cellpadding="20">
+      <tr style="background-color: #0071c1; color: #fff; font-size: 1rem">
+        <th style="width: 30%; text-align: center">服务名称</th>
+        <th style="width: 40%; text-align: center">服务内容</th>
+        <th style="width: 30%; text-align: center">客户价值</th>
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">技术服务-技术交易</td>
+        <td style="width: 40%; text-align: left">提供交易撮合服务、交易合规性服务和交易鉴证。</td>
+        
+        <td
+          style="width: 30%; text-align: left"
+          rowSpan="5"
+        >
+          高效助力企业解决发展过程中遇到的“技术难、融资难、政策难、推广难”问题，提供相应解决方案。
+        </td>
+        
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">技术服务-技转通</td>
+        <td style="width: 40%; text-align: left">提供技术查询、企业专利价值分析报告和单一专利价格分析报告等专业服务。</td>
+        
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">融资服务</td>
+        <td style="width: 40%; text-align: left">依托上技所的科技金融产品和创新服务，为会员企业提供便捷的融资渠道。</td>
+        
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">研究服务</td>
+        <td style="width: 40%; text-align: left">联动国家、地方层面的创新环境，为会员企业提供宏观政策、行业发展等前端研究咨询服务。</td>
+        
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">市场服务</td>
+        <td style="width: 40%; text-align: left">关注会员企业长远的发展经营，为优秀的成果、产品提供更加广阔的推广平台。</td>
+        
+      </tr>
+      
+    </table>
+  </div>
+
+  <h6 style="color: #828282">二、企业开放式创新中心规划建设</h6>
+  <div>
+    <table border="1" cellpadding="20">
+      <tr style="background-color: #0071c1; color: #fff; font-size: 1rem">
+        <th style="width: 30%; text-align: center">服务名称</th>
+        <th style="width: 40%; text-align: center">服务内容</th>
+        <th style="width: 30%; text-align: center">客户价值</th>
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">企业科创属性评估诊断体系</td>
+        <td style="width: 40%; text-align: left">从技术成果转化、交易准备度和规范性、成果对接机制等不同维度建立评估模型、评估指标和评估量表，发现相关领域的问题和短板，出具诊断报告。</td>
+        
+        <td
+          style="width: 30%; text-align: left"
+          rowSpan="4"
+        >
+          1.帮助企业实现技术成果的价值变现；2.规范企业的技术成果转化应用；3.支撑企业在科技创新和科技强国方面的发展目标。
+        </td>
+        
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">企业技术交易融合体系</td>
+        <td style="width: 40%; text-align: left">对企业科技成果转化现状进行深入分析，建立企业技术交易风险管理体系，打通企业与外部的合规技术交易路径。</td>
+        
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">企业数字科创平台</td>
+        <td style="width: 40%; text-align: left">基于企业战略目标、业务流程与管理需求，搭建数字科创平台，实现科技成果转移转化的全流程信息化管理。</td>
+        
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">企业科技创新激励机制</td>
+        <td style="width: 40%; text-align: left">围绕企业创新发展方向，帮助企业建立科创激励机制，包括薪酬体系和收入增长机制等。</td>
+        
+      </tr>
+      
+    </table>
+  </div>
+
+  <h6 style="color: #828282">三、企业科技成果评价服务</h6>
+  <div>
+    <table border="1" cellpadding="20">
+      <tr style="background-color: #0071c1; color: #fff; font-size: 1rem">
+        <th style="width: 30%; text-align: center">服务名称</th>
+        <th style="width: 40%; text-align: center">服务内容</th>
+        <th style="width: 30%; text-align: center">客户价值</th>
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">企业科创属性评价</td>
+        <td style="width: 40%; text-align: left">基于中国证监会与上交所关于科创板上市硬性指标和审核要点，对拟上市企业进行科创属性全面评估与诊断。</td>
+        <td style="width: 30%; text-align: left">指导企业为科创板上市过程中的信息披露要求提前做好准备。</td>
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">企业技术资产评价</td>
+        <td style="width: 40%; text-align: left">通过技术、市场、法律、能力和风险多维评价体系，为被评企业的技术资产提供全景画像，并给出初步的资产价值估算。</td>
+        <td style="width: 30%; text-align: left">方便各投资方及其他利益相关方快速理解企业的未来价值与潜在风险，提升品牌影响力和融资能力。</td>
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">专利分级盘点</td>
+        <td style="width: 40%; text-align: left">从专利撰写质量、保护范围、 权利稳定性、交易热度、市场价值等维度，对批量专利进行分级盘点，并进行分类、分级整理。</td>
+        <td style="width: 30%; text-align: left">为成果持有人专利资产的高效率批量管理提供决策建议。</td>
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">专利自由实施度评价</td>
+        <td style="width: 40%; text-align: left">基于成果涉及的技术方案，开展全球范围或者指定国家内的技术方案的专利检索、专利筛选、侵权比对，并出具分析报告。</td>
+        <td style="width: 30%; text-align: left">为专利实施人排查可能遇到的专利壁垒，识别侵权风险。</td>
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">专利资产价值评估</td>
+        <td style="width: 40%; text-align: left">基于历史交易数据，通过市场法分析企业专利价值，为交易双方提供底价参考。</td>
+        <td style="width: 30%; text-align: left">针对成果转化需求与知识产权融资需求，实现对专利价格的快速评估</td>
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">技术成果全景评价</td>
+        <td style="width: 40%; text-align: left">从技术性、市场性、法律性、交易性、投资性等多维度全面评价科技成果的价值，形成定制化的科技成果评价报告。</td>
+        <td style="width: 30%; text-align: left">协助多维度精准判断科技成果价值，着力强化成果高质量供给与转化应用，为后续的成果转化流程提供价值判定依据。</td>
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">技术成果估值</td>
+        <td style="width: 40%; text-align: left">从市场交易情况、市场规模、市场竞争、市场占有率等方面对技术成果进行综合分析，并通过收益法预测其市场价值。</td>
+        <td style="width: 30%; text-align: left">针对成果转化需求与知识产权融资需求，实现对成果价格的快速评估，为交易底价的形成提供科学依据。</td>
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">项目可转化性评价</td>
+        <td style="width: 40%; text-align: left">对于待转化项目，从项目、团队、市场前景、核心技术评价、转化风险评估等维度进行评价分析，并给出转化建议。</td>
+        <td style="width: 30%; text-align: left">面向成果持有方与成果实施企业，评价转化项目与市场需求的匹配程度，规避成果转化的相关风险。</td>
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">企业科技成果评价</td>
+        <td style="width: 40%; text-align: left">根据委托方明确的目的，对被评价科技成果进行审查与辨别，对其科学性、创造性、先进性、可行性和应用前景等进行评价，并做出相应结论。</td>
+        <td style="width: 30%; text-align: left">企业技术成果评价是企业技术水平的重要证明，其评价结果是企业获得国家奖励、政策支持、项目结题验收以及投融资等成果价值判断的重要依据，有利于技术成果获得行业的认可，帮助成果快速地进行市场推广和产业化。</td>
+      </tr>
+      
+    </table>
+  </div>
+
+  <h6 style="color: #828282">四、技术合同认定登记服务</h6>
+  <div>
+    <table border="1" cellpadding="20">
+      <tr style="background-color: #0071c1; color: #fff; font-size: 1rem">
+        <th style="width: 30%; text-align: center">服务名称</th>
+        <th style="width: 40%; text-align: center">服务内容</th>
+        <th style="width: 30%; text-align: center">客户价值</th>
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">技术合同认定登记服务</td>
+        <td style="width: 40%; text-align: left">从技术上核查申请认定登记的合同文本，确认其是否符合技术合同要求的专项管理工作。</td>
+        <td style="width: 30%; text-align: left">1、对接上海市技术合同认定系统，获得受理审核服务；2、上技所出具凭证可作为技术合同认定登记辅助材料证明； 3、“一站式”享受相关政策。</td>
+      </tr>
+      
+    </table>
+  </div>
+
+  <h6 style="color: #828282">五、合规交易服务</h6>
+  <div>
+    <table border="1" cellpadding="20">
+      <tr style="background-color: #0071c1; color: #fff; font-size: 1rem">
+        <th style="width: 30%; text-align: center">服务名称</th>
+        <th style="width: 40%; text-align: center">服务内容</th>
+        <th style="width: 30%; text-align: center">客户价值</th>
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">技术权益登记</td>
+        <td style="width: 40%; text-align: left">对技术成果、技术服务能力进行权属登记，为不同要素流通场景下主体的确权提供公信力依据。</td>
+        
+        <td
+          style="width: 30%; text-align: left"
+          rowSpan=""
+        >
+          保证各类创新主体权益。
+        </td>
+        
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">正式挂牌</td>
+        <td style="width: 40%; text-align: left">在上技所公开平台发布技术成果和技术服务交易信息，公开征集意向受让方。适用于交易标的、交易方式和交易底价明确的项目。</td>
+        
+        <td
+          style="width: 30%; text-align: left"
+          rowSpan="3"
+        >
+          1、保障交易主体流程严谨性；2、满足交易主体勤勉尽职、交易合规等需求；3、解决成果转化各类进场诉求。
+        </td>
+        
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">意向挂牌</td>
+        <td style="width: 40%; text-align: left">适用于标的范围、交易价格或交易方式不明确的项目，提供信息发布、征集意向方、组织交易等服务。</td>
+        
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">非公开协议成交</td>
+        <td style="width: 40%; text-align: left">适用于在进场前已经达成交易并签订合法文件的交易双方，提供交易鉴证、资金结算、出具交易凭证等交易服务。</td>
+        
+      </tr>
+      
+    </table>
+  </div>
+
+  <h6 style="color: #828282">六、金融服务</h6>
+  <div>
+    <table border="1" cellpadding="20">
+      <tr style="background-color: #0071c1; color: #fff; font-size: 1rem">
+        <th style="width: 30%; text-align: center">服务名称</th>
+        <th style="width: 40%; text-align: center">服务内容</th>
+        <th style="width: 30%; text-align: center">客户价值</th>
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">“技知融”</td>
+        <td style="width: 40%; text-align: left">“技知融”是上海技术交易所联合金融机构推出的知识产权质押融资产品。该产品依托上技所一站式基础数据模块、专利分析模块和技术价值模块，利用线上系统形成知识产权价值分析报告，结合技术合同审核，作为融资授信审核的重要依据。申请条件：主要服务对象为注册地在上海市，持有权属清晰，可办理质押登记与主营业务相关的技术专利的科技型企业；企业生产经营情况良好，具有持续经营能力（需在上海技术交易所登记相关业务合同）。</td>
+        
+        <td
+          style="width: 30%; text-align: left"
+          rowSpan="2"
+        >
+          解决企业融资难问题
+        </td>
+        
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">“上市技易贷”</td>
+        <td style="width: 40%; text-align: left">“上市技易贷” 是上海技术交易所联合上海银行推出的科创企业专属金融产品。产品面向有科技成长性、先进性、突破性的科创企业，结合上海技术交易所的科创属性评价和技术合同认定为企业缓解上市进程中的资金压力，支持科技型企业技术交易转化进场，助力科技企业培育上市，持续为主板、科创板、创业板输送具有潜力的拟上市公司。申请条件：企业在科创企业上市培育库入库，并在上海技术交易所提报融资需求，优先受理同步上传和反馈技术升级改造、合作开发、技术许可应用、技术转让等相关合同或意向交易信息的融资需求企业。</td>
+        
+      </tr>
+      
+    </table>
+  </div>
+
+  <h6 style="color: #828282">七、交易撮合服务</h6>
+  <div>
+    <table border="1" cellpadding="20">
+      <tr style="background-color: #0071c1; color: #fff; font-size: 1rem">
+        <th style="width: 30%; text-align: center">服务名称</th>
+        <th style="width: 40%; text-align: center">服务内容</th>
+        <th style="width: 30%; text-align: center">客户价值</th>
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">需求评估分析</td>
+        <td style="width: 40%; text-align: left">明确供需方需求，对拟交易项目进行调研，形成项目投资简报供市场推广。</td>
+        
+        <td
+          style="width: 30%; text-align: left"
+          rowSpan="5"
+        >
+          促进科学技术成果的落地转化，实现商业价值。
+        </td>
+        
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">信息披露推介</td>
+        <td style="width: 40%; text-align: left">通过上技所全平台宣传发布需求信息，针对具体行业以及需求，定制化点对点对接匹配意向方。</td>
+        
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">交易对接撮合</td>
+        <td style="width: 40%; text-align: left">组织服务机构参与，筛选合适意向方，参与尽调，跟进洽谈与评估，促成交易。</td>
+        
+      </tr>
+      
+      <tr>
+        <td style="width: 30%; text-align: center">产学研企融通</td>
+        <td style="width: 40%; text-align: left">通过技术转让、许可、合作等方式，与高校院所形成产业化合作网络，协助相关战略工作，建立产学研合作机制。</td>
+        
+      </tr>
+      
+    </table>
+  </div>
+</div>
+
+</div>
+    </div>
+  </div>
+</section>
+<!--
+ * @Description: 
+ * @Author: doris_xu
+ * @Date: 2023-03-21 15:11:19
+ * @LastEditTime: 2024-09-14 09:53:21
+-->
+<div class="back-to-top d-none">
+    <i class="istte-top"></i>
+</div>
+<div id="to-other-link">
+    <!-- <div class="to-other-link">
+        <div class="to-link-img">
+            <a href="http://121.37.152.231:8080/webroot/decision/link/el3d" target="_blank">
+                <img src="/img/market-link.png" />
+                <div class="text">找行情</div>
+            </a>
+        </div>
+        <div class="to-link-img">
+            <a href="https://www.t2radar.cn/tf" target="_blank">
+                <img src="/img/tech-link.png" />
+                <div class="text">找技术</div>
+            </a>
+        </div>
+        <div class="to-link-img">
+            <a href="http://stexfin.stte.com/" target="_blank">
+                <img src="/img/fund-link.png" />
+                <div class="text">找资金</div>
+            </a>
+        </div>
+        <div class="to-link-img">
+            <a href="https://admin.qiliance.com/#/login?name=%E4%B8%8A%E6%B5%B7%E6%8A%80%E6%9C%AF%E4%BA%A4%E6%98%93%E6%89%80"
+                target="_blank">
+                <img src="/img/policy-link.png" />
+                <div class="text">找政策</div>
+            </a>
+        </div>
+    </div> -->
+</div>
+<div class="QRcode-wp" id="QRcode-wp">
+    <i class="close-icon"></i>
+    <img src="/img/sideCode.png" class="qrcode" />
+</div>
+<footer>
+    <section class="main">
+        <div class="container">
+            <div class="footer-row">
+                <div class="col1" style="height: 139px;overflow: hidden;">
+                    <div class="wrapper">
+                        <h3>上海技术交易所</h3>
+                        <div class="list-one-col" style="width: 520px;">
+                            <a href="/about">关于我们</a>
+                            <div style="color: #333;"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- <div class="col2">
+          <div class="wrapper">
+            <h3>友情链接</h3>
+            <div class="list-two-cols">
+              
+            </div>
+          </div>
+        </div> -->
+                <div class="col3">
+                    <div class="wrapper">
+                        <h3 class="d-none d-md-block">联系我们</h3>
+                        <div class="list-two-cols">
+                            <div>
+                                <div>交易热线：4000-211-365</div>
+                                <div>
+                                    <a rel="nofollow" href="mailto:marketing@stte.com">marketing@stte.com</a>
+                                </div>
+                                <div>上海杨浦区国权北路1600号<br />湾谷科技园B5号楼</div>
+                            </div>
+                            <div class="text-left text-lg-right d-block d-md-none d-lg-block">
+                                <img src="/img/applet.png" class="qrcode" />
+                                <img src="/img/qrcode.png" class="qrcode" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="ext">
+        <div class="container">
+            <div class="d-flex flex-wrap">
+                <div>
+                    &copy;上海技术交易所有限公司版权所有
+                    <a rel="nofollow" href="http://beian.miit.gov.cn" target="_blank">沪ICP备18013364号-5
+                    </a>
+                    <a rel="nofollow" href="http://www.beian.gov.cn/portal/registerSystemInfo" target="_blank">
+                        31011002002706
+                        <img src="/img/ga.png" />
+                    </a>
+                    <img src="/img/962110.png" height="30">
+                </div>
+                <div class="ml-0 ml-lg-auto">
+                    
+                    <a href="/articles/43">Cookies条款</a>
+                    
+                    <a href="/articles/44">隐私政策</a>
+                    
+                    <a href="/articles/45">安全</a>
+                    
+                    <a href="/articles/46">数据保护</a>
+                    
+                </div>
+            </div>
+        </div>
+    </section>
+</footer>
+<script src="/vendors/jquery/jquery.clamp.min.js"></script>
+<script src="/vendors/jquery/jquery.cookie.min.js"></script>
+<script src="/vendors/jquery/jquery.smooth-scroll.min.js"></script>
+<script src="/vendors/bootstrap4/js/bootstrap.bundle.min.js"></script>
+<script src="/vendors/swiper/js/swiper-bundle.min.js"></script>
+<script src="//g.alicdn.com/de/prismplayer/2.8.2/aliplayer-min.js"></script>
+<script src="/js/base.js?v=1726282468223"></script>
+<script>
+    const isOther = JSON.parse(localStorage.getItem("isOther"));
+    if (isOther) {
+        document.getElementById('to-other-link').style.display = 'block';
+        document.getElementById('QRcode-wp').style.bottom = '335px';
+    } else {
+        document.getElementById('to-other-link').style.display = 'none';
+    }
+</script>
+</body>
+
+</html>
+
+<style scoped>
+  h6 {
+    font-size: 1.1rem !important;
+  }
+
+  table tbody tr th {
+    line-height: 0.6;
+  }
+</style>

@@ -29,7 +29,7 @@ export interface SessionUser {
 const MANAGES_TECHNOLOGY = ['org_owner', 'org_admin', 'technology_manager'];
 // 06 §6.1: drafts and revised listings are submitted for review; a published listing submits a revision.
 const SUBMITTABLE: string[] = ['draft', 'changes_requested', 'published'];
-const LOCKED: string[] = ['submitted', 'in_review', 'update_pending', 'rejected', 'suspended', 'archived'];
+const LOCKED: string[] = ['submitted', 'in_review', 'approved', 'update_pending', 'rejected', 'suspended', 'archived'];
 
 export function defineAbilityFor(user: SessionUser | null): AppAbility {
   const { can, cannot, build } = new AbilityBuilder(AppAbility);

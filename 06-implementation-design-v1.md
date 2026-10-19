@@ -9,8 +9,8 @@
 
 | Profile | Value |
 | --- | --- |
-| Launch | Regional (one country first; China selected later in [08](08-china-operating-model.md)) |
-| Business model | Managed technology exchange marketplace |
+| Launch | Regional (one country first; China selected later in [08](08-china-operating-model.md), Shanghai first) |
+| Business model | Managed technology exchange: demand-driven matching and services with managed transfer workflows |
 | Hosting | Self-hosted |
 | Team | Small engineering team (1–4 developers) |
 | Target runtime | **Node.js 12.4** + **MongoDB 4.4 / 5.0** replica set (see [11](11-target-runtime-node12-mongodb.md)) |
@@ -20,13 +20,15 @@
 
 ## Summary
 
-Build a **managed technology exchange**: neither a plain listing website nor a fully automated trading exchange.
+Build a **demand-driven matching and service platform with managed transfer workflows**: neither a plain listing website nor a trading exchange. Formal listing, bidding, settlement and certificates are venue functions, performed through STEX or CTEX with the platform as a registered practising agent.
 
 The platform brings technology suppliers and buyers together. It helps them discover relevant opportunities, verifies important claims, controls confidential disclosure, facilitates introductions and manages negotiations through to a recorded outcome. **Platform staff operate the review and exchange workflows; participating organizations keep control of their technologies and commercial decisions.**
 
+Formal listing (挂牌), bidding and auctions, third-party settlement and transaction certificates are **venue functions**. The platform does not perform them itself: from release R3 it routes them to a licensed venue (STEX or CTEX) as that venue's registered practising agent (执业类交易服务机构). Money is held and released only by a licensed bank or payment institution; the platform coordinates the conditions. See [08](08-china-operating-model.md) and [10](10-product-requirements.md).
+
 For the first release, deliberately avoid microservices, a separate graph database, a custom payment wallet and a complex AI platform. They add operational work without being needed to prove the core business.
 
-The backend runs on the given target server: **Node.js 12.4 with MongoDB 4.4 / 5.0**. Every database definition and code sample in this document was **verified** on that stack (Node 12.4.0 with MongoDB 4.4.30 and 5.0.33) with the checks in [`draft-implementation/`](draft-implementation/README.md). Doc [11](11-target-runtime-node12-mongodb.md) lists the approved library versions and the risks of the end-of-life runtime.
+The backend runs on the given target server: **Node.js 12.4 with MongoDB 4.4 / 5.0**. The database definitions, data-layer code and permission policy in §4 and §8.4 were **verified** on that stack (Node 12.4.0 with MongoDB 4.4.30 and 5.0.33) with the checks in [`draft-implementation/`](draft-implementation/README.md). HTTP routes are not part of the draft implementation yet, so the API contracts in §5 are a specification, not verified code. Doc [11](11-target-runtime-node12-mongodb.md) lists the approved library versions and the risks of the end-of-life runtime.
 
 ---
 
@@ -53,10 +55,10 @@ Where a decision is still open, an explicit assumption lets engineering proceed 
 | Open decision | Baseline assumption | Consequence |
 | --- | --- | --- |
 | Launch country | One country, chosen before production launch (later decided: China) | Country-specific legal, tax, privacy and e-signature review remains mandatory |
-| Launch language | One primary language, translation-ready architecture | User-visible strings and searchable text are language-aware |
-| Currency | One settlement and reporting currency; records store ISO 4217 codes | Multi-currency later without redesign |
-| Legal status | Private commercial platform, **not** a statutory exchange unless later authorized | Never imply official approval or legal certification |
-| Transaction execution | Platform coordinates; parties sign independently or through an integrated signing provider | No proprietary escrow or custody service |
+| Launch language | One primary language, translation-ready architecture (later decided: Chinese required, English optional) | User-visible strings and searchable text are language-aware |
+| Currency | One settlement and reporting currency (CNY); records store ISO 4217 codes | Multi-currency later without redesign |
+| Legal status | Private commercial platform, **not** a technology-trading venue. Venue functions (formal listing, bidding, settlement, certificates) go through a licensed venue, with the platform as its registered agent | Never imply official approval or legal certification |
+| Transaction execution | Platform coordinates; parties sign independently or through an integrated signing provider | No proprietary escrow or custody service; funds stay with a licensed bank or payment institution |
 | Verification | Human review supported by evidence and external registries | Verification claims are scoped and auditable |
 | Infrastructure | Linux servers under the operator's control; Node.js 12.4 and MongoDB 4.4/5.0 already given | systemd + Nginx deployment; no Kubernetes; see [11](11-target-runtime-node12-mongodb.md) |
 | Traffic | Early-stage, modest volume | Two API instances, one worker process, one MongoDB replica set |
@@ -70,12 +72,14 @@ A "regional launch" is not yet a precise legal jurisdiction. The domain model is
 | Included | Deferred until justified |
 | --- | --- |
 | Organization accounts and roles | Automated payment settlement or escrow |
-| Technology listings and offers | Public auctions and automated bidding |
+| Technology listings and offers | Formal listing, auctions and bidding (venue functions, routed to a licensed venue in R3) |
 | Buyer demands and search | Complex commission splitting |
 | Managed review and matching | A microservice per domain |
 | Controlled introductions | Custom AI model training, autonomous negotiation |
 | Deal pipeline and audit trail | A separate graph database or event-streaming cluster |
 | | Multi-region active-active deployment |
+
+Doc [10 §9](10-product-requirements.md) splits this scope into releases: **R0** foundation, **R1** marketplace MVP (listings, review, demands, search, matching, introductions), **R2** managed transfer (deal workspace, negotiation, NDA and data rooms, e-signature) and **R3** venue-routed transactions and payment-partner integration. §13 maps the development phases to these releases.
 
 ---
 
@@ -154,6 +158,7 @@ Each offer defines its own transaction type, rights scope, territory, field of u
 | 13 | `notifications` | Email and in-app notifications |
 | 14 | `audit` | Immutable business event history |
 | 15 | `reporting` | Operational and commercial dashboards |
+| 16 | `content` | Articles, events and event registrations (public content pages) |
 
 Finance, subscriptions, e-signatures and AI start as **integration boundaries or later modules**, not as reasons to split the backend into services.
 
@@ -263,12 +268,12 @@ Embedded (not separate collections): deal **parties** (inside `deals`), document
 
 | Topic | Rule |
 | --- | --- |
-| Identifiers | `_id` is an `ObjectId`. Every business object users talk about also gets a **human-readable reference** (`TEC-000123`, `DEM-…`, `DEAL-…`, `CASE-…`), generated by an atomic counter and indexed as unique. Support staff and users quote references, never raw IDs |
-| Field names | camelCase; enums are lower-case strings declared once as `as const` arrays (TypeScript type + Mongoose `enum`), repeated in the database validator |
+| Identifiers | `_id` is an `ObjectId`. Every business object users talk about also gets a **human-readable reference** (`ref`): `TEC-000123` for technologies, `DEM-` demands, `DEAL-` deals, `CASE-` review cases, and `ORG-`, `OFR-` (offers), `INT-` (introductions). A reference is generated by an atomic counter (`Counter.nextRef`) and indexed as unique. The API sends `_id` as a 24-character hex string named `id` (§5.1). Support staff and users quote references, never raw IDs |
+| Field names | camelCase, in the database **and** in API JSON; enums are lower-case snake_case strings declared once as `as const` arrays (TypeScript type + Mongoose `enum`), repeated in the database validator |
 | Text | Bilingual objects `{ zh: string, en?: string }`: Chinese is required, English optional (machine-translated drafts must be reviewed) |
 | Time | BSON `Date` in UTC; display in `Asia/Shanghai` |
 | Money | `{ currency: 'CNY', amountMinor: Int64 }` (fen). Never floating point; percentages and royalty rates as `Decimal128`. Mongoose 5 has no 64-bit integer type, so the project registers a strict `Int64` schema type (§4.5) that rejects fractions and serializes to JSON as a decimal string |
-| Concurrency | Every mutable document has `rev` (int): the Mongoose **version key** with `optimisticConcurrency: true`, so every `save()` filters on `rev` and increments it. The API compares the client's `If-Match` value with `rev` first. A mismatch returns `409 VERSION_CONFLICT` |
+| Concurrency | Every mutable document has `rev` (int): the Mongoose **version key** with `optimisticConcurrency: true`, so every `save()` filters on `rev` and increments it. `rev` is not the content version: `currentVersion` / `publishedVersion` number the reviewed content revisions, while `rev` counts every change to the document. The API returns `rev` (also as the `ETag` header), and the client sends it back in `If-Match`. The service compares it with `rev` before changing anything; a mismatch returns `409 VERSION_CONFLICT` |
 | History | Content that is reviewed or published lives in **version collections** (`technology_versions`, `demand_versions`) that become immutable when frozen (`freezablePlugin`); state changes are appended to `workflow_transitions` (`appendOnlyPlugin`) |
 | Embed vs reference | Embed small, bounded data that is always read with its parent (deal parties ≤ 10, document links). Reference anything with its own lifecycle, its own permissions, or unbounded growth (versions, milestones, messages, matches) |
 | Arrays | No unbounded arrays. Conversations, audit events and matches are separate collections |
@@ -285,21 +290,21 @@ Embedded (not separate collections): deal **parties** (inside `deals`), document
 | `users` (`User`) | People and login identities | `phoneE164`, `emailNormalized`, `passwordHash`, `status`, `realName.status`, `locale` | unique partial: phone, email, authSubject |
 | `organizations` (`Organization`) | Legal or institutional participants | `ref`, `legalName`, `organizationType`, `jurisdictionCode`, `registrationNumber` (unified social credit code), `verification.{status,level,expiresAt}` | unique `ref`; unique partial (`jurisdictionCode`, `registrationNumber`) |
 | `organization_memberships` (`OrganizationMembership`) | User ↔ organization, roles | `organizationId`, `userId`, `roleCodes[]`, `status` | unique (`organizationId`, `userId`); (`userId`, `status`) |
-| `organization_authorizations` (`OrganizationAuthorization`) | Delegated authority: sign, approve payment, approve disclosure; limits, expiry, evidence | `organizationId`, `userId`, `scope`, `limitMinor`, `validUntil`, `status` | (`organizationId`, `userId`, `scope`, `status`) |
+| `organization_authorizations` (`OrganizationAuthorization`) | Delegated authority: sign, approve payment, approve disclosure, submit to a venue; limits, expiry, evidence | `organizationId`, `userId`, `scope`, `limitMinor`, `validUntil`, `status` | (`organizationId`, `userId`, `scope`, `status`) |
 | `platform_role_assignments` (`PlatformRoleAssignment`) | Staff roles, separate from organization roles | `userId`, `roleCode`, `expiresAt` | unique (`userId`, `roleCode`) |
 | `technologies` (`Technology`) | Stable identity and lifecycle of a technology | `ref`, `ownerOrganizationId`, `technologyType`, `lifecycleStatus`, `visibility`, `currentVersion`, `publishedVersion`, `rev` | unique `ref`; (`ownerOrganizationId`, `lifecycleStatus`) |
 | `technology_versions` (`TechnologyVersion`) | Immutable revisions (frozen on submission) | `technologyId`, `version`, `title`, `publicSummary`, `claimedTrl`, `assessedTrl`, `technicalAttributes`, `frozen` | unique (`technologyId`, `version`) |
 | `technology_publications` (`TechnologyPublication`) | **Approved public snapshot**: the only technology data sent to search and public pages | `technologyId`, `version`, `ref`, `status`, owner summary, title, summary, codes, TRL, offer types, badges | unique partial `technologyId` where `status: 'live'` |
-| `ip_assets` (`IpAsset`) | Patents, applications, software copyrights, know-how claims | `technologyId`, `assetType`, `jurisdictionCode`, `identifier`, `rightsStatus`, `legalStatusCheckedAt` | `technologyId`; (`jurisdictionCode`, `identifier`) |
-| `technology_offers` (`TechnologyOffer`) | Licence, assignment, partnership, pilot, equity-investment offers | `ref`, `technologyId`, `technologyVersion`, `transactionType`, `offerStatus`, `exclusivity`, `price`, `validFrom/Until` | unique `ref`; (`technologyId`, `offerStatus`) |
-| `demands`, `demand_versions` (`Demand`, `DemandVersion`) | Buyer needs and their immutable revisions | status, visibility, `hardConstraints`, `preferredAttributes`, `budget` | unique `ref`; unique (`demandId`, `version`) |
-| `matches` (`Match`) | Scored demand ↔ offer candidates, reproducible | `demandId`, `demandVersion`, `offerId`, `technologyVersion`, `rankingVersion`, `score`, `scoreComponents`, `explanation` | **unique** (`demandId`, `demandVersion`, `offerId`, `rankingVersion`) |
-| `introduction_requests` (`IntroductionRequest`) | Consent-based introductions | `ref`, `matchId`, `buyerOrganizationId`, `supplierOrganizationId`, `status`, `disclosureScope` | (`supplierOrganizationId`, `status`); validator: buyer ≠ supplier |
-| `deals` (`Deal`) | Managed negotiations and transactions (parties embedded) | `ref`, `dealType`, `status`, `parties[]`, `estimatedValue`, `assignedManagerId` | unique partial `introductionRequestId`; (`parties.organizationId`, `status`) |
-| `deal_milestones` (`DealMilestone`) | Deliverables and conditions | `dealId`, `dueDate`, `status`, evidence | (`dealId`, `dueDate`); (`status`, `dueDate`) |
-| `documents` (`DocumentFile`) | File metadata, classification, scan status, links | `storageKey`, `sha256`, `classification`, `scanStatus`, `lifecycleStatus`, `links[]` | unique `storageKey`; (`links.resourceType`, `links.resourceId`) |
-| `document_access_grants` (`DocumentAccessGrant`) | Per-document access for a grantee (view/download, watermark, expiry) | `documentId`, `granteeOrganizationId`, `permissions`, `expiresAt`, `revokedAt` | (`documentId`, `granteeOrganizationId`) |
-| `review_cases` (`ReviewCase`) | Verification, listing, IP, demand and introduction reviews | `ref`, `caseType`, `resource.{type,id,version}`, `status`, `priority`, `assignedTo`, `dueAt` | (`status`, `priority`, `dueAt`); (`assignedTo`, `status`) |
+| `ip_assets` (`IpAsset`) | Patents, applications, software copyrights, know-how claims | `technologyId`, `ownerOrganizationId`, `assetType`, `jurisdictionCode`, `identifier`, `rightsStatus`, `legalStatusCheckedAt` | `technologyId`; (`jurisdictionCode`, `identifier`) |
+| `technology_offers` (`TechnologyOffer`) | Licence, assignment, partnership, pilot, equity-investment offers | `ref` (`OFR-`), `technologyId`, `technologyVersion`, `supplierOrganizationId`, `transactionType`, `offerStatus`, `exclusivity`, `price`, `validFrom/Until` | unique `ref`; (`technologyId`, `offerStatus`); (`supplierOrganizationId`, `offerStatus`) |
+| `demands`, `demand_versions` (`Demand`, `DemandVersion`) | Buyer needs and their immutable revisions | Demand: `ref`, `buyerOrganizationId`, `status`, `visibility`, `currentVersion`. Version: `title`, `problemStatement`, `hardConstraints`, `preferredAttributes`, `budget`, `frozen` | unique `ref`; (`buyerOrganizationId`, `status`); unique (`demandId`, `version`) |
+| `matches` (`Match`) | Scored demand ↔ offer candidates, reproducible | `demandId`, `demandVersion`, `offerId`, `technologyVersion`, `rankingVersion`, `score`, `scoreComponents`, `explanation`, `eligibilityStatus`, `reviewStatus` | **unique** (`demandId`, `demandVersion`, `offerId`, `rankingVersion`) |
+| `introduction_requests` (`IntroductionRequest`) | Consent-based introductions | `ref` (`INT-`), `matchId`, `buyerOrganizationId`, `supplierOrganizationId`, `status`, `disclosureScope` | unique `ref`; (`supplierOrganizationId`, `status`); (`buyerOrganizationId`, `status`); validator: buyer ≠ supplier |
+| `deals` (`Deal`) | Managed negotiations and transactions (parties embedded) | `ref`, `dealType`, `status`, `parties[]`, `estimatedValue`, `assignedManagerId` | unique `ref`; unique partial `introductionRequestId`; (`parties.organizationId`, `status`) |
+| `deal_milestones` (`DealMilestone`) | Deliverables, conditions and payment milestones | `dealId`, `kind`, `dueDate`, `amount`, `status`, `evidenceDocumentIds` | (`dealId`, `dueDate`); (`status`, `dueDate`) |
+| `documents` (`DocumentFile`) | File metadata (the bytes are in file storage), classification, scan status, links | `ownerOrganizationId`, `storageKey`, `sha256`, `classification`, `scanStatus`, `lifecycleStatus`, `links[]` | unique `storageKey`; (`links.resourceType`, `links.resourceId`); (`ownerOrganizationId`, `createdAt`) |
+| `document_access_grants` (`DocumentAccessGrant`) | Per-document access for another organization (view/download, watermark, expiry) | `documentId`, `dealId`, `granteeOrganizationId`, `permissions`, `watermark`, `expiresAt`, `revokedAt` | (`documentId`, `granteeOrganizationId`); `dealId` |
+| `review_cases` (`ReviewCase`) | Verification, listing, IP, demand and introduction reviews | `ref`, `caseType`, `resource.{type,id,version}`, `status`, `priority`, `assignedTo`, `dueAt` | unique `ref`; (`status`, `priority`, `dueAt`); (`assignedTo`, `status`); (`resource.type`, `resource.id`) |
 | `workflow_transitions` (`WorkflowTransition`) | Every state change with actor and reason | `resource`, `fromStatus`, `toStatus`, `action`, `actorUserId`, `correlationId` | (`resource.type`, `resource.id`, `occurredAt`) |
 | `idempotency_keys` (`IdempotencyKey`) | Results of retriable commands | `actorUserId`, `key`, `requestHash`, `response*`, `expiresAt` | unique (`actorUserId`, `key`); **TTL** on `expiresAt` |
 | `outbox_events` (`OutboxEvent`) | Events written in the business transaction, relayed by the worker | `eventType`, `aggregate`, `payload`, `status`, `attempts`, `lockedUntil` | partial (`createdAt`) where `status: 'pending'` |
@@ -425,7 +430,9 @@ export function recordOptions(collection: string, createdAt = 'createdAt'): Sche
 }
 ```
 
-Mongoose 5 has no 64-bit integer type and stores JavaScript numbers above 2³¹ as doubles. `Int64` ([`int64.schema-type.ts`](draft-implementation/src/core/db/int64.schema-type.ts), about 40 lines) accepts a `Long`, a safe integer or an integer string, and rejects anything else. The community package `mongoose-long` was not adopted: it silently truncates `300000.5` to `300000`.
+Mongoose 5 has no 64-bit integer type and stores JavaScript numbers above 2³¹ as doubles. `Int64` ([`int64.schema-type.ts`](draft-implementation/src/core/db/int64.schema-type.ts), about 40 lines) accepts a `Long`, a safe integer or an integer string, and rejects anything else. A stored `Long` serializes to JSON as a decimal string (`"30000000"`), so API clients never lose precision (JavaScript numbers are exact only up to 2⁵³). The community package `mongoose-long` was not adopted: it silently truncates `300000.5` to `300000`.
+
+The same file has small helpers used by every schema: `int()` (a `Number` that must be an integer, stored as BSON `int`), `enumOf()` (a string limited to an `as const` list), `ref()` (an `ObjectId` reference to another model), `refPattern('TEC')` (the `^TEC-[0-9]{6,}$` format) and `crossField()` (a validator that needs the whole document; see the table below).
 
 #### A model: technologies and their versions
 
@@ -436,14 +443,15 @@ export const TECHNOLOGY_STATUSES = [
   'rejected', 'published', 'update_pending', 'suspended', 'archived',
 ] as const;
 export type TechnologyStatus = typeof TECHNOLOGY_STATUSES[number];
+export const VISIBILITIES = ['private', 'public', 'restricted'] as const;
 
 export interface TechnologyDoc extends Document {
   _id: Types.ObjectId;
   ref: string;
   ownerOrganizationId: Types.ObjectId;
-  technologyType: string;
+  technologyType: string;                          // validated against the taxonomy by the service
   lifecycleStatus: TechnologyStatus;
-  visibility: 'private' | 'public' | 'restricted';
+  visibility: typeof VISIBILITIES[number];
   currentVersion: number;                          // version being edited or reviewed…
   publishedVersion: number | null;                 // …while this one stays public
   createdBy: Types.ObjectId;
@@ -457,7 +465,7 @@ const TechnologySchema = new Schema<TechnologyDoc>({
   ownerOrganizationId: ref('Organization', { required: true, immutable: true }),
   technologyType: { type: String, required: true },
   lifecycleStatus: enumOf(TECHNOLOGY_STATUSES, { required: true, default: 'draft' }),
-  visibility: enumOf(['private', 'public', 'restricted'] as const, { required: true, default: 'private' }),
+  visibility: enumOf(VISIBILITIES, { required: true, default: 'private' }),
   currentVersion: int({ required: true, min: 1, default: 1 }),
   publishedVersion: int({ default: null }),
   createdBy: ref('User', { required: true, immutable: true }),
@@ -468,7 +476,11 @@ TechnologySchema.index({ ownerOrganizationId: 1, lifecycleStatus: 1 });
 TechnologySchema.plugin(tenantScopePlugin, { fields: ['ownerOrganizationId'] });   // §4.8
 TechnologySchema.plugin(accessibleRecordsPlugin);   // Technology.accessibleBy(ability, action), §8.4
 
-export const Technology = model<TechnologyDoc, AccessibleRecordModel<TechnologyDoc>>('Technology', TechnologySchema);
+export type TechnologyModel = AccessibleRecordModel<TechnologyDoc>;
+export const Technology = model<TechnologyDoc, TechnologyModel>('Technology', TechnologySchema);
+
+// technology_versions: content revisions, immutable once frozen (on submission)
+const trl = () => int({ min: 1, max: 9, default: null });
 
 const TechnologyVersionSchema = new Schema<TechnologyVersionDoc>({
   technologyId: ref('Technology', { required: true, immutable: true }),
@@ -476,9 +488,10 @@ const TechnologyVersionSchema = new Schema<TechnologyVersionDoc>({
   title: { type: i18nText, required: true },
   publicSummary: i18nText,
   technicalDescription: i18nText,
-  industryCodes: [{ type: String, match: /^[A-T][0-9]{0,4}$/ }],   // GB/T 4754-2017
-  claimedTrl: int({ min: 1, max: 9, default: null }),
-  assessedTrl: int({ min: 1, max: 9, default: null }),
+  industryCodes: [{ type: String, match: /^[A-T][0-9]{0,4}$/ }],   // GB/T 4754-2017, e.g. C384
+  applicationCodes: [String],
+  claimedTrl: trl(),
+  assessedTrl: trl(),
   technicalAttributes: Schema.Types.Mixed,          // sector-specific fields, validated per technologyType
   createdBy: ref('User', { required: true }),
 }, recordOptions('technology_versions'));
@@ -507,7 +520,7 @@ export const TechnologyVersion = model<TechnologyVersionDoc>('TechnologyVersion'
 
 #### Database validators (migrations)
 
-Migrations create the core collections with `$jsonSchema` validators, define roles and fix data. They do not create indexes. The validators repeat the most important rules of the Mongoose schemas, so a write that bypasses Mongoose still cannot store an unknown state, money as a double, or a buyer that is also the supplier. The verified migration is [`001-core-schema.js`](draft-implementation/migrations/001-core-schema.js):
+Migrations create the core collections with `$jsonSchema` validators, define roles and fix data. They do not create the models' indexes; the one exception is the TTL index on the `sessions` collection, which belongs to `connect-mongo` rather than to a Mongoose model. The validators repeat the most important rules of the Mongoose schemas, so a write that bypasses Mongoose still cannot store an unknown state, money as a double, or a buyer that is also the supplier. The verified migration is [`001-core-schema.js`](draft-implementation/migrations/001-core-schema.js):
 
 ```javascript
 // migrations/001-core-schema.js (excerpt) — run by migrate-mongo as tex_migrator
@@ -591,7 +604,7 @@ await admin.command({ createRole: 'texApp', privileges, roles: [] });   // updat
 | Database user | Role | Used by |
 | --- | --- | --- |
 | `tex_app` | `texApp` | API and worker processes |
-| `tex_migrator` | `dbAdmin` + `readWrite` on `tex`, `tex_audit`; `userAdmin` only when changing roles | Release pipeline (migrations and index sync) |
+| `tex_migrator` | `dbAdmin` + `readWrite` on `tex`, `tex_audit`; user-administration rights (`userAdmin` on `admin` and on the databases the role covers) only while a migration changes roles | Release pipeline (migrations and index sync) |
 | `tex_backup` | `backup` / `restore` | Backup jobs |
 | `tex_readonly` | `read` on `tex` (not on documents' storage) | Reporting, support investigations |
 
@@ -618,15 +631,22 @@ export async function inTransaction<T>(work: (session: ClientSession) => Promise
 }
 ```
 
-The submit use case, verified with the Document API ([`technology.service.ts`](draft-implementation/src/modules/technology/technology.service.ts) also has create, update, revise-after-publication, discard and list):
+The submit use case, verified with the Document API ([`technology.service.ts`](draft-implementation/src/modules/technology/technology.service.ts) also has create, update, revise-after-publication, discard and list). The `Actor` is built from the session by the API middleware: the user's ID, the IDs of the organizations where the user is an active member (the tenant context of §4.8), the CASL ability (§8.4) and the request ID as `correlationId`. `expectedRev` is the `If-Match` value (§5.1).
 
 ```typescript
 // src/modules/technology/technology.service.ts (excerpt)
-/** Tenant scope: another organization's technology is indistinguishable from a missing one. */
-async function loadForChange(actor: Actor, id: Types.ObjectId, expectedRev: number, session: ClientSession) {
+// Allowed submissions (§6.1): a draft or a revised listing goes to review; a revision of a published
+// listing goes to `update_pending` while the old snapshot stays public.
+const SUBMIT_TARGET: Partial<Record<TechnologyStatus, TechnologyStatus>> = {
+  draft: 'submitted', changes_requested: 'submitted', published: 'update_pending',
+};
+const REVIEW_SLA_MS = 5 * 24 * 3600 * 1000;       // first review within 5 days (business days in production, FR-ADM-09)
+
+/** The tenant scope makes another organization's technology indistinguishable from a missing one. */
+async function loadForChange(actor: Actor, id: Types.ObjectId, expectedRev: number, session: ClientSession): Promise<TechnologyDoc> {
   const tech = await Technology.findById(id).setOptions({ tenant: actor }).session(session);
-  if (!tech) throw new NotFoundError('Technology not found');                                  // 404
-  if (tech.rev !== expectedRev) throw new VersionConflictError('Technology changed since it was read');   // 409
+  if (!tech) throw new NotFoundError('Technology not found');                                                  // 404
+  if (tech.rev !== expectedRev) throw new VersionConflictError(`Technology changed since it was read (rev ${tech.rev})`);  // 409
   return tech;
 }
 
@@ -634,13 +654,13 @@ export function submitTechnologyForReview(actor: Actor, id: Types.ObjectId, expe
   return inTransaction(async (session) => {
     const tech = await loadForChange(actor, id, expectedRev, session);
     ForbiddenError.from(actor.ability).throwUnlessCan('submit', tech);    // CASL: role + state rules, 403
-    const target = SUBMIT_TARGET[tech.lifecycleStatus];                   // draft → submitted, published → update_pending
-    if (!target) throw new InvalidTransitionError(`Cannot submit in status ${tech.lifecycleStatus}`);
+    const target = SUBMIT_TARGET[tech.lifecycleStatus];
+    if (!target) throw new InvalidTransitionError(`Cannot submit a technology in status ${tech.lifecycleStatus}`);   // 409
 
     const version = await TechnologyVersion.findOne({ technologyId: tech._id, version: tech.currentVersion })
       .session(session)
       .orFail(() => new NotFoundError('Current version missing'));
-    if (version.frozen) throw new InvalidTransitionError('No unsubmitted changes');
+    if (version.frozen) throw new InvalidTransitionError('No unsubmitted changes');                           // 409
     version.frozen = true;                         // immutable from now on (freezablePlugin)
     await version.save();                          // a document loaded in the session saves in it
 
@@ -648,15 +668,16 @@ export function submitTechnologyForReview(actor: Actor, id: Types.ObjectId, expe
     tech.lifecycleStatus = target;
     await tech.save();                             // filters on rev and increments it: VersionError if changed meanwhile
 
+    const now = new Date();
     const reviewCase = new ReviewCase({
       ref: await Counter.nextRef('CASE', session),  // atomic findOneAndUpdate on `counters`
       caseType: 'technology_review',
-      resource: { type: 'technology', id: tech._id, version: version.version },
-      dueAt: addWorkingDays(new Date(), 5),         // SLA from the working-day calendar (FR-ADM-09)
+      resource: { type: 'technology', id: tech._id, version: version.version },   // the exact version under review
+      dueAt: new Date(now.getTime() + REVIEW_SLA_MS),
     });
     await reviewCase.save({ session });
-    await record(session, actor, tech, 'submitted', fromStatus, target, { reviewCaseRef: reviewCase.ref });
-    return { reviewCaseRef: reviewCase.ref, status: target };
+    await record(session, actor, tech, 'submitted', fromStatus, tech.lifecycleStatus, { reviewCaseRef: reviewCase.ref });
+    return { reviewCaseRef: reviewCase.ref, status: tech.lifecycleStatus, rev: tech.rev };   // new ETag value
   });
 }
 
@@ -673,7 +694,9 @@ async function record(session: ClientSession, actor: Actor, tech: TechnologyDoc,
 }
 ```
 
-The draft implementation uses a fixed five-day due date; production code computes it from `calendar_days` (§4.9).
+The draft implementation uses a fixed five-calendar-day due date. Production code must compute five **working days** from `calendar_days` (§4.9), which records official holidays and make-up working days (FR-ADM-09).
+
+How the errors in this excerpt reach the client (full list in §5.6): `NotFoundError` → `404`, `VersionConflictError` and Mongoose's `VersionError` → `409 VERSION_CONFLICT`, CASL's `ForbiddenError` → `403`, `InvalidTransitionError` → `409 INVALID_STATE_TRANSITION`, and a Mongoose `ValidationError` → `422`. Because the policy check comes first, a request that the policy's state rules forbid (for example submitting a listing that is already in review) gets `403`; `409 INVALID_STATE_TRANSITION` covers what the policy cannot see, such as a published listing with no unsubmitted changes.
 
 **Document API patterns** used throughout the backend:
 
@@ -732,9 +755,13 @@ export function tenantScopePlugin(schema: Schema<any>, opts: { fields: string[] 
     this[SCOPED] = true;
   }
 
-  schema.pre('aggregate', function () {           // the scope becomes the first pipeline stage
-    const filter = scopeFilter(this.model().modelName, opts.fields, this.options);
-    if (filter) this.pipeline().unshift({ $match: filter });
+  schema.pre('aggregate', function (this: Aggregate<unknown>) {   // the scope becomes the first pipeline stage
+    const aggregate = this as Aggregate<unknown> & { options: TenantScopeOptions; model(): { modelName: string } };
+    const options = aggregate.options || {};
+    const filter = scopeFilter(aggregate.model().modelName, opts.fields, options);
+    if (filter) aggregate.pipeline().unshift({ $match: filter });
+    delete options.tenant;
+    delete options.crossTenant;
   });
 }
 
@@ -751,14 +778,19 @@ DealSchema.plugin(tenantScopePlugin, { fields: ['parties.organizationId'] });
 | `Demand` | `buyerOrganizationId` |
 | `IntroductionRequest` | `buyerOrganizationId` or `supplierOrganizationId` (both sides see it) |
 | `Deal` | `parties.organizationId` |
-| Child records (`technology_versions`, `demand_versions`, `deal_milestones`) | Loaded only through their scoped parent's `_id` |
+| Child records (`technology_versions`, `demand_versions`, `deal_milestones`, `matches`, `document_access_grants`) | No plugin: loaded only through their scoped parent's `_id` (technology, demand or offer, deal, document) |
+| Identity records (`users`, `organizations`, `organization_memberships`, `organization_authorizations`, `platform_role_assignments`) | No plugin: loaded by the session's own user ID and organization IDs, or by staff modules |
+| Public data (`technology_publications`) and platform records (`review_cases`, `workflow_transitions`, `outbox_events`, `counters`) | No plugin: public by design, or used only by services and staff modules |
+
+A tenant-scoped query on another organization's document returns nothing, so the service reports `404`, never `403`. The API therefore does not reveal that the document exists (§5.6).
 
 Controls around it:
 
 1. Document methods (`doc.save()`, `doc.deleteOne()`) are not queries and are not scoped by the plugin. They are safe because the document was loaded through a scoped query, and services only change documents they loaded. New documents take their owner from the actor's context, and the policy check on the unsaved document (`can('create', doc)`) rejects any other owner.
 2. Staff access uses `crossTenant: { reason }` with a case reference. The calling service writes an audit event with that reason; a lint rule allows `crossTenant` only in staff modules.
 3. Every list endpoint has an automated cross-tenant test (Organization A must never see Organization B's data). The draft implementation's tests check every query type, including `updateMany`, `deleteMany`, `distinct` and `aggregate`.
-4. Highly sensitive fields (bank account numbers, ID-card numbers) use **explicit client-side field-level encryption** through the driver, or are stored only with the payment or identity provider. Automatic encryption needs MongoDB Enterprise.
+4. Access by grant is not covered by owner fields. A buyer that holds a `document_access_grants` entry for a supplier's document cannot load it through its own tenant scope. The planned path: the service finds an active, unexpired grant for the caller's organization, then loads the document through the audited cross-tenant path with the grant as the reason, and the policy (`accessGrants` in §8.4) allows `read`. This path is not yet in the draft implementation.
+5. Highly sensitive fields (bank account numbers, ID-card numbers) are stored only with the payment or identity provider, or encrypted by the application before they are saved. Explicit client-side field-level encryption needs the native `mongodb-client-encryption` add-on, which has not been verified on Node 12.4; automatic encryption needs MongoDB Enterprise.
 
 ### 4.9 Additional collections before launch
 
@@ -785,32 +817,47 @@ Controls around it:
 
 ## 5. API specifications
 
-Expose a versioned REST API under `/api/v1` (Express 4). Request and response models are **zod schemas** in `packages/contracts`, shared with the frontend. The OpenAPI 3 document is generated from them on CI and published with each release. Authentication and authorization run as shared Express middleware, never inside individual handlers.
+Expose a versioned REST API under `/api/v1` (Express 4). Request and response models are **zod schemas** in `packages/contracts`, shared with the frontend. The OpenAPI 3 document is generated from them on CI and published with each release.
+
+Every request passes the same pipeline:
+
+1. **Shared middleware**: session authentication, CSRF check, rate limits, request ID.
+2. **Route**: parses the path, query and body with the zod schema, then builds the `Actor` (user ID, tenant context, CASL ability, request ID).
+3. **Service** (`*.service.ts`): loads documents through the tenant scope, checks the policy on each loaded document, applies the change in one transaction (§4.7).
+4. **Response serializer**: returns only the fields this caller may see (public, registered-user or NDA-covered, §8.4).
+5. **Error middleware**: maps errors to the catalogue in §5.6.
+
+Per-document policy checks run in the services, not in middleware, because they need the loaded document. A new route therefore cannot skip them.
 
 ### 5.1 Conventions
 
 **Requests**
 
-- JSON for business operations.
-- Multipart uploads or short-lived object-storage upload URLs for documents.
-- ISO 8601 timestamps with time zone.
-- UUIDs for resource identifiers.
-- Cursor (or limit/offset) pagination with deterministic sorting.
-- Explicit filters rather than opaque query strings.
-- `Idempotency-Key` header on retriable operations with business effects.
-- `If-Match` header (or an explicit `version` field) for conflict-sensitive edits.
+- JSON bodies for business operations, with the **same camelCase field names as the Mongoose models** (§4.2), for example `ownerOrganizationId`, `lifecycleStatus`.
+- Documents: short-lived upload sessions to quarantine storage (§9.1), or multipart uploads for small files.
+- **Identifiers**: the document's `_id` (an `ObjectId`), sent as a 24-character hex string, both in paths (`/technologies/6716f1c2a1b2c3d4e5f60001`) and in JSON (`id`, `ownerOrganizationId`). A path ID that is not a valid `ObjectId` returns `404`, like any unknown ID. Responses also carry the human-readable `ref` (`TEC-000123`); the UI shows the `ref`, never the raw ID.
+- **Timestamps**: ISO 8601 in UTC (`2026-10-12T06:30:00Z`); the client displays them in `Asia/Shanghai`.
+- **Money**: `{ "currency": "CNY", "amountMinor": "30000000" }`, the amount in minor units (fen) as a **decimal string**, in requests and responses. The `Int64` type serializes to a string (§4.5); a JSON number would lose precision above 2⁵³. Rates and percentages (`Decimal128`) are also sent as decimal strings; the response serializer converts them.
+- **Pagination**: keyset pagination with a deterministic sort. Parameters `limit` (default 20, at most 100) and `after` (the cursor from the previous page); responses return `meta.nextCursor` (`null` on the last page).
+- **Filters**: explicit, named query parameters, parsed by zod. Never pass `req.query` or `req.body` objects into a Mongoose filter: Mongoose 5 has no `sanitizeFilter`, so an object such as `{ "$ne": null }` would become a query operator ([11 §5.2](11-target-runtime-node12-mongodb.md)).
+- **`Idempotency-Key`** header (a client-generated UUID) on retriable `POST` requests with business effects: creating records, submissions, introduction requests, deal creation. The server stores the key per user with a hash of the request in `idempotency_keys`. A retry with the same key and payload returns the stored response without repeating the change; the same key with a different payload returns `409 IDEMPOTENCY_KEY_REUSED`. Keys expire through a TTL index.
+- **`If-Match`** header on every change to an existing resource that has a `rev` (`PATCH`, `DELETE` and action endpoints). Its value is the `rev` the client last read. A single-resource response returns `rev` in the body and as the `ETag` header (`ETag: "9"` → `If-Match: "9"`); list items carry `rev` in the body. A missing header returns `428 PRECONDITION_REQUIRED`; a stale value returns `409 VERSION_CONFLICT`, and the client must reload before trying again.
+- **Authentication**: the browser sends the session cookie (`HttpOnly`, `Secure`, `SameSite=Lax`) and an `X-CSRF-Token` header on every state-changing request (§9.2). The web application does not use bearer tokens; API keys for enterprise integrations are a later phase (§13, phase 6).
+- **Request ID**: Nginx sets `X-Request-Id` ([11 §9.3](11-target-runtime-node12-mongodb.md)). The API logs it, returns it as `meta.requestId`, and stores it as the `correlationId` of workflow transitions and audit events.
 
-**Responses.** A normal resource response:
+**Responses.** A normal resource response (headers `ETag: "0"`):
 
 ```json
 {
   "data": {
-    "id": "d6efc3d0-9d10-4b0b-a7f8-0dfe39a7f1c1",
-    "status": "draft",
-    "version": 1
+    "id": "6716f1c2a1b2c3d4e5f60001",
+    "ref": "TEC-000123",
+    "lifecycleStatus": "draft",
+    "currentVersion": 1,
+    "rev": 0
   },
   "meta": {
-    "request_id": "7b5f0f5c-85f2-4f48-b3cc-8d5a15d8d0bb"
+    "requestId": "7b5f0f5c85f24f48b3cc8d5a15d8d0bb"
   }
 }
 ```
@@ -821,21 +868,31 @@ An error response:
 {
   "error": {
     "code": "INVALID_STATE_TRANSITION",
-    "message": "The requested action is not allowed.",
-    "request_id": "7b5f0f5c-85f2-4f48-b3cc-8d5a15d8d0bb",
+    "message": "There are no unsubmitted changes to submit.",
+    "requestId": "7b5f0f5c85f24f48b3cc8d5a15d8d0bb",
     "details": {
-      "current_status": "draft",
-      "requested_action": "publish"
+      "currentStatus": "published",
+      "requestedAction": "submit"
     }
   }
 }
 ```
 
-Use stable error codes. Never reveal another organization's confidential resource details in authorization errors.
+Use stable error codes. For `422 VALIDATION_FAILED`, `details.fields` lists each invalid field with its path and a message. Never reveal another organization's confidential resource details in errors: a resource in another organization's tenant scope returns `404`, not `403`.
 
 ### 5.2 Endpoint catalogue
 
-Detailed schemas live in OpenAPI and are validated in integration tests.
+Detailed schemas live in OpenAPI and are validated in integration tests. Every `{id}` is the resource's `ObjectId` (§5.1). Where the table has no **Permission** column, the permission comes from the CASL policy (§8.4) and the tenant scope (§4.8).
+
+**Authentication**
+
+| Method | Endpoint | Permission | Purpose |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/auth/sms-codes` | Anonymous (rate-limited, CAPTCHA after repeated sends) | Send a login or registration code by SMS |
+| `POST` | `/api/v1/auth/sessions` | Anonymous (rate-limited) | Log in with SMS code or password; staff also give a TOTP code |
+| `DELETE` | `/api/v1/auth/sessions/current` | Authenticated | Log out |
+| `GET` | `/api/v1/me/sessions` | Self | List own sessions (FR-ACC-08) |
+| `DELETE` | `/api/v1/me/sessions/{sessionId}` | Self | Sign out another device |
 
 **Identity and organizations**
 
@@ -855,19 +912,21 @@ Detailed schemas live in OpenAPI and are validated in integration tests.
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `POST` | `/api/v1/technologies` | Create technology draft |
-| `GET` | `/api/v1/technologies/{id}` | Read authorized technology |
-| `PATCH` | `/api/v1/technologies/{id}/draft` | Update editable draft |
-| `POST` | `/api/v1/technologies/{id}/versions` | Create revision |
-| `POST` | `/api/v1/technologies/{id}/submissions` | Submit revision for review |
+| `GET` | `/api/v1/technologies` | List the technologies of the caller's organizations (keyset pagination) |
+| `POST` | `/api/v1/technologies` | Create a technology draft with version 1 (§5.3) |
+| `GET` | `/api/v1/technologies/{id}` | Read an authorized technology, with its `rev` |
+| `PATCH` | `/api/v1/technologies/{id}/draft` | Update the working version. If the current version is frozen (submitted or published), this starts the next version; the published one does not change |
+| `DELETE` | `/api/v1/technologies/{id}` | Discard a never-submitted draft (anything else is archived instead) |
+| `POST` | `/api/v1/technologies/{id}/submissions` | Submit the working version for review (§5.4) |
 | `GET` | `/api/v1/technologies/{id}/review-status` | View submission progress |
+| `POST` | `/api/v1/technologies/{id}/archivals` | Withdraw (archive) a published or suspended listing |
+| `GET` | `/api/v1/technologies/{id}/history` | View authorized version history |
 | `POST` | `/api/v1/technologies/{id}/offers` | Create offer |
 | `PATCH` | `/api/v1/offers/{id}` | Update permitted offer fields |
 | `POST` | `/api/v1/offers/{id}/submissions` | Submit offer for review |
 | `POST` | `/api/v1/offers/{id}/withdrawals` | Withdraw offer |
-| `GET` | `/api/v1/technologies/{id}/history` | View authorized version history |
 
-Use dedicated **action endpoints** for submission and withdrawal. The frontend never sets `lifecycle_status` or `offer_status` directly.
+Use dedicated **action endpoints** for submission, withdrawal and every other state change. The frontend never sets `lifecycleStatus` or `offerStatus` directly; the zod schemas of the general update endpoints do not contain those fields. Review decisions on a technology (approve, request changes, reject, approve or reject a revision) go through `/api/v1/admin/review-cases/{id}/decisions`; suspension and reinstatement are staff actions (below).
 
 **Demands and matching**
 
@@ -890,10 +949,10 @@ Use dedicated **action endpoints** for submission and withdrawal. The frontend n
 | `GET` | `/api/v1/introduction-requests` | List authorized requests |
 | `POST` | `/api/v1/introduction-requests/{id}/decisions` | Record an authorized decision |
 | `POST` | `/api/v1/introduction-requests/{id}/assignments` | Assign broker or case owner |
-| `POST` | `/api/v1/deals` | Create deal |
+| `POST` | `/api/v1/deals` | Create a deal from an introduction (at most one deal per introduction, §6.3) |
 | `GET` | `/api/v1/deals/{id}` | Read authorized deal |
 | `POST` | `/api/v1/deals/{id}/proposals` | Create proposal |
-| `POST` | `/api/v1/deals/{id}/stage-actions` | Request an allowed stage transition |
+| `POST` | `/api/v1/deals/{id}/stage-actions` | Request a stage transition by action name, e.g. `{ "action": "qualify" }` (§6.4, [05 §13](05-system-design-blueprint.md)) |
 | `POST` | `/api/v1/deals/{id}/milestones` | Create milestone |
 | `PATCH` | `/api/v1/deal-milestones/{id}` | Update permitted milestone fields |
 | `POST` | `/api/v1/deals/{id}/completion-checks` | Evaluate completion prerequisites |
@@ -906,10 +965,14 @@ Use dedicated **action endpoints** for submission and withdrawal. The frontend n
 | `POST` | `/api/v1/documents/upload-sessions` | Request an authorized upload |
 | `POST` | `/api/v1/documents/{id}/finalization` | Complete upload and start validation |
 | `POST` | `/api/v1/documents/{id}/access-requests` | Request restricted document access |
+| `POST` | `/api/v1/documents/{id}/access-grants` | Owner grants another organization access (view or download, watermark, expiry) |
+| `DELETE` | `/api/v1/document-access-grants/{id}` | Revoke a grant |
 | `GET` | `/api/v1/documents/{id}/download` | Obtain short-lived authorized file access |
 | `GET` | `/api/v1/admin/review-queues` | Retrieve review work |
 | `POST` | `/api/v1/admin/review-cases/{id}/assignments` | Assign a case |
 | `POST` | `/api/v1/admin/review-cases/{id}/decisions` | Record a review decision |
+| `POST` | `/api/v1/admin/technologies/{id}/suspensions` | Suspend a published listing (compliance) |
+| `POST` | `/api/v1/admin/technologies/{id}/reinstatements` | Reinstate a suspended listing |
 | `GET` | `/api/v1/admin/audit-events` | Search authorized audit records |
 | `GET` | `/api/v1/admin/reports/operations` | Read operational metrics |
 
@@ -917,96 +980,122 @@ Use dedicated **action endpoints** for submission and withdrawal. The frontend n
 
 ```http
 POST /api/v1/technologies
-Authorization: Bearer <token>
-Idempotency-Key: 9b3f-example
+Cookie: <session cookie>
+X-CSRF-Token: <token>
+Idempotency-Key: 4f0c2d9e-7a51-4b4e-9d1e-2f6b8c3a7e10
 Content-Type: application/json
 ```
 
 ```json
 {
-  "owner_organization_id": "5f73e2d4-31c4-44d4-970e-73d3a9b7e9d2",
-  "title": "Industrial optical inspection technology",
-  "technology_type": "process_technology",
-  "public_summary": "Draft summary for a new inspection process.",
-  "industry_codes": ["manufacturing"],
-  "claimed_trl": 6
+  "ownerOrganizationId": "6716f1c2a1b2c3d4e5f6aaaa",
+  "technologyType": "process_technology",
+  "content": {
+    "title": { "zh": "锂电池极片缺陷在线检测技术", "en": "Inline defect detection for lithium-battery electrodes" },
+    "publicSummary": { "zh": "基于机器视觉的电极缺陷实时检测。" },
+    "industryCodes": ["C384"],
+    "claimedTrl": 6
+  }
 }
 ```
 
 The backend must:
 
-1. Authenticate the caller.
-2. Verify active membership in the requested organization.
-3. Verify permission to create technology records.
-4. Validate the payload and the taxonomy codes (`technology_type`, `industry_codes`).
-5. Create the technology and its first version **in one database transaction**.
-6. Write an audit event.
-7. Return the identifier and version.
+1. Authenticate the session and check the CSRF token.
+2. Look up the `Idempotency-Key`: replay the stored response for a repeated request, or return `409 IDEMPOTENCY_KEY_REUSED` if the payload differs.
+3. Parse the body with zod (`422` with field details on failure) and check `technologyType` and `industryCodes` against the taxonomy.
+4. Run `createTechnologyDraft` **in one database transaction** (§4.7):
+   - build the technology with the requested owner, and check the policy on the unsaved document: only a technology role (`org_owner`, `org_admin`, `technology_manager`) in an **active membership** of that organization may create (`403` otherwise);
+   - validate version 1 **before** taking a `TEC-` reference number, so a rejected request consumes no number;
+   - save the technology and version 1, with the workflow transition, the `technology.created` outbox event and the audit event.
+5. Store the response under the idempotency key.
+6. Return `201 Created` with `Location: /api/v1/technologies/{id}` and `ETag: "0"`.
 
 ```json
 {
   "data": {
-    "id": "d6efc3d0-9d10-4b0b-a7f8-0dfe39a7f1c1",
-    "current_version": 1,
-    "lifecycle_status": "draft"
-  }
+    "id": "6716f1c2a1b2c3d4e5f60001",
+    "ref": "TEC-000123",
+    "lifecycleStatus": "draft",
+    "currentVersion": 1,
+    "rev": 0
+  },
+  "meta": { "requestId": "7b5f0f5c85f24f48b3cc8d5a15d8d0bb" }
 }
 ```
 
 ### 5.4 Contract: submit for review
 
 ```http
-POST /api/v1/technologies/{id}/submissions
-Idempotency-Key: <unique-key>
+POST /api/v1/technologies/6716f1c2a1b2c3d4e5f60001/submissions
+Cookie: <session cookie>
+X-CSRF-Token: <token>
+Idempotency-Key: 0b9e6c55-3f0e-4d7a-8a3c-5d2f1e9b7a64
+If-Match: "3"
 Content-Type: application/json
 ```
 
 ```json
 {
-  "version": 1,
-  "requested_visibility": "public",
-  "declaration_accepted": true
+  "declarationAccepted": true,
+  "requestedVisibility": "public"
 }
 ```
 
-The backend verifies that:
+The request has no version number: the server always submits the technology's current working version, and `If-Match` proves the caller has seen it. The backend checks, in this order:
 
-- The caller can manage this technology.
-- The submitted version exists and has not changed unexpectedly.
-- Required fields are complete.
-- Rights declarations are present.
-- The evidence files passed the safety checks.
-- The version is eligible for submission.
-- An equivalent submission does not already exist.
+| Check | Failure |
+| --- | --- |
+| The technology belongs to one of the caller's organizations (tenant scope) | `404 RESOURCE_NOT_FOUND` |
+| `rev` equals the `If-Match` value | `409 VERSION_CONFLICT` |
+| The policy allows `submit`: a technology role in the owning organization, and status `draft`, `changes_requested` or `published` | `403 PERMISSION_DENIED` |
+| The working version has unsubmitted changes (it is not frozen) | `409 INVALID_STATE_TRANSITION` |
+| Required fields complete, holder declaration accepted (FR-TEC-09), evidence files scanned clean | `422 VALIDATION_FAILED` |
 
-The response includes the submission ID and review status. The public listing does not change until approval and publication.
+The draft implementation covers the first four checks; the completeness, declaration and evidence checks are still to be written.
+
+On success, one transaction freezes the version, moves the status (`draft` or `changes_requested` → `submitted`; `published` → `update_pending`), opens a `CASE-` review case for that exact version with its due date, and writes the transition, the `technology.submitted` outbox event and the audit event. A retry with the same `Idempotency-Key` returns the same response. A retry without it fails with `409 VERSION_CONFLICT`, because `rev` has changed, so a second review case is never opened.
+
+```json
+{
+  "data": { "status": "submitted", "reviewCaseRef": "CASE-000042", "rev": 4 },
+  "meta": { "requestId": "c41d7e0a9b3f4e6c8d2a1b5f7e9c0d3a" }
+}
+```
+
+The public listing does not change until approval and publication. For a revision (`update_pending`), the previous snapshot stays public until the revision is approved.
 
 ### 5.5 Contract: retrieve matches
 
 ```http
-GET /api/v1/demands/{id}/matches?limit=20&sort=score_desc
+GET /api/v1/demands/6716f1c2a1b2c3d4e5f60601/matches?limit=20&sort=score_desc
 ```
 
 ```json
 {
   "data": [
     {
-      "match_id": "a0d4e5ce-4e6e-42c9-8a0d-cc85b6cfc0d1",
-      "offer_id": "9a9a5f19-0c0a-4f23-9848-7dc0cdeee3d1",
+      "id": "6716f1c2a1b2c3d4e5f60501",
+      "offerId": "6716f1c2a1b2c3d4e5f60401",
+      "offerRef": "OFR-000057",
+      "technologyRef": "TEC-000123",
+      "demandVersion": 2,
+      "rankingVersion": "ranking-v1",
       "score": 84.5,
-      "eligibility_status": "eligible",
+      "eligibilityStatus": "eligible",
       "explanation": {
-        "technical_fit": "strong",
+        "technicalFit": "strong",
         "maturity": "meets_requirement",
-        "rights_compatibility": "requires_confirmation",
-        "commercial_fit": "indicative_only"
+        "rightsCompatibility": "requires_confirmation",
+        "commercialFit": "indicative_only"
       },
-      "next_action": "request_introduction"
+      "nextAction": "request_introduction"
     }
   ],
   "meta": {
     "limit": 20,
-    "next_cursor": null
+    "nextCursor": null,
+    "requestId": "7b5f0f5c85f24f48b3cc8d5a15d8d0bb"
   }
 }
 ```
@@ -1015,29 +1104,36 @@ An example, not a real match. The API returns only data the buyer is authorized 
 
 ### 5.6 Error catalogue
 
-| HTTP status | Error code | Meaning |
-| --- | --- | --- |
-| `400` | `INVALID_REQUEST` | Invalid request structure |
-| `401` | `AUTHENTICATION_REQUIRED` | Authentication missing or invalid |
-| `403` | `PERMISSION_DENIED` | Caller lacks the required permission |
-| `404` | `RESOURCE_NOT_FOUND` | Resource not found **or not disclosed** to this caller |
-| `409` | `STATE_CONFLICT` / `INVALID_STATE_TRANSITION` | Current state prevents the action |
-| `409` | `VERSION_CONFLICT` | Record changed since it was read |
-| `409` | `IDEMPOTENCY_KEY_REUSED` | Same key sent with a different payload |
-| `422` | `VALIDATION_FAILED` | Business input is invalid |
-| `429` | `RATE_LIMITED` | Request rate exceeded |
-| `500` | `INTERNAL_ERROR` | Unexpected server failure |
-| `503` | `DEPENDENCY_UNAVAILABLE` | Required subsystem unavailable |
+The error middleware maps each error class to one code. Services throw the classes; they never build HTTP responses themselves.
 
-Use the same error envelope everywhere.
+| HTTP status | Error code | Meaning | Raised by |
+| --- | --- | --- | --- |
+| `400` | `INVALID_REQUEST` | The request cannot be parsed: invalid JSON, wrong content type | Body parser |
+| `401` | `AUTHENTICATION_REQUIRED` | No valid session | Session middleware |
+| `403` | `CSRF_CHECK_FAILED` | Missing or wrong CSRF token on a state-changing request | CSRF middleware |
+| `403` | `PERMISSION_DENIED` | The policy forbids this action for this caller on this resource **in its current state**: a missing role, or a state rule such as "no edits while in review" | CASL `ForbiddenError` (§8.4) |
+| `404` | `RESOURCE_NOT_FOUND` | The resource does not exist, **or belongs to another organization** (the tenant scope makes both cases identical), or the path ID is not a valid `ObjectId` | `NotFoundError`; tenant scope (§4.8) |
+| `409` | `VERSION_CONFLICT` | `If-Match` differs from the current `rev`, or another request changed the document during this one | `VersionConflictError`; Mongoose `VersionError` |
+| `409` | `INVALID_STATE_TRANSITION` | The workflow has no such transition from the current state, or a transition precondition fails | `InvalidTransitionError` |
+| `409` | `DUPLICATE_RESOURCE` | A unique rule would break: same phone number or unified social credit code, a second deal for the same introduction | MongoDB duplicate-key error (code 11000) |
+| `409` | `IDEMPOTENCY_KEY_REUSED` | Same key sent with a different payload | Idempotency middleware |
+| `422` | `VALIDATION_FAILED` | The request parsed, but a field is missing or breaks a rule (TRL outside 1–9, money with a fraction of a fen, budget min > max, buyer = supplier); `details.fields` lists each field | zod schema; Mongoose `ValidationError` (including cast errors) |
+| `428` | `PRECONDITION_REQUIRED` | `If-Match` missing on a change to a resource with a `rev` | Route middleware |
+| `429` | `RATE_LIMITED` | Request rate exceeded | Nginx `limit_req`, `express-rate-limit` |
+| `500` | `INTERNAL_ERROR` | Unexpected failure, including programming errors stopped by the model layer (`TenantScopeError`, `ImmutableRecordError`, Mongoose `StrictModeError`). Details go to the log only | Any |
+| `503` | `DEPENDENCY_UNAVAILABLE` | MongoDB or another required service is unreachable (`bufferCommands` is off, so requests fail fast instead of queueing) | Driver and integration errors |
+
+Use the same error envelope everywhere. A `500` caused by `TenantScopeError` is a bug (a query without a tenant scope), never a reason to retry with `crossTenant`.
 
 ---
 
 ## 6. Workflow state machines and business rules
 
-Each workflow has an explicit state machine, permitted transitions, responsible roles, preconditions and failure paths.
+Each workflow has an explicit state machine, permitted transitions, responsible roles, preconditions and failure paths. Diagram states are written in CamelCase; the stored values are the snake_case enums of the models (`ChangesRequested` is stored as `changes_requested`). A state change always goes through a service that checks the policy, applies the transition, and writes the `workflow_transitions` record, the outbox event and the audit event in the same transaction (§4.7, §6.5).
 
 ### 6.1 Technology publication lifecycle
+
+Stored in `technologies.lifecycleStatus` (`TECHNOLOGY_STATUSES`, §4.5): `draft`, `submitted`, `in_review`, `changes_requested`, `approved`, `rejected`, `published`, `update_pending`, `suspended`, `archived`.
 
 ```mermaid
 stateDiagram-v2
@@ -1045,44 +1141,52 @@ stateDiagram-v2
     Draft --> Submitted : Submit
     Submitted --> InReview : Assign reviewer
     InReview --> ChangesRequested : Request changes
-    ChangesRequested --> Submitted : Revise
+    ChangesRequested --> Submitted : Revise and resubmit
     InReview --> Approved : Approve
     InReview --> Rejected : Reject
     Approved --> Published : Publish approved snapshot
     Published --> UpdatePending : Submit material revision
-    UpdatePending --> Published : Approve revision
+    UpdatePending --> Published : Revision approved or rejected
     Published --> Suspended : Rights or safety concern
     Suspended --> Published : Reinstatement approved
     Published --> Archived : Withdraw or retire
-    Suspended --> Archived : Withdraw or retire
+    Suspended --> Archived : Permanent removal
     Rejected --> [*]
     Archived --> [*]
 ```
 
-| From | Action | To | Who | Preconditions / effects |
+**Status and content versions.** The status lives on the small `technologies` document; the content lives in `technology_versions`. `currentVersion` is the version being edited or reviewed, and `publishedVersion` is the version behind the live public snapshot (`technology_publications`, status `live`). Submitting freezes the current version. Editing after that (in `changes_requested`, or while `published`) starts the next version as a copy, so frozen content never changes. While a published listing is being edited, its status stays `published` and the old snapshot stays public; the edit is submitted with the same `submit` action, which leads to `update_pending`.
+
+| From | Action | To | Who (role code) | Preconditions / effects |
 | --- | --- | --- | --- | --- |
-| `draft` | submit | `submitted` | Technology manager | Required fields, rights declaration, evidence scanned clean; version frozen |
-| `submitted` | assign | `in_review` | Ops manager / auto-assignment | Reviewer has no conflict of interest |
-| `in_review` | request_changes | `changes_requested` | Reviewer | Reason per field |
-| `changes_requested` | revise | `submitted` | Technology manager | New version created |
+| `draft` | submit | `submitted` | Organization technology role (`org_owner`, `org_admin`, `technology_manager`) | Required fields, holder declaration, evidence scanned clean; version frozen; review case opened |
+| `submitted` | assign | `in_review` | `operations_manager` or auto-assignment | Reviewer has no conflict of interest |
+| `in_review` | request_changes | `changes_requested` | Reviewer (`listing_reviewer`) | Reason per field |
+| `changes_requested` | submit | `submitted` | Organization technology role | The first edit after the request started a new version; that version is frozen and reviewed |
 | `in_review` | approve | `approved` | Reviewer | Checklist complete; approved field scope recorded |
-| `in_review` | reject | `rejected` | Reviewer | Reason recorded; appeal possible |
-| `approved` | publish | `published` | System | Snapshot created; outbox event for indexing |
-| `published` | submit_revision | `update_pending` | Technology manager | Old snapshot stays public |
-| `update_pending` | approve_revision | `published` | Reviewer | New snapshot replaces old |
-| `published` | suspend | `suspended` | Reviewer / compliance | Reason; de-indexing within minutes; new introductions blocked |
+| `in_review` | reject | `rejected` | Reviewer | Reason recorded; appeal handled outside the state machine |
+| `approved` | publish | `published` | System | Snapshot created (`publishedVersion` set); outbox event for indexing and page rendering |
+| `published` | submit | `update_pending` | Organization technology role | A new version with unsubmitted changes exists; old snapshot stays public |
+| `update_pending` | approve_revision | `published` | Reviewer | New snapshot goes `live`, the old one becomes `superseded` |
+| `update_pending` | reject_revision | `published` | Reviewer | Reason recorded; old snapshot stays `live`; the owner may edit and submit again |
+| `published` | suspend | `suspended` | Compliance (`compliance_officer`) | Reason; removed from search and public pages within 5 minutes (FR-TEC-12); new introductions blocked |
 | `suspended` | reinstate | `published` | Authorized reviewer | Issue resolved with evidence |
-| `published` or `suspended` | archive | `archived` | Owner or admin | History preserved |
+| `published` or `suspended` | archive | `archived` | Owner or admin | Snapshot `withdrawn`; history preserved |
+
+A never-submitted draft (still at version 1) can be discarded (deleted) instead; every other technology is archived, never deleted.
 
 Rules:
 
 - A draft is visible only to authorized organization members and to platform staff with a case-related need.
-- Submission freezes the version under review; review decisions reference that exact version.
-- Publication creates an approved public snapshot. Editing a published technology creates a new revision.
+- Submission freezes the version under review; review decisions reference that exact version (`review_cases.resource.version`).
+- Publication creates an approved public snapshot. Editing a published technology creates a new version.
 - Material changes to technical claims, rights or commercial scope require re-review.
 - Suspension immediately disables new discovery and new introductions, while preserving history.
+- No edits while `submitted`, `in_review`, `approved`, `update_pending`, `rejected`, `suspended` or `archived` (the policy's state rule, §8.4). `approved` is the short step before the system publishes the snapshot.
 
 ### 6.2 Buyer demand lifecycle
+
+Stored in `demands.status` (`DEMAND_STATUSES` in `demand.model.ts`): `draft`, `submitted`, `clarification`, `approved`, `rejected`, `matching`, `shortlisted`, `no_candidates`, `introduction`, `in_evaluation`, `negotiation`, `fulfilled`, `withdrawn`, `expired`.
 
 ```mermaid
 stateDiagram-v2
@@ -1098,9 +1202,9 @@ stateDiagram-v2
     NoCandidates --> Matching : Refine criteria
     NoCandidates --> Withdrawn : Buyer stops
     Shortlisted --> Introduction : Introduction requested
-    Introduction --> Evaluation : Introduced
-    Evaluation --> Negotiation : Preferred candidate
-    Evaluation --> Shortlisted : Candidate dropped
+    Introduction --> InEvaluation : Introduced
+    InEvaluation --> Negotiation : Preferred candidate
+    InEvaluation --> Shortlisted : Candidate dropped
     Negotiation --> Fulfilled : Deal completed
     Negotiation --> Shortlisted : Talks failed
     Shortlisted --> Withdrawn : Buyer stops
@@ -1109,9 +1213,11 @@ stateDiagram-v2
     Rejected --> [*]
 ```
 
-A demand may be **private, broker-assisted or publicly discoverable**; the buyer chooses the disclosure level. Public discovery must never automatically reveal the buyer's identity, budget or confidential technical problem. Demands that pass their target date move to `expired` through a scheduled job.
+Like a technology, a demand's content is versioned: submission freezes the current `demand_versions` entry, and matches always record the `demandVersion` they were computed for. A demand's `visibility` is `private`, `broker_only`, `verified_users` or `anonymous_public`; the buyer chooses the disclosure level. Public discovery must never automatically reveal the buyer's identity, budget or confidential technical problem. Demands that pass their target date move to `expired` through a scheduled job (not drawn above); every closure (`fulfilled`, `withdrawn`, `expired`, `rejected`) records a `closureReason`.
 
 ### 6.3 Introduction lifecycle
+
+Stored in `introduction_requests.status` (`INTRODUCTION_STATUSES`): `requested`, `under_review`, `supplier_pending`, `approved`, `rejected`, `withdrawn`, `introduced`, `converted_to_deal`. Both the buyer and the supplier organization can see the request (§4.8).
 
 ```mermaid
 stateDiagram-v2
@@ -1137,9 +1243,12 @@ Business rules:
 3. The broker may ask for clarification or reject an unsuitable request.
 4. **Supplier approval is required**, unless a documented policy or existing agreement explicitly authorizes otherwise.
 5. The platform records the date, parties, disclosure scope and communication channel used.
-6. Creating a deal from an introduction is **idempotent** (enforced by the unique `deals.introduction_request_id`).
+6. Creating a deal from an introduction is **idempotent**: a partial unique index on `deals.introductionRequestId` allows at most one deal per introduction, so a retried request gets `409 DUPLICATE_RESOURCE` (or the stored response, if it repeats its `Idempotency-Key`).
+7. Buyer and supplier must be different organizations (Mongoose `crossField` validator and database `$expr` validator).
 
 ### 6.4 Deal lifecycle
+
+Stored in `deals.status` (`DEAL_STATUSES` in `deal.model.ts`): `opportunity`, `qualified`, `due_diligence`, `negotiation`, `contract_draft`, `approval`, `signed`, `conditions_pending`, `ready_to_complete`, `completed`, `on_hold`, `lost`, `disputed`. This is the same state machine as [05 §7.5](05-system-design-blueprint.md); its transition table (actions, allowed actors, preconditions) is in [05 §13](05-system-design-blueprint.md).
 
 ```mermaid
 stateDiagram-v2
@@ -1155,17 +1264,21 @@ stateDiagram-v2
     Negotiation --> Lost : Talks ended
     ContractDraft --> Approval : Submit for approval
     Approval --> ContractDraft : Changes required
-    Approval --> Signed : Signatures verified
+    Approval --> Signed : All signatures verified
     Signed --> ConditionsPending : Conditions outstanding
-    Signed --> Completed : No conditions
-    ConditionsPending --> Completed : Conditions satisfied
-    Signed --> Disputed : Dispute
-    ConditionsPending --> Disputed : Dispute
-    Disputed --> ConditionsPending : Resolved
+    ConditionsPending --> ReadyToComplete : All conditions met
+    ReadyToComplete --> Completed : Completion confirmed
+    Signed --> Disputed : Dispute opened
+    ConditionsPending --> Disputed : Dispute opened
+    Disputed --> ConditionsPending : Resolved, continue
     Disputed --> Lost : Terminated
     Completed --> [*]
     Lost --> [*]
 ```
+
+`ready_to_complete` means every completion condition of the deal type is satisfied with evidence (for example licence effective and initial payment confirmed by the payment provider). The deal owner then confirms completion as a separate, audited action. Completion is never automatic and has no "force complete" shortcut ([05 §9.5](05-system-design-blueprint.md)).
+
+**Deal status on the venue route (R3).** The deal stays `negotiation` while the venue lists and discloses the technology and runs buyer registration and price discovery. It moves to `contract_draft` when the venue confirms the buyer and price, then through `approval` to `signed` (contract within 5 WD), and stays `conditions_pending` until venue settlement is confirmed and the transaction certificate (交易凭证) is recorded: both are completion conditions of a venue-routed deal. The venue's own steps are tracked on `venue_submissions` (FR-VEN), not as extra deal statuses.
 
 The stage is only **one dimension** of a deal. Store separate fields or records for:
 
@@ -1195,6 +1308,10 @@ Build one reusable workflow layer with:
 - Structured exception reasons.
 
 An approval transition updates the resource status **and** appends its transition record in the same database transaction. Notifications are queued through the transactional outbox (`outbox_events`) and sent **after** the business transaction commits.
+
+Keep the allowed transitions as **data**, next to the service that applies them: `SUBMIT_TARGET` in the technology service (§4.7) is the first example, and [05 §13](05-system-design-blueprint.md) shows the same pattern for deals. State rules that decide who may act in which state belong in the CASL policy (§8.4); preconditions that need other records (evidence, signatures, conditions) belong in the transition's check.
+
+The worker relays outbox events: it leases pending events (`status: 'pending'`, `lockedUntil`), performs the side effect (search index, page rendering, notification), then marks them `published`, or increments `attempts` and records `lastError`. Side effects can therefore run more than once, so every consumer must be idempotent (an index upsert, a notification keyed by event ID).
 
 ---
 
@@ -1308,7 +1425,7 @@ One consistent structure for buyers, suppliers and assigned brokers, with differ
 
 ```text
 +------------------------------------------------------------------------+
-| DEAL  D-2025-0042 · Parties: Buyer Co., Example University · Mgr: Lee   |
+| DEAL-000042 · Parties: Buyer Co., Example University · Manager: Lee     |
 +------------------------------------------------------------------------+
 | [Overview] [Negotiation] [Documents] [Milestones] [Completion]          |
 +------------------------------------------------------------------------+
@@ -1371,6 +1488,15 @@ A technology exchange needs more than role-based menus. Combine role-based permi
 
 A platform administrator is **not** automatically entitled to browse every confidential document. Privileged access is granted through a separate, audited permission.
 
+The columns are groups of platform staff roles, stored in `platform_role_assignments.roleCode` (`PLATFORM_ROLES` in `user.model.ts`). A temporary assignment has an `expiresAt` (FR-ADM-10).
+
+| Column | Role codes |
+| --- | --- |
+| Broker | `platform_technology_manager` (a platform-employed technology manager, 技术经理人) |
+| Reviewer | `listing_reviewer`, `verification_reviewer`, `compliance_officer` |
+| Admin | `operations_manager`, `system_admin`, `security_admin` |
+| Other staff roles | `finance_officer`, `support_agent` |
+
 ### 8.2 Organization-level roles
 
 | Permission | Owner | Org admin | Technology manager | Demand manager | Deal manager | Viewer |
@@ -1385,6 +1511,10 @@ A platform administrator is **not** automatically entitled to browse every confi
 | Request introductions | Yes | Yes | Relevant scope | Yes | Yes | Policy |
 | Manage assigned deals | Yes | Yes | Limited | Limited | Yes | Read only |
 | Export organization records | Yes | Policy | Policy | Policy | Policy | No |
+
+The columns are the role codes in `organization_memberships.roleCodes`: `org_owner`, `org_admin`, `technology_manager`, `demand_manager`, `deal_manager`, `viewer`. A member may hold several roles, and only memberships with status `active` count.
+
+**Terminology.** The organization role `technology_manager` means "manages this organization's technology listings". It is **not** the 技术经理人 (technology manager in the sense of a technology-transfer broker) of [10](10-product-requirements.md), who works on demands and deals for others. A platform-employed broker holds the staff role `platform_technology_manager` (§8.1).
 
 `Limited` and `Policy` must resolve to **explicit permissions in code** (for example `technology.edit_offer_terms`), never to undocumented assumptions.
 
@@ -1403,7 +1533,7 @@ Being a `technology_manager` does not grant access to another organization's unp
 
 ### 8.4 Implementation
 
-Policies are written once with **CASL 5** (verified on Node 12.4). The API checks them on every request; the frontend uses the same rules only to hide unavailable actions.
+Policies are written once with **CASL 5** (verified on Node 12.4). For each request the API builds the caller's ability from the session (`SessionUser`: active memberships, platform roles, explicit access grants), and the services check it on every document they load or create. The frontend uses the same rules only to hide unavailable actions.
 
 ```typescript
 // src/modules/identity/abilities.ts — RBAC + ABAC policy with CASL 5 (verified on Node 12.4).
@@ -1437,7 +1567,7 @@ export interface SessionUser {
 const MANAGES_TECHNOLOGY = ['org_owner', 'org_admin', 'technology_manager'];
 // 06 §6.1: drafts and revised listings are submitted for review; a published listing submits a revision.
 const SUBMITTABLE: string[] = ['draft', 'changes_requested', 'published'];
-const LOCKED: string[] = ['submitted', 'in_review', 'update_pending', 'rejected', 'suspended', 'archived'];
+const LOCKED: string[] = ['submitted', 'in_review', 'approved', 'update_pending', 'rejected', 'suspended', 'archived'];
 
 export function defineAbilityFor(user: SessionUser | null): AppAbility {
   const { can, cannot, build } = new AbilityBuilder(AppAbility);
@@ -1486,7 +1616,9 @@ const reviewQueue = await Technology.accessibleBy(reviewerAbility, 'review')
   .setOptions({ crossTenant: { reason: 'review-queue' } });               // staff queue spans organizations
 ```
 
-The verification run checks this policy on plain objects and on Mongoose documents. A technology manager can submit their own draft and a revision of a published listing, but not a listing already in review, and cannot edit another organization's technology or a listing with a pending update. A viewer can read but not submit. Anonymous visitors see only published public listings. A reviewer can review submitted listings but not drafts, and the reviewer queue spans organizations. A role without a matching rule gets a `ForbiddenError` from `accessibleBy`, not an empty list.
+The verification run checks this policy on plain objects and on Mongoose documents. A technology manager can submit their own draft and a revision of a published listing, but not a listing already in review, and cannot edit another organization's technology or a listing with a pending update. A viewer can read but not submit. Anonymous visitors see only published public listings. A reviewer can review submitted listings but not drafts, and the reviewer queue spans organizations. A role without a matching rule gets a `ForbiddenError` from `accessibleBy`, not an empty list; the error middleware turns it into `403 PERMISSION_DENIED`, like every other `ForbiddenError` (§5.6).
+
+The draft policy covers technologies only. Demands, deals and documents follow the same pattern: their subject types are already declared, and their rules are added with their services. Public pages and public search do not use this policy at all: they read only the approved snapshots in `technology_publications` (§10).
 
 The policy decides **what** an actor may do. The tenant-scope plugin (§4.8) decides **which documents can be loaded at all**. Both are required. Field-level visibility (public, registered-user, NDA-covered fields) is applied by the response serializer of each endpoint. Test authorization at the **service layer and the API boundary**; never rely on the frontend.
 
@@ -1502,7 +1634,7 @@ sequenceDiagram
     participant API as Backend API
     participant POL as Policy engine
     participant OS as Object storage (quarantine)
-    participant Q as Job queue
+    participant Q as Job queue (MongoDB jobs)
     participant SC as Scanner worker
     participant DB as MongoDB
     User->>API: Request upload session
@@ -1543,10 +1675,10 @@ If the scanner is unavailable, files **stay quarantined**. Never make documents 
 | Login methods | **Mobile number + SMS code** (the norm for Chinese users), or e-mail / mobile + password. WeChat QR login can be added later through WeChat Open Platform OAuth |
 | Passwords | `bcryptjs`, cost 12; at least 10 characters; checked against a common-password list |
 | SMS codes | 6 digits, valid 5 minutes, stored hashed in `sms_codes` (TTL); at most 1 send per 60 s and 10 per day per number; image CAPTCHA after repeated sends; SMS templates registered with the SMS provider |
-| MFA | TOTP (`otplib`) **mandatory for platform staff**, strongly encouraged for organization owners and signatories |
-| Sessions | Opaque random session ID in a `Secure`, `HttpOnly`, `SameSite=Lax` cookie; session data in the MongoDB `sessions` collection (TTL 8 h idle, 7 days absolute); rotate the ID on login and on privilege change; revoke all sessions on suspension or password change |
-| CSRF | `SameSite` cookies plus a CSRF token header on every state-changing request |
-| Brute force | Nginx `limit_req` on `/api/v1/auth/` plus per-account lockout (`login_attempts`, TTL) |
+| MFA | TOTP (`otplib`) **mandatory for platform staff**; optional for other users; mandatory for organization owners and signatories from R2 (FR-ACC-03) |
+| Sessions | Opaque random session ID in a `Secure`, `HttpOnly`, `SameSite=Lax` cookie; session data in the MongoDB `sessions` collection through `express-session` + `connect-mongo` 3.2.0 on the Mongoose connection (TTL index from a migration; 8 h idle, 7 days absolute); rotate the ID on login and on privilege change; revoke all sessions on suspension or password change |
+| CSRF | `SameSite` cookies plus a CSRF token header (`X-CSRF-Token`) on every state-changing request |
+| Brute force | Nginx `limit_req` on `/api/v1/auth/` plus per-account lockout: 15 minutes after 5 failed attempts (`login_attempts`, TTL; FR-ACC-02) |
 | Real-name and enterprise verification | Through provider APIs (see [10](10-product-requirements.md)); results stored as verification levels, never raw ID-card images in the main database |
 
 ### 9.3 Audit and incident response
@@ -1695,7 +1827,7 @@ Each module folder contains `*.routes.ts` (HTTP and zod validation), `*.service.
 
 ### 11.5 Release and recovery process
 
-Follow the release procedure in [11 §9.4](11-target-runtime-node12-mongodb.md): build and test on CI (unit tests on `node:12.4.0`) → back up the database → run migrations → switch the release symlink → restart API instances one at a time with health checks → restart the worker → smoke tests. Migrations are **expand-and-contract**, so rollback is a symlink switch. A database restore is the last resort and is rehearsed monthly.
+Follow the release procedure in [11 §9.4](11-target-runtime-node12-mongodb.md): build and test on CI (unit tests on `node:12.4.0`) → back up the database → run migrations, then index sync (`npm run db:migrate`, `npm run db:indexes`, as `tex_migrator`) → switch the release symlink → restart API instances one at a time with health checks → restart the worker → smoke tests. Migrations are **expand-and-contract**, so rollback is a symlink switch. A database restore is the last resort and is rehearsed monthly.
 
 ---
 
@@ -1706,7 +1838,7 @@ Test business rules, not only whether endpoints return HTTP 200.
 | Layer | Tooling | Runs on |
 | --- | --- | --- |
 | Unit and service tests | `jest@27.5.1` | `node:12.4.0` container (the real runtime) |
-| Integration tests | jest + a **MongoDB 4.4 single-node replica set** container (transactions need a replica set) + Meilisearch container; migrations and `db:indexes` run first, as in `draft-implementation/run.sh` | CI |
+| Integration tests | jest + a **MongoDB single-node replica set** container, 4.4 and 5.0 until the server survey fixes one version (transactions need a replica set) + Meilisearch container; migrations and `db:indexes` run first, as in `draft-implementation/run.sh` | CI |
 | Compatibility gate | `run.sh` (from `draft-implementation/`) on every dependency change | CI |
 | End-to-end tests | Playwright against a staging deployment | CI (modern Node) |
 
@@ -1722,9 +1854,9 @@ Test business rules, not only whether endpoints return HTTP 200.
 | Buyer requests an introduction | The request enters the appropriate review workflow |
 | Supplier rejects an introduction | No deal is created |
 | Introduction is approved | Only the authorized disclosure scope is shared |
-| Unauthorized user guesses a document ID | Access is denied (and audited) |
+| Unauthorized user guesses a document ID | `404`, exactly as for a missing document; the attempt is logged |
 | Technology is suspended | New discovery and introductions are blocked |
-| Two reviewers decide simultaneously | Exactly one valid transition succeeds |
+| Two reviewers decide simultaneously | Exactly one valid transition succeeds; the other gets `409 VERSION_CONFLICT` |
 | Notification delivery fails | The business operation stays committed; delivery retries |
 | Deal reaches completion | Deal-type-specific completion conditions are satisfied |
 | Backup is restored | Database and document references remain consistent |
@@ -1758,15 +1890,15 @@ flowchart LR
     P5 --> P6["Phase 6<br/>Scale and<br/>intelligence"]
 ```
 
-| Phase | Deliverables | Exit gate |
-| --- | --- | --- |
-| **0 — Foundation and business rules** (specification) | Confirm launch jurisdiction and legal model · Finalize taxonomy and core entities · Define state machines and permissions · Create migrations and API conventions · Build design system and wireframes · Define backup, security and release requirements | Business owners approve the core workflows and completion criteria |
-| **1 — Identity and organizations** | Authentication and account recovery · Organization creation and membership · Organization profiles · Role and permission enforcement · Basic admin console · Audit events · Initial deployment pipeline | Several organizations operate independently with no cross-tenant data access |
-| **2 — Technology registry and review** | Technology wizard · Version history · Offers and rights claims · Document upload and quarantine · Organization and technology verification queues · Publication snapshots · Public catalogue | A supplier can submit, revise and publish a reviewed listing without leaking restricted information |
-| **3 — Demand, discovery and matching** | Demand wizard · Structured requirements · Search and filters · Candidate retrieval and ranking · Match explanations · Shortlists and feedback · Matching admin workspace | Buyers submit demands and review useful, permission-safe candidates |
-| **4 — Managed exchange** | Introduction requests · Broker assignments · Controlled supplier responses · Confidentiality workflow · Deal creation and participant permissions · Negotiation history · Milestones and outcome tracking | The platform coordinates a complete opportunity from demand through introduction and managed negotiation |
-| **5 — Commercial operations** | Enterprise service packages · Contract-management integration · E-signature integration · Invoicing and reconciliation (if the model needs them) · Commercial reporting · Service-level monitoring and support | The team supports paid services and transactions with auditable financial and contractual records |
-| **6 — Scale and intelligence** | Dedicated search if needed · Semantic matching · Document extraction and AI-assisted review · Enterprise APIs · More languages and currencies · Advanced analytics · More regional deployments | New capabilities measurably improve match quality, commercial performance or efficiency |
+| Phase | Deliverables | Exit gate | Release ([10 §9](10-product-requirements.md)) |
+| --- | --- | --- | --- |
+| **0 — Foundation and business rules** (specification) | Confirm launch jurisdiction and legal model · Finalize taxonomy and core entities · Define state machines and permissions · Create migrations and API conventions · Build design system and wireframes · Define backup, security and release requirements | Business owners approve the core workflows and completion criteria | R0 |
+| **1 — Identity and organizations** | Authentication and account recovery · Organization creation and membership · Organization profiles · Role and permission enforcement · Basic admin console · Audit events · Initial deployment pipeline | Several organizations operate independently with no cross-tenant data access | R0 |
+| **2 — Technology registry and review** | Technology wizard · Version history · Offers and rights claims · Document upload and quarantine · Organization and technology verification queues · Publication snapshots · Public catalogue | A supplier can submit, revise and publish a reviewed listing without leaking restricted information | R1 |
+| **3 — Demand, discovery and matching** | Demand wizard · Structured requirements · Search and filters · Candidate retrieval and ranking · Match explanations · Shortlists and feedback · Matching admin workspace | Buyers submit demands and review useful, permission-safe candidates | R1 |
+| **4 — Managed exchange** | Introduction requests · Broker assignments · Controlled supplier responses · Confidentiality workflow · Deal creation and participant permissions · Negotiation history · Milestones and outcome tracking | The platform coordinates a complete opportunity from demand through introduction and managed negotiation | R1 (introductions), R2 (deals, negotiation, milestones) |
+| **5 — Commercial operations** | Enterprise service packages · Contract-management integration · E-signature integration · Invoicing and reconciliation (if the model needs them) · Payment-partner integration · Venue-routed listing and bidding through a licensed venue · Commercial reporting · Service-level monitoring and support | The team supports paid services and transactions with auditable financial and contractual records | R2 (contracts, e-signature, invoices), R3 (payments, venue route) |
+| **6 — Scale and intelligence** | Dedicated search if needed · Semantic matching · Document extraction and AI-assisted review · Enterprise APIs · More languages and currencies · Advanced analytics · More regional deployments | New capabilities measurably improve match quality, commercial performance or efficiency | After R3 |
 
 ### Suggested team allocation (four people)
 
@@ -1897,7 +2029,7 @@ It validates the most important foundations: identity, tenant isolation, version
 | Documents | Private storage with quarantine, scanning, per-document grants and watermarks |
 | Workflow | Explicit state machines, transactions, transition history, outbox |
 | Deployment | systemd + Nginx on the target server; nightly `mongodump --oplog` |
-| Business model | Managed exchange: offers, demands, introductions, deal management |
+| Business model | Managed exchange: offers, demands, introductions, deal management; venue functions through a licensed venue as its registered agent (R3) |
 | Security | Organization roles + CASL policies (`accessibleBy` for lists) + tenant-scope plugin on every tenant-owned model |
 | Delivery | One complete vertical workflow at a time |
 

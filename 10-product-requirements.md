@@ -13,7 +13,8 @@
 
 - **Position:** a demand-driven **matching and service platform** with managed transfer workflows, acting as a **registered practising agent** of a licensed trading venue (STEX or CTEX). Formal listing, binding bidding, settlement and statutory certificates run **through the venue**; the platform prepares, tracks and records them.
 - **138 numbered functional requirements** in 17 modules (67 start in R1, 53 in R2, 18 in R3), each tagged with release, reference source and regulatory status. **17 non-functional requirements** have measurable targets.
-- **R1 (MVP)** delivers verified organizations, reviewed technology listings with bulk import, demands and basic challenges, Chinese search, public pages, inquiries with contact masking, university public notices, a working-day calendar, notifications, the admin console and audit.
+- **R0 (foundation)** sets up the runtime, CI, authentication, organizations and audit; it has no numbered requirements of its own (§9).
+- **R1 (MVP)** delivers verified organizations, reviewed technology listings with bulk import, demands and solution submissions, Chinese search, public pages, first-pass matching with broker review, inquiries with contact masking, introductions, university public notices, a working-day calendar, notifications, the admin console and audit.
 - The rest follows in **R2 (managed transfer and clients)** and **R3 (venue-routed transactions and payments)**, gated by the legal and partner decisions in §12.
 
 ---
@@ -51,7 +52,7 @@ flowchart LR
 | --- | --- |
 | **ID** | `FR-<MODULE>-<nn>`; never reused |
 | **Rel** | **R1** = MVP marketplace · **R2** = managed transfer and clients · **R3** = venue-routed transactions and payments |
-| **Ref** | Where the requirement comes from: section of [09](09-reference-platform-features.md) (e.g. `09 §2.3`), or a design document |
+| **Ref** | Where the requirement comes from: section of [09](09-reference-platform-features.md) (e.g. `09 §2.3`) or of another document (`05 §7.1`); a bare `§` (e.g. `§5.2`) is a section of this document |
 | **Reg** | **L** = needs a licence or a licensed partner (venue, payment, e-signature, auction house) · **C** = compliance obligation, no licence · blank = none |
 | Working days (WD) | Counted on the **official China calendar** including make-up working days (调休), provided by FR-ADM-09 |
 
@@ -107,7 +108,7 @@ Three groups use the platform. They need different interfaces, permissions and s
 | --- | --- | --- | --- | --- |
 | FR-ORG-01 | Create an organization with legal name, type (university, institute, hospital, company, government, service institution…), **unified social credit code**, legal representative, economic type and scale; duplicates detected by credit code | R1 | 09 §2.3 | C |
 | FR-ORG-02 | Organization verification case: business licence (OCR in R2), authorization letter (授权委托书) for the applicant, check against the national enterprise credit system; decision with reason; re-check date | R1 | 05 §9.2 | C |
-| FR-ORG-03 | Invite members with roles (owner, admin, technology manager, demand manager, deal manager, viewer); invitations expire after 7 days | R1 | 06 §8.2 | |
+| FR-ORG-03 | Invite members with roles (owner, admin, technology manager, demand manager, deal manager, viewer); invitations expire after 7 days. Here "technology manager" is the organization role that manages its listings, not a 技术经理人 broker (MAT) | R1 | 06 §8.2 | |
 | FR-ORG-04 | **Delegated authority** records: who may approve disclosure, sign contracts, approve payments, with amount limits, validity and evidence; enforced by every related action | R2 | 07 §2.2, 08 §2.3 | |
 | FR-ORG-05 | Organization showcase page (品牌馆): profile, technologies, news, videos, contact form | R2 | 09 §3.3 | |
 | FR-ORG-06 | **Agent of record**: a party can appoint an agent organization (agency contract uploaded); the agent can act within the delegated scope and must record a verification opinion with joint-liability acknowledgement on venue submissions | R2 | 09 §2.1 | L (for venue submissions) |
@@ -142,7 +143,7 @@ Three groups use the platform. They need different interfaces, permissions and s
 | FR-UNI-03 | **Negotiated-price public notice** (公示): template with notice number, results and application numbers, inventor count, mode, named assignee, price, valuation firm and value, payment terms; **≥ 15 days**; real-name written objections; 10 WD investigation timer; pause, close or convert to listing | R1 | 09 §5 | C |
 | FR-UNI-04 | **Dual publication**: notice embedded on the university's site and published through the venue partner, with the venue's no-objection certificate linked, to support the Shanghai due-diligence exemption | R2 | 09 §5 | L |
 | FR-UNI-05 | Pricing-method record for each transfer: negotiated + notice, listing, or auction; evidence attached | R1 | 08 §5.4 | C |
-| FR-UNI-06 | Income ledger and inventor-reward calculation (national ≥ 50%, Shanghai ≥ 70%, or the institution's rule); reward notice ≥ 15 WD including the contract-registration number | R2 | 09 §5 | C |
+| FR-UNI-06 | Income ledger and inventor-reward calculation (the institution's rule or agreement; without one, the national default of ≥ 50%; Shanghai institutions may set ≥ 70%); reward notice ≥ 15 WD including the contract-registration number | R2 | 09 §5 | C |
 | FR-UNI-07 | Ownership-grant (赋权) workflow: team agreement, application, approval, ≥ 15-day notice, co-ownership share or ≥ 10-year use right with expiry alerts, negative-list screening, annual list export | R3 | 09 §5 | C |
 | FR-UNI-08 | Patent revitalisation: tag patents with conversion intent, let companies subscribe and give feedback, report outcomes in the official categories (open, ordinary, sole or exclusive licence, industrialised) | R2 | 09 §5 | |
 | FR-UNI-09 | Annual transfer-report export (prior year, by 30 March) | R2 | 09 §1 | C |
@@ -153,12 +154,12 @@ Three groups use the platform. They need different interfaces, permissions and s
 | --- | --- | --- | --- | --- |
 | FR-DEM-01 | Demand wizard: problem, technical parameters, expected outcomes, hard constraints vs preferences, TRL, route (licence, purchase, joint development, service, investment), budget in ¥10,000 or "negotiable", deadline | R1 | 09 §3.4 | |
 | FR-DEM-02 | AI-assisted structuring of free text into the demand form (buyer confirms every field) | R2 | 04 §6 | C (if a generative-AI service is used) |
-| FR-DEM-03 | Disclosure levels: anonymous public · verified users only · private (broker-led); buyer identity and budget never public by default | R1 | 05 §7.2 | |
+| FR-DEM-03 | Disclosure levels: anonymous public · verified users only · broker only (broker-led search) · private; buyer identity and budget never public by default | R1 | 05 §7.2 | |
 | FR-DEM-04 | **Demand rewriting**: a technology manager or expert writes a demand analysis (需求分析报告) and an anonymized public version; buyer approves before publication | R1 | 09 §3.5, §4 | |
-| FR-DEM-05 | Demand state machine: draft → review → collecting → choosing → negotiating → feedback → done, with terminated / closed / expired; closure reason mandatory | R1 | 09 §3.4 | |
+| FR-DEM-05 | Demand lifecycle as specified in [06 §6.2](06-implementation-design-v1.md): draft → submitted (with a clarification loop) → approved → matching → shortlisted → introduction → in evaluation → negotiation → fulfilled, with rejected, no candidates, withdrawn and expired; closure reason mandatory. InnoMatch's demand stages (collecting, choosing, negotiating, feedback) are the reference | R1 | 09 §3.4, 06 §6.2 | |
 | FR-DEM-06 | **Every demand gets a response**: SLA alert if a published demand has no candidate or no staff action within 10 WD | R1 | 09 §3.5 | |
 | FR-DEM-07 | **Solution submission (揭榜)**: solvers (organizations or individuals) submit proposals with attachments under NDA; states draft → review → accepted / not accepted → feedback → signed / matched / failed | R1 | 09 §3.4 | |
-| FR-DEM-08 | **Challenge campaigns**: campaign pages with tracks, eligibility rules (e.g. revenue, R&D ratio, minimum bounty), deadlines, expert first and final selection, roadshow, live final only with ≥ 3 teams, awards, prize paid by the demander, contract tracking (e.g. within 2 months) | R2 | 09 §3.5, §4 | |
+| FR-DEM-08 | **Challenge campaigns**: campaign pages with tracks, eligibility rules (e.g. revenue, R&D ratio, minimum bounty), deadlines, expert first and final selection, roadshow, live final only with ≥ 3 teams, awards, prize paid in principle by the demander and never a condition of exclusivity, contract tracking (e.g. within 2 months) | R2 | 09 §3.5, §4 | |
 | FR-DEM-09 | Staged subsidy tracker for government-funded challenges (e.g. 40% / 80% / rest) | R3 | 09 §4 | |
 | FR-DEM-10 | **Enterprise technology procurement listing**: ≥ 20 WD publication, bid bond ≤ 2% of budget, anti-discrimination checklist (no brand or patent naming), supplier qualification rules | R3 | 09 §2.4 | L (if run through a venue) |
 | FR-DEM-11 | Demand owner sees candidates, compares up to 4 side by side, scores them with an evaluation scorecard and records decisions | R1 | 06 §7.3 | |
@@ -229,7 +230,7 @@ These requirements cover listing-based sales that must run on a licensed venue. 
 | FR-VEN-03 | Listing timeline tracking with WD rules: review ≤ 3 WD, disclosure ≥ 5 WD (≥ 10 WD on CTEX), extensions ≥ 5 WD, maximum 12 months; clock restarts after changes | R3 | 09 §2.3, §4 | L |
 | FR-VEN-04 | **Buyer registration on behalf of clients**: intent form with buyer floor ≥ listing floor, consortium shares, risk statement, agent verification opinion; corrections ≤ 3 WD; seller confirmation ≤ 3 WD (silence = consent); objections ≤ 3 WD | R3 | 09 §2.3 | L |
 | FR-VEN-05 | Outcome router: 0 buyers → extend or terminate; 1 → agreement at ≥ floor; ≥ 2 → the competitive method announced in advance | R3 | 09 §2.3 | L |
-| FR-VEN-06 | Competitive-method support: bidding plans for online bidding (timed ≥ 10 min, continuous cycles ≥ 60 s, increments, no self-outbidding, one-shot sealed bids, pre-emption final bid), auction hand-off to a licensed auction house, tender (deposit ≤ 30%, ≥ 10 WD preparation) | R3 | 09 §2.4 | L |
+| FR-VEN-06 | Competitive-method support: bidding plans for online bidding (timed ≥ 10 min, continuous cycles ≥ 60 s, increments, no self-outbidding, one-shot sealed bids; pre-emption: the highest bidder's extra final bid sets the exercise price, rule 179), auction hand-off to a licensed auction house, tender (deposit ≤ 30%, ≥ 10 WD preparation) | R3 | 09 §2.4 | L |
 | FR-VEN-07 | **Competitive negotiation on the platform** (non-binding preparation): odd-sized panel, ≥ one-third experts drawn at random from the expert pool, signed minutes, final quotes, panel report ≤ 5 WD | R3 | 09 §2.4 | |
 | FR-VEN-08 | Settlement tracking: deposit and price status from the venue (amounts, dates, refunds ≤ 5 WD, instalments with ≥ 30% down); the platform never holds the funds | R3 | 09 §2.4, §4 | L |
 | FR-VEN-09 | Certificates: store venue rights-registration, no-objection and transaction certificate numbers and PDFs; link them to deals, notices and reward records | R3 | 09 §1 | L |
@@ -290,7 +291,7 @@ These requirements cover listing-based sales that must run on a licensed venue. 
 | FR-ADM-07 | Content management: news, policies (政策), case studies, FAQs, help centre, banners | R1 | 09 §2.2 | C (content moderation) |
 | FR-ADM-08 | Sensitive-word and content-moderation checks on public text and messages, with a review queue | R1 | 08 §1.1 | C |
 | FR-ADM-09 | **Working-day calendar**: official holidays and make-up working days per year, maintained by admins; all WD timers use it | R1 | 09 §6 | |
-| FR-ADM-10 | Staff role management with quarterly access review and automatic expiry of temporary roles | R1 | 06 §4.6 | |
+| FR-ADM-10 | Staff role management with quarterly access review and automatic expiry of temporary roles | R1 | 05 §5.2, 06 §8.1 | |
 
 ### 3.16 Reporting and statistics (RPT)
 
@@ -306,7 +307,7 @@ These requirements cover listing-based sales that must run on a licensed venue. 
 | ID | Requirement | Rel | Ref | Reg |
 | --- | --- | --- | --- | --- |
 | FR-CMP-01 | Append-only audit of all state changes, permission changes, confidential access and admin actions, searchable by resource, actor and time | R1 | 06 §4.6 | C |
-| FR-CMP-02 | **Evidence preservation**: hash chain over listing snapshots, notices, proposals, contracts and acceptance decisions; optional trusted timestamps or judicial-blockchain anchoring | R2 | 09 §4 | Partner (optional) |
+| FR-CMP-02 | **Evidence preservation**: hash chain over listing snapshots, notices, proposals, contracts and acceptance decisions; optional trusted timestamps or judicial-blockchain anchoring | R2 | 09 §4 | L (only if a trusted-timestamp or judicial-blockchain partner is used) |
 | FR-CMP-03 | Versioned risk statements and commitments (buyer risk statement, holder commitment, notice and commitment) captured per action | R1 | 09 §2.3 | C |
 | FR-CMP-04 | Complaints and disputes: ticket, evidence, response deadline, mediation log, escalation, outcome ([08 §8](08-china-operating-model.md)) | R1 (basic) / R2 (mediation) | 08 §8 | |
 | FR-CMP-05 | Export-control and cross-border screening flags on technologies and parties; blocks disclosure, signing, delivery and payment until cleared | R2 | 08 §5.3 | C |
@@ -325,6 +326,7 @@ flowchart LR
         a3["UNI notices, TTO workspace"]
         a4["DEM demands, rewriting,<br/>solution submissions"]
         a5["SRC Chinese search, filters,<br/>saved searches"]
+        a8["MAT matching jobs,<br/>broker review queue"]
         a6["INT inquiries, masking,<br/>introductions"]
         a7["ADM console, WD calendar,<br/>maker-checker · CMP audit"]
     end
@@ -393,7 +395,7 @@ flowchart LR
 | Morning | Reviewers | Claim cases in priority and due-date order; nothing stays unclaimed for more than 4 business hours |
 | Daily | Technology managers | Work the assigned-demand queue; log every outreach; update candidate status |
 | Daily | Support | Answer tickets; resend codes or notifications; unlock accounts after identity checks |
-| Weekly | Operations lead | Stale listing sweep (§4 TEC requirements), demand follow-ups, technology-manager performance review |
+| Weekly | Operations lead | Stale listing sweep (FR-TEC-13), demand follow-ups (FR-DEM-06), technology-manager performance review |
 | Monthly | Compliance + security | Access review of staff roles, restore drill, review of audit anomalies |
 | Monthly | Management | KPI report (funnel, revenue, SLA) and government programme reports where applicable |
 
@@ -415,7 +417,7 @@ Every notification is defined by an event, its recipients, the channels and the 
 | Login code, password reset | User | — | ✓ | ✓ | — | Immediate |
 | New login from unknown device | User | ✓ | ✓ | — | ✓ | Immediate |
 | Organization verified / rejected | Organization admins | ✓ | ✓ | ✓ | ✓ | Immediate |
-| Listing review decision | Technology managers of the owner | ✓ | ✓ | — | ✓ | Immediate |
+| Listing review decision | Owner's members who manage the listing (owner, admin, technology-manager role) | ✓ | ✓ | — | ✓ | Immediate |
 | Public notice started / ended (university pricing) | TTO officers | ✓ | ✓ | — | — | Immediate |
 | New inquiry or introduction request | Supplier's responsible users | ✓ | ✓ | ✓ (if unanswered 24 h) | ✓ | Immediate + reminder |
 | New qualified matches | Buyer's demand managers | ✓ | Digest | — | ✓ | Daily digest |
@@ -451,7 +453,7 @@ Targets for the first production release on the target stack (Node 12.4, MongoDB
 | NFR-11 | Localization | `zh-CN` default and `en`; all UI strings externalized; dates in `Asia/Shanghai`; Chinese sorting by pinyin (full ICU) | i18n lint + ICU test in CI |
 | NFR-12 | Browsers and devices | Latest two versions of Chrome, Edge, Safari, Firefox, 360 and QQ browsers; responsive down to **360 px** width; WeChat in-app browser for public pages | Cross-browser test matrix |
 | NFR-13 | Accessibility | WCAG 2.1 AA for public pages and core workflows (contrast, keyboard, labels) | Automated axe checks + manual review |
-| NFR-14 | Scalability (year 1) | 50,000 published technologies, 10,000 demands, 5,000 organizations, 200 concurrent users without architecture change | Load test with synthetic data |
+| NFR-14 | Scalability (year 1) | 50,000 published technologies, 10,000 demands, 5,000 organizations, 200 concurrent users without architecture change | Load test with synthetic data at these volumes; the NFR-02 latency targets must still hold |
 | NFR-15 | Observability | Structured logs with request IDs; metrics for latency, errors, queue (outbox) backlog, search lag; alerts to the on-call channel within 5 min | Alert test each release |
 | NFR-16 | Runtime compatibility | Every dependency passes the Node 12.4 smoke test; code uses only the MongoDB 4.4 feature set | `draft-implementation/run.sh` in CI |
 | NFR-17 | Maintainability | Unit-test coverage ≥ 70% on services and policies; every state machine fully covered by transition tests | Coverage report in CI |
@@ -462,17 +464,17 @@ Providers are examples to evaluate, not decisions. Every integration goes throug
 
 | Capability | Purpose | Examples to evaluate | Release |
 | --- | --- | --- | --- |
-| SMS | Login codes, critical notifications | Aliyun SMS, Tencent Cloud SMS (signature and template approval required) | MVP |
-| E-mail | Notifications, digests | Enterprise SMTP service (Aliyun DirectMail, Tencent Exmail…) | MVP |
+| SMS | Login codes, critical notifications | Aliyun SMS, Tencent Cloud SMS (signature and template approval required) | R1 |
+| E-mail | Notifications, digests | Enterprise SMTP service (Aliyun DirectMail, Tencent Exmail…) | R1 |
 | WeChat | Official-account template messages, QR login, link previews | WeChat Official Account, WeChat Open Platform | R2 |
-| Enterprise information | Check legal name, unified social credit code, legal representative, status | National Enterprise Credit Information Publicity System (manual) at launch; commercial APIs (e.g. Qichacha, Tianyancha) later | MVP (manual) / R2 (API) |
+| Enterprise information | Check legal name, unified social credit code, legal representative, status | National Enterprise Credit Information Publicity System (manual) at launch; commercial APIs (e.g. Qichacha, Tianyancha) later | R1 (manual) / R2 (API) |
 | Personal real-name verification | Verify identity of signatories and representatives | Licensed identity-verification services from cloud providers | R2 |
 | Corporate bank-account verification | Prove control of the organization (small-amount transfer check) | Payment partner or bank service | R3 |
-| Patent data | Check patent number, holder, legal status | CNIPA public search (manual) at launch; commercial patent databases (e.g. incoPat, PatSnap) later | MVP (manual) / R2 |
+| Patent data | Check patent number, holder, legal status | CNIPA public search (manual) at launch; commercial patent databases (e.g. incoPat, PatSnap) later | R1 (manual) / R2 |
 | E-signature | Sign NDAs and contracts with company e-seals | Licensed e-signature services (e.g. Fadada, eSignBao, BestSign) | R2 |
 | Payments and settlement | Payment requests, conditional holding, payouts | Bank fund-supervision accounts or licensed payment institutions (see [08 §1.2](08-china-operating-model.md)) | R3 |
 | E-invoices | Issue platform invoices for services and subscriptions | Digital e-invoice (数电票) through the tax platform or an invoicing service | R2 |
-| Search engine submission | Fast indexing of new public pages | Baidu search-resource platform push API; sitemap | MVP |
+| Search engine submission | Fast indexing of new public pages | Baidu search-resource platform push API; sitemap | R1 |
 | OCR | Read business licences and patent certificates during verification | Cloud OCR services | R2 |
 | Maps (optional) | Show organization location on profiles | Amap / Baidu Maps | R3 |
 | AI models | Demand structuring, translation drafts, summaries | Domestic model providers that have completed generative-AI filing; never send confidential documents without a data agreement | R2–R3 |
@@ -486,38 +488,38 @@ Indicative plan for **3–4 developers plus a part-time designer, a QA engineer 
 ```mermaid
 flowchart LR
     R0["R0 Foundation<br/>≈ 6 weeks"] --> R1["R1 Marketplace MVP<br/>≈ 12 weeks"]
-    R1 --> R2["R2 Managed transfer<br/>≈ 12 weeks"]
-    R2 --> R3["R3 Transactions and<br/>exchange functions<br/>≈ 12–16 weeks"]
+    R1 --> R2["R2 Managed transfer<br/>and clients<br/>≈ 12 weeks"]
+    R2 --> R3["R3 Venue-routed transactions<br/>and payments<br/>≈ 12–16 weeks"]
 ```
 
 | Release | Scope | Exit criteria |
 | --- | --- | --- |
 | **R0 — Foundation** | Server survey and target runtime set-up (doc 11), repository and CI with the Node 12 compatibility gate, migrations, authentication (SMS + password, staff MFA), organizations and memberships, audit, admin shell, design system | A staff user and a pilot organization can log in; cross-tenant tests pass; release and rollback rehearsed |
-| **R1 — Marketplace MVP** | All **R1** requirements in §3: verification queue, technology listings with review and publication, bulk import, demands, challenges (basic), search, saved searches, pre-rendered public pages, inquiries with contact masking, notifications, content pages, basic reports | 3–5 pilot universities and 10 pilot companies use it; ≥ 300 reviewed listings; review SLA met for 4 weeks |
-| **R2 — Managed transfer** | Technology-manager network, matching and broker queues, introductions, NDA and data rooms with watermarks, proposals and negotiation, e-signature, deal workspace and milestones, events and roadshows, enterprise client workspace and scouting projects, institutional (TTO / programme) workspaces, invoices, WeChat notifications | First completed licence or service deals recorded end to end; first paying enterprise client |
-| **R3 — Transactions and exchange functions** | Payment-partner integration (requests, confirmations, conditional holding if approved, payouts, reconciliation), listing-based sales with bidding through a licensed venue partner or own licence, technology-contract registration packages, dispute workflow, advanced reports | Legal and payment-partner sign-off ([08 §10](08-china-operating-model.md)); reconciliation runs clean for one month |
+| **R1 — Marketplace MVP** | All 67 **R1** requirements in §3, including: organization verification queue, technology listings with review and publication, bulk import, TTO workspace and negotiated-price public notices, demands with rewriting and solution submissions (揭榜), Chinese search, saved searches, pre-rendered public pages, matching jobs with a broker review queue, inquiries with contact masking, introductions, expert pool, notifications (in-app, e-mail, SMS), admin console with working-day calendar and maker-checker, content pages, audit, funnel and SLA reports | 3–5 pilot universities and 10 pilot companies use it; ≥ 300 reviewed listings; review SLA met for 4 weeks |
+| **R2 — Managed transfer and clients** | All 53 **R2** requirements, including: real-name verification and delegated authority, agents of record, technology-manager network (registration, assignment, outreach log, points), recommendations, AI-assisted demand structuring, challenge campaigns and special boards, NDA and data rooms with watermarks, deal workspace, proposals and negotiation, contract generator, e-signature, milestones, technology-contract registration packages, deal dossiers, services, expert panels and valuation, events and roadshows, enterprise client plans and scouting projects, institutional (TTO income ledger, programme) workspaces, e-invoices, WeChat notifications, evidence preservation, export-control screening, dispute mediation | First completed licence or service deals recorded end to end; first paying enterprise client |
+| **R3 — Venue-routed transactions and payments** | All 18 **R3** requirements: listing-based sales through a licensed venue partner as its agent (or under the platform's own licence if D-01 so decides): submission packages, disclosure, buyer registration, competitive methods, settlement tracking, certificates and venue data exchange (FR-VEN); enterprise procurement listings, staged subsidies, ownership grants (赋权), commission splits, royalty schedules, public market data, co-branded portals and state-owned asset routing. Also payment-partner integration (requests, confirmations, conditional holding if approved, payouts, reconciliation) as specified in [08 §6](08-china-operating-model.md); it has no numbered requirement yet | Legal and payment-partner sign-off ([08 §10](08-china-operating-model.md)); reconciliation runs clean for one month |
 
 ---
 
 ## 10. User acceptance scenarios
 
-Each release is accepted when these scenarios pass with real pilot users, not only with test accounts.
+A release is accepted when the scenarios marked for it (and those of earlier releases) pass with real pilot users, not only with test accounts. **Rel** is the release that introduces the scenario.
 
-| # | Persona | Scenario | Pass condition |
-| --- | --- | --- | --- |
-| UAT-01 | TTO officer | Import 50 technologies from the Excel template, fix the rows flagged as errors, submit them for review | All valid rows become drafts; errors are listed per row and cell; nothing is published before review |
-| UAT-02 | Reviewer | Process 20 listing reviews: approve some, request changes on others, restrict one confidential attachment | Decisions recorded with reasons; supplier sees field-level feedback; restricted file never appears publicly |
-| UAT-03 | TTO officer | Publish a negotiated-price public notice for a service invention; receive one objection; switch to listing | Notice page live for the configured period; objection recorded; pricing method change audited |
-| UAT-04 | R&D manager | Describe a problem in Chinese free text, accept the structured demand, publish it anonymously | Buyer identity and budget never visible publicly; demand searchable by keywords |
-| UAT-05 | Technology manager | Take an assigned demand, log outreach to 5 suppliers, shortlist 3, request introductions | Every step timestamped; supplier consent required before identities are shared |
-| UAT-06 | Buyer and supplier | Exchange messages before introduction approval | Phone numbers, e-mails and WeChat IDs in messages are masked; after approval, contact cards are shared |
-| UAT-07 | Supplier | Grant an NDA-covered buyer access to two of five documents | Buyer sees exactly two; downloads are watermarked with the buyer's name and time; access log complete |
-| UAT-08 | Buyer and supplier | Negotiate three proposal versions and sign with e-seals | Only the final version is "agreed"; signed PDF hash stored; signatory authority checked |
-| UAT-09 | Enterprise client | Commission a scouting project and receive the report | Report visible only to authorized client users; candidates traceable to evidence |
-| UAT-10 | Programme manager | Run an innovation-voucher round: applications, approval, redemption against a service order, KPI report | Voucher ledger balances; report exports to Excel |
-| UAT-11 | Support | Use "view as" to diagnose a buyer's problem | Read-only, banner shown, audit event written, no confidential documents visible |
-| UAT-12 | Compliance | Suspend a listing after a rights dispute | Removed from search and public pages within 5 minutes; open introductions frozen; owner notified |
-| UAT-13 | Operations | Restore yesterday's backup into staging and run smoke tests | Completed within the RTO; data and documents consistent |
+| # | Rel | Persona | Scenario | Pass condition |
+| --- | --- | --- | --- | --- |
+| UAT-01 | R1 | TTO officer | Import 50 technologies from the Excel template, fix the rows flagged as errors, submit them for review | All valid rows become drafts; errors are listed per row and cell; nothing is published before review |
+| UAT-02 | R1 | Reviewer | Process 20 listing reviews: approve some, request changes on others, restrict one confidential attachment | Decisions recorded with reasons; supplier sees field-level feedback; restricted file never appears publicly |
+| UAT-03 | R1 | TTO officer | Publish a negotiated-price public notice for a service invention; receive one objection; switch to listing | Notice page live for the configured period; objection recorded; pricing method change audited |
+| UAT-04 | R1 / R2 | R&D manager | Create a demand with the wizard (R1), or describe it in Chinese free text and accept the AI-structured version (R2, FR-DEM-02); publish it anonymously | Buyer identity and budget never visible publicly; demand searchable by keywords |
+| UAT-05 | R2 | Technology manager | Take an assigned demand, log outreach to 5 suppliers, shortlist 3, request introductions | Every step timestamped; supplier consent required before identities are shared |
+| UAT-06 | R1 | Buyer and supplier | Exchange messages before introduction approval | Phone numbers, e-mails and WeChat IDs in messages are masked; after approval, contact cards are shared |
+| UAT-07 | R2 | Supplier | Grant an NDA-covered buyer access to two of five documents | Buyer sees exactly two; downloads are watermarked with the buyer's name and time; access log complete |
+| UAT-08 | R2 | Buyer and supplier | Negotiate three proposal versions and sign with e-seals | Only the final version is "agreed"; signed PDF hash stored; signatory authority checked |
+| UAT-09 | R2 | Enterprise client | Commission a scouting project and receive the report | Report visible only to authorized client users; candidates traceable to evidence |
+| UAT-10 | R2 | Programme manager | Run an innovation-voucher round: applications, approval, redemption against a service order, KPI report | Voucher ledger balances; report exports to Excel |
+| UAT-11 | R1 | Support | Use "view as" to diagnose a buyer's problem | Read-only, banner shown, audit event written, no confidential documents visible |
+| UAT-12 | R1 | Compliance | Suspend a listing after a rights dispute | Removed from search and public pages within 5 minutes; open introductions frozen; owner notified |
+| UAT-13 | R1 | Operations | Restore yesterday's backup into staging and run smoke tests | Completed within the RTO; data and documents consistent |
 
 ---
 
@@ -550,8 +552,11 @@ A technology exchange fails if it opens empty. These operational requirements ar
 
 ## Traceability
 
+The **Ref** column of each requirement in §3 is the authoritative link to its source. This table groups the main sources.
+
 | Source | Requirements that implement it |
 | --- | --- |
+| Shanghai venue rules and STEX products ([09 §1, §2.2](09-reference-platform-features.md)) | FR-VEN-08 … FR-VEN-10, FR-TEC-06, FR-SRC-06, FR-SVC-02, FR-SVC-05 |
 | STEX listing and buyer rules ([09 §2.3](09-reference-platform-features.md)) | FR-VEN-01 … FR-VEN-05, FR-TEC-09, FR-CMP-03 |
 | STEX competitive methods ([09 §2.4](09-reference-platform-features.md)) | FR-VEN-06, FR-VEN-07, FR-DEM-10 |
 | STEX service institutions and agents ([09 §2.1](09-reference-platform-features.md)) | FR-ORG-06, FR-SVC-01, FR-ADM-02 |
