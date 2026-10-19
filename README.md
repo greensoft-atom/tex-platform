@@ -11,9 +11,12 @@ Design documentation for a technology exchange and technology-transfer platform.
 | 03 | [Business models and revenue](03-business-models-and-revenue.md) | Verified financials, revenue streams, profit pools, lessons for our pricing | Founders, business planning |
 | 04 | [Product strategy](04-product-strategy.md) | What to copy, what to do differently, demand-first design, TRL, verification, scouting, strategic stages | Founders, product, architects |
 | 05 | [System design blueprint](05-system-design-blueprint.md) | Target architecture: domain model, roles, workflows, sequence diagrams, data, APIs, AI, security, roadmap, KPIs | Product, architects, engineering leads |
-| 06 | [Implementation-level design v1.0](06-implementation-design-v1.md) | Executable PostgreSQL schema, API catalogue, state machines, UI specs, permissions, self-hosted deployment, sprint plan | Engineers, tech lead |
+| 06 | [Implementation-level design v1.0](06-implementation-design-v1.md) | Verified MongoDB collections, validators, indexes, roles and transactions; API catalogue; state machines; UI specs; permissions (CASL); search; deployment; sprint plan | Engineers, tech lead |
 | 07 | [Real-world roles, workflows and money movement](07-roles-workflows-and-money.md) | User groups and authority, workflows per role, action vocabulary, disclosure ladder, payment lifecycle, deal types | Product, operations, architects |
 | 08 | [China operating model](08-china-operating-model.md) | Legal map, authority model, deal-type catalogue, transitions, cross-border and university rules, funds handling, disputes, launch checklist | Founders, compliance, finance, counsel |
+| 09 | [Reference platform features](09-reference-platform-features.md) | What STEX, NETC/InnoMatch, CTEX and other Chinese platforms actually provide: modules, rules, flows, architecture hints, gap analysis | Product, business analysts |
+| 10 | [Product requirements specification](10-product-requirements.md) | Numbered functional requirements for users, clients and administrators; non-functional requirements; integrations; release plan; UAT scenarios | Product, engineering, QA, operations |
+| 11 | [Target runtime: Node.js 12.4 + MongoDB 4.4/5.0](11-target-runtime-node12-mongodb.md) | Verified library versions, coding rules, MongoDB rules, Chinese search, SEO, deployment configs, risks and upgrade path | Tech lead, engineers, DevOps |
 
 ```mermaid
 flowchart LR
@@ -27,21 +30,32 @@ flowchart LR
         D05["05 Blueprint"] --> D06["06 Implementation v1.0"]
         D07["07 Roles and money"] --> D08["08 China operating model"]
     end
+    subgraph Requirements
+        D09["09 Reference platform features"] --> D10["10 Product requirements"]
+    end
+    subgraph Engineering
+        D11["11 Target runtime<br/>Node 12.4 + MongoDB 4.4/5.0"]
+    end
     D03 --> D04 --> D05
     D06 --> D07
+    D08 --> D09
+    D10 --> D06
+    D11 --> D06
 ```
 
 ## Key decisions at a glance
 
 | Topic | Decision | Reference |
 | --- | --- | --- |
-| Positioning | Managed technology exchange: demand-driven marketplace + managed transfer workflow; not a statutory exchange at launch | [04](04-product-strategy.md), [06 §1](06-implementation-design-v1.md) |
+| Positioning | Demand-driven **matching and service platform** with managed transfer workflows, acting as a **registered practising agent** of a licensed venue (STEX / CTEX) for formal listing, bidding, settlement and certificates | [09 §1–§2](09-reference-platform-features.md), [10 §1](10-product-requirements.md) |
+| Requirements | 138 numbered functional requirements (67 start in R1) and 17 measurable non-functional requirements | [10](10-product-requirements.md) |
 | Launch market | China (one region first) | [08](08-china-operating-model.md) |
 | Users at launch | Technology suppliers and buyers, supported by platform staff | [06 §1](06-implementation-design-v1.md) |
 | Deal types | All types in the data model; three implementation tiers (standardized, legal review, specialist-only) | [08 §3](08-china-operating-model.md) |
 | Money | Funds held and released only by a licensed bank or payment institution; the platform coordinates conditions and records verified events | [08 §1, §6](08-china-operating-model.md) |
-| Architecture | FastAPI modular monolith, PostgreSQL, private object storage, explicit state machines, transactional outbox | [06 §3–§6](06-implementation-design-v1.md) |
-| Hosting and team | Self-hosted Linux VMs with Docker Compose; 1–4 developers | [06 §11, §13](06-implementation-design-v1.md) |
+| Target runtime | **Node.js 12.4 + MongoDB 4.4 / 5.0** replica set ("4.5" is a development series); verified with real binaries | [11](11-target-runtime-node12-mongodb.md), [`verification/`](verification/node12-mongodb/README.md) |
+| Architecture | Express 4 modular monolith (TypeScript → ES2019), MongoDB with validators, transactions and least-privilege roles, Meilisearch for Chinese search, transactional outbox, pre-rendered public pages | [06 §3–§6, §10](06-implementation-design-v1.md) |
+| Hosting and team | Self-hosted: Nginx + systemd on the given servers; 1–4 developers | [06 §11, §13](06-implementation-design-v1.md), [11 §9](11-target-runtime-node12-mongodb.md) |
 
 ## Glossary
 
@@ -60,7 +74,9 @@ flowchart LR
 | **Rights registration** (权属登记) / **Transaction certification** (交易鉴证) | Regulated functions of a licensed technology trading venue |
 | **Technology-contract registration** (技术合同认定登记) | Registration of technology contracts that unlocks tax incentives in China (MIIT measures, effective 2026-03-01) |
 | **Payment obligation / transaction / payout** | What is owed / money actually moved and confirmed by the provider / money paid out to a recipient. Never the same thing |
-| **Transactional outbox** | A table written in the same database transaction as a business change, used to publish events reliably |
+| **Transactional outbox** | A collection written in the same database transaction as a business change, used to publish events reliably (search indexing, notifications, page rendering) |
+| **Publication snapshot** | The approved, public part of a technology version; the only technology data sent to search and public pages |
+| **揭榜挂帅 / challenge** | A demand published as an open challenge: solvers submit proposals, an expert panel selects the winner |
 
 ## Viewing the diagrams
 
@@ -68,7 +84,16 @@ All diagrams are standard [Mermaid](https://mermaid.js.org/) code blocks (`flowc
 
 ## Revision notes
 
-These documents began as ChatGPT conversation exports. This revision:
+### Revision 3 — target stack and strengthened requirements
+
+- Backend changed to **Node.js + MongoDB** on the given target servers (Node 12.4, MongoDB 4.4 / 5.0). Docs 05, 06 and 08 were updated; doc 11 added.
+- All schema definitions and code samples were **verified with real binaries** (Node 12.4.0; MongoDB 4.4.30 and 5.0.33; Meilisearch 1.11.3). The reproducible kit is in [`verification/node12-mongodb/`](verification/node12-mongodb/README.md).
+- Findings from the verification: MongoDB 4.4/5.0 cannot search Chinese text (Meilisearch adopted); Node 12 needs `full-icu` for Chinese dates and pinyin sorting; `bull@4` fails on Node 12.4 despite its declared engines; driver 3.x API differences are documented.
+- Docs 09 (real platform features) and 10 (numbered product requirements for users, clients and administrators) added.
+
+### Revision 2 — rewrite of the ChatGPT drafts
+
+These documents began as ChatGPT conversation exports. That revision:
 
 - Rewrote every file in a documentation voice, with a consistent structure (purpose, audience, summary, sections, sources) and cross-links.
 - Replaced ChatGPT's rendered-SVG/CSS "mermaid" output (unreadable outside ChatGPT) with **pure Mermaid source**, reconstructed from the surviving labels. Converted the ASCII sketches into Mermaid diagrams as well.
@@ -82,12 +107,10 @@ These documents began as ChatGPT conversation exports. This revision:
 | STEX "~¥189B transaction volume" (2024) | ¥18.922B was STEX's **2023** value (decimal error); 2024 on-exchange value was **¥30.933B** | Fund prospectus; STCSM 2024 report |
 | NETC revenue "not found" | NETC's operating company reported **¥46.20M** revenue in 2023, more than STEX's ¥28.43M | Fund prospectus |
 | STEX and NETC treated as independent competitors | Both belong to the same state-owned group (杨浦科创集团), with overlapping leadership | Fund prospectus |
-| NETC cumulative value "¥40B" vs "¥400B" | Contradictory and unverified; flagged for confirmation | — |
+| NETC "¥42B facilitated in 2024"; cumulative "¥40B" vs "¥400B" | 2024: **≈ ¥4.2 billion** (近42亿元, a 10× unit error); cumulative **≈ ¥40 billion** (近400亿元) | STCSM 2024 report |
 | STEX profile source labelled "Shanxi Provincial Government" | It is the **Shanghai Yangpu District** government site | — |
 | TRL list with non-standard definitions and a fixed TRL→CRL mapping | Replaced with EU/Horizon TRL definitions; CRL treated as an independent scale | EU H2020 Annex G; ARENA CRI |
-| `documents.classification` default `'restricted'` (not allowed by its own CHECK) | Default changed to `'organization_only'` | Validated on PostgreSQL 16 |
-| Status CHECK lists out of sync with the state machines; `technology_type` missing; matches without technology version or idempotency key | Aligned and added; `updated_at` trigger, outbox, idempotency and platform-role tables added | Validated on PostgreSQL 16 |
-| `CREATE EXTENSION pgcrypto` for `gen_random_uuid()` | Not needed since PostgreSQL 13; removed | PostgreSQL docs |
+| Draft SQL schema: status lists out of sync with the state machines, a default value rejected by its own CHECK, missing `technology_type`, matches without version or idempotency key | Fixed in revision 2; superseded in revision 3 by the verified MongoDB design (validators enforce the same rules) | [06 §4](06-implementation-design-v1.md) |
 | Civil Code contract types listed without technology **development** contracts; no CNIPA registration for patent assignments | Added development contracts, Patent Law Art. 10 registration, university pricing rules (Art. 18 / Art. 45), 2026 technology-contract registration measures, ICP/EDI and MLPS items | See [08 Sources](08-china-operating-model.md#sources) |
 
 > Figures are as of the cited sources (2023–2026). Legal statements are an implementation baseline, **not legal advice**; items marked *legal validation required* in [08](08-china-operating-model.md) must be confirmed by PRC counsel before launch.

@@ -244,7 +244,7 @@ A graph answers questions like:
 
 > "Find all technologies related to solid-state batteries at TRL 6 or higher that are not exclusively licensed, have Asian manufacturing capability, and have at least one successful industrial validation."
 
-The graph can be a **logical model** (relational tables plus relationship tables) long before it needs a graph database (see [05 §15.4](05-system-design-blueprint.md)).
+The graph can be a **logical model** (MongoDB collections with reference fields, traversed with `$graphLookup`) long before it needs a graph database (see [05 §15.4](05-system-design-blueprint.md)).
 
 ---
 
@@ -433,7 +433,7 @@ flowchart LR
 | --- | --- | --- |
 | 1 — Intelligence and matching | Technology database, demand database, AI matching, technology profiles, verification, expert network | Become the best place to **find** the right technology |
 | 2 — Technology transfer | Private negotiation, deal room, NDA, due diligence, valuation, licensing, contract workflow | Become the place where technology **deals happen** |
-| 3 — Technology exchange | Formal listings, competitive bidding, auction, transaction certification, settlement and escrow through licensed partners, rights registration | Become **market infrastructure** |
+| 3 — Technology exchange | Formal listings, competitive bidding, auction, transaction certification, settlement and rights registration, **run through a licensed venue as its registered practising agent** (venue licences are approved under total-quantity control, see [09 §1](09-reference-platform-features.md)) | Become **market infrastructure** |
 | 4 — Commercialization | PoC, pilots, manufacturing, investment, financing, regulatory support, industrial partners, M&A | Become the infrastructure through which technology **becomes products and businesses** |
 
 These strategic stages map to the delivery phases in [05 §17](05-system-design-blueprint.md) and [06 §13](06-implementation-design-v1.md).

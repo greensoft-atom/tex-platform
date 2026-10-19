@@ -71,7 +71,7 @@ The 2025 STCSM rules are the best public description of what a *licensed* techno
 - **Transaction methods (Art. 2):** negotiated transfer (协议转让), auction (拍卖), tender (招标), competitive bidding (竞价), and other lawful methods.
 - **Conduct rules:** staff must recuse themselves from conflicts, may not misuse investor information or take improper benefits from listed projects (Art. 15), and must file monthly, quarterly and annual reports with STCSM (Art. 16).
 
-> **Why this matters for us:** a private platform can copy the *workflow*, but some of these functions are *regulated activities*: certified rights registration, transaction certification, and holding or settling funds. Our design must keep those as clearly separated modules that can be switched on only when a licence or a licensed partner exists. See [05 §2](05-system-design-blueprint.md) and [08](08-china-operating-model.md).
+> **Why this matters for us:** a private platform can copy the *workflow*, but some of these functions are *regulated activities*: certified rights registration, transaction certification, and holding or settling funds. New venues are approved under "total-quantity control and prudent approval" (Art. 6), so a venue licence is a long, uncertain path. The realistic route is to act as a **registered practising agent** of a licensed venue (STEX or CTEX) and run formal listing, bidding, settlement and certificates through it. See [09 §1–§2](09-reference-platform-features.md), [05 §2](05-system-design-blueprint.md) and [08](08-china-operating-model.md).
 
 ### 1.4 Scale
 
@@ -107,19 +107,21 @@ The 2025 STCSM rules are the best public description of what a *licensed* techno
 - Combines **online intelligent matching** with **offline brokerage and project operation**.
 - Runs the annual **InnoMatch EXPO / Global Tech-Matching Fair**, part of the Pujiang Innovation Forum. The 2025 fair released more than 10,000 technology needs, with more than ¥20 billion of investment commitments from participating companies and 1,728 R&D results seeking commercialization.
 
-### 2.3 Scale (self-reported)
+### 2.3 Scale
 
-NETC's 2024 figures were published on its own website. They could **not** be independently re-verified while this document was prepared (the site was unreachable), so treat them as self-reported:
+Official figures (STCSM 2024 report; STCSM replies on InnoMatch):
 
-| Metric (2024, self-reported) | Value |
-| --- | --- |
-| Corporate technology demands on InnoMatch | 6,468 |
-| Technology results on InnoMatch | 4,390 |
-| Solutions submitted | 3,015 |
-| Completed transactions | 313 |
-| Completed ("landed") transaction value | ¥778 million |
-| Intended signing value on the platform | > ¥3.4 billion |
-| Network-wide transaction contracts facilitated in 2024 | ≈ ¥42 billion |
+| Metric | Value | Source |
+| --- | --- | --- |
+| Signed deals facilitated by NETC in 2024 | **≈ ¥4.2 billion** (近42亿元) | STCSM 2024 report |
+| Signed deals facilitated, cumulative | **≈ ¥40 billion** (近400亿元) | STCSM 2024 report |
+| Network | 44 domestic outlets, 11 international cooperation channels (8 added in 2024) | STCSM 2024 report |
+| InnoMatch, mid-2024 | 4,395 demands; 3,295 results; match rate > 60%; ¥5.239 billion intended deals | STCSM reply |
+| InnoMatch, 2025 | ≈ 30,000 users; 6,600 demands; ≈ ¥800 million signed | STCSM |
+
+Figures published on NETC's own website for 2024 (6,468 demands, 4,390 results, 3,015 solutions, 313 completed transactions, ¥778 million completed value, > ¥3.4 billion intended value) could not be re-checked, because the site was unreachable. Treat them as self-reported.
+
+> **Correction:** an earlier draft gave NETC's 2024 figure as "¥42 billion". The official text says 近42亿元, which is **¥4.2 billion** (亿 = 100 million).
 
 ---
 

@@ -13,6 +13,7 @@
 | Business model | Managed technology exchange marketplace |
 | Hosting | Self-hosted |
 | Team | Small engineering team (1–4 developers) |
+| Target runtime | **Node.js 12.4** + **MongoDB 4.4 / 5.0** replica set (see [11](11-target-runtime-node12-mongodb.md)) |
 | Scope of this document | Architecture baseline · Domain model · Database · APIs · Workflows · UI · Permissions · Security · Search · Deployment · Testing · Delivery plan |
 
 ---
@@ -24,6 +25,8 @@ Build a **managed technology exchange**: neither a plain listing website nor a f
 The platform brings technology suppliers and buyers together. It helps them discover relevant opportunities, verifies important claims, controls confidential disclosure, facilitates introductions and manages negotiations through to a recorded outcome. **Platform staff operate the review and exchange workflows; participating organizations keep control of their technologies and commercial decisions.**
 
 For the first release, deliberately avoid microservices, a separate graph database, a custom payment wallet and a complex AI platform. They add operational work without being needed to prove the core business.
+
+The backend runs on the given target server: **Node.js 12.4 with MongoDB 4.4 / 5.0**. Every database definition and code sample in this document was **verified** on that stack (Node 12.4.0 with MongoDB 4.4.30 and 5.0.33) with the kit in [`verification/node12-mongodb/`](verification/node12-mongodb/README.md). Doc [11](11-target-runtime-node12-mongodb.md) lists the approved library versions and the risks of the end-of-life runtime.
 
 ---
 
@@ -55,8 +58,8 @@ Where a decision is still open, an explicit assumption lets engineering proceed 
 | Legal status | Private commercial platform, **not** a statutory exchange unless later authorized | Never imply official approval or legal certification |
 | Transaction execution | Platform coordinates; parties sign independently or through an integrated signing provider | No proprietary escrow or custody service |
 | Verification | Human review supported by evidence and external registries | Verification claims are scoped and auditable |
-| Infrastructure | Linux servers or VMs under the operator's control | Containers and scripted deployment; no Kubernetes initially |
-| Traffic | Early-stage, modest volume | One application deployment, a worker process, one primary database |
+| Infrastructure | Linux servers under the operator's control; Node.js 12.4 and MongoDB 4.4/5.0 already given | systemd + Nginx deployment; no Kubernetes; see [11](11-target-runtime-node12-mongodb.md) |
+| Traffic | Early-stage, modest volume | Two API instances, one worker process, one MongoDB replica set |
 | Technology ownership | Suppliers declare their authority to list and negotiate | Publication does not certify ownership |
 | AI | Optional, later phases | Core flows work without AI |
 
@@ -158,643 +161,455 @@ Finance, subscriptions, e-signatures and AI start as **integration boundaries or
 
 ## 3. Technical architecture
 
+The target server runs **Node.js 12.4** and **MongoDB 4.4 / 5.0** (the stated "4.5" is a development series). The detailed compatibility rules, verified library versions, risks and upgrade path are in [11 — Target runtime](11-target-runtime-node12-mongodb.md). This section summarizes the decisions that shape the design.
+
 ### 3.1 Technology stack
 
-| Layer | Recommendation | Reason |
+| Layer | Choice | Why |
 | --- | --- | --- |
-| Frontend | React + TypeScript + Vite | Straightforward SPA development |
-| UI | One component library and shared design tokens | Faster, consistent screens |
-| Backend | Python + FastAPI | Typed APIs, validation, OpenAPI generation |
-| Domain validation | Pydantic plus explicit domain services | Consistent input and business validation |
-| Primary database | PostgreSQL 15+ | Transactions, relational integrity, JSONB, row-level security |
-| Search (initial) | PostgreSQL full-text search and trigram indexes | No extra datastore early on |
-| Search (later) | OpenSearch or another dedicated search service | Advanced multilingual search and facets |
-| Cache | Redis, only when justified | Rate limits, caching, short-lived coordination |
-| Background jobs | Durable, database-backed job queue initially | Simple operations for a small team |
-| File storage | Private S3-compatible object storage (e.g. MinIO) or protected local storage | Controlled document lifecycle |
-| Authentication | OIDC-compatible identity provider (e.g. Keycloak) or a secure application auth library | MFA, sessions, integration flexibility |
-| Reverse proxy | Nginx or Caddy | TLS termination and routing |
-| Deployment | Docker Compose on Linux | Repeatable self-hosted deployment |
-| Observability | Structured logs, metrics, error reporting | Operational visibility |
-| CI/CD | Git workflow, automated tests, image builds | Controlled releases |
-
-Start **without Redis and without a search cluster**. PostgreSQL can carry the first version's search and matching workloads. Add infrastructure when measured performance or product requirements justify it.
-
-Background jobs need durable persistence, retry rules, deduplication and failure visibility. A database-backed queue is fine at low volume; move to a broker when volume or delivery guarantees require it.
+| Runtime | **Node.js 12.4** (upgrade to 12.22.12 strongly recommended) | Given target; see [11 §1](11-target-runtime-node12-mongodb.md) |
+| Language | TypeScript, compiled on CI to **ES2019 / CommonJS** | Type safety; output runs on Node 12 |
+| HTTP framework | **Express 4.22** + helmet, with an explicit module structure (§11.4) | Verified on 12.4; maintained; avoids end-of-life NestJS 8 |
+| Validation | **zod 3.22**, schemas shared with the frontend | One definition for API input, UI forms and OpenAPI |
+| Database | **MongoDB 4.4 / 5.0 replica set**, native driver **3.7.4** | Driver 4.x needs Node ≥ 12.9; a replica set is required for transactions |
+| Schema control | `$jsonSchema` validators + indexes + roles via **migrate-mongo** | The database enforces structure even though MongoDB is schemaless |
+| Search | **Meilisearch** (Chinese word segmentation), fed from an outbox | MongoDB 4.4/5.0 cannot search Chinese text (verified) |
+| Background work | One **worker** process: outbox relay, indexing, page pre-rendering, notifications, schedules | No Redis needed at launch |
+| Authorization | **CASL 5** policies (RBAC + ABAC) | Verified on Node 12; policy shared by API checks and UI hints |
+| Authentication | Phone + SMS code or password (**bcryptjs**), TOTP MFA for staff, sessions in MongoDB | China-friendly login; pure-JS hashing (no native build) |
+| Files | Storage adapter: encrypted local volume, S3-compatible store or Aliyun OSS | Same code for a single server or object storage |
+| Frontend | React 18 + Vite + **Ant Design 5**, built on CI, served by Nginx | Not bound to the server's Node version |
+| Public SEO pages | **Pre-rendered static HTML** (EJS) on publication + sitemap | Server-side rendering frameworks need newer Node |
+| Reverse proxy | Nginx (TLS, static files, rate limits) | Single public entry point |
+| Process management | systemd: `tex-api@3001`, `tex-api@3002`, `tex-worker` | Simple, restart-on-failure, no extra tooling |
+| Observability | pino logs, prom-client metrics, request IDs | Verified on Node 12 |
 
 ### 3.2 Logical deployment topology
 
 ```mermaid
 flowchart TB
-    USERS["Buyers, suppliers and staff"] --> RP
-    subgraph HOST["Self-hosted application host(s)"]
-        RP["TLS reverse proxy"] --> FE["React static frontend"]
-        RP --> API["FastAPI application"]
-        API --> AUTH["Identity provider<br/>or auth module"]
-        API --> PG[("PostgreSQL")]
-        API --> FS[("Private file storage")]
-        API --> JQ[["Persistent job queue"]]
-        JQ --> WK["Background worker"]
-        WK --> PG
-        WK --> FS
+    USERS["Buyers, suppliers, clients and staff"] --> NG
+    subgraph APPHOST["Application server"]
+        NG["Nginx<br/>TLS, static web, pre-rendered pages, rate limits"]
+        NG --> API1["tex-api@3001<br/>(Node 12, Express)"]
+        NG --> API2["tex-api@3002"]
+        WK["tex-worker<br/>outbox, indexing, rendering, jobs"]
+        MS[("Meilisearch")]
+        FS[("File storage<br/>(encrypted volume / bucket)")]
     end
-    WK --> SMTP["SMTP / email provider"]
-    API -.-> MON["Monitoring and logs"]
-    WK -.-> MON
-    PG -.-> BAK["Encrypted backup target"]
-    FS -.-> BAK
+    subgraph DBHOSTS["MongoDB replica set rs0 (4.4 / 5.0)"]
+        P[("Primary")]
+        S1[("Secondary")]
+        S2[("Secondary")]
+    end
+    API1 --> P
+    API2 --> P
+    WK --> P
+    API1 --> MS
+    WK --> MS
+    API1 --> FS
+    WK --> FS
+    WK --> EXT["SMS, e-mail, WeChat,<br/>e-signature, payment providers"]
+    S1 -.-> BK["Nightly mongodump --oplog<br/>→ separate backup storage"]
 ```
 
-For production, separate the public-facing application from the database host, even if the first environment has only two or three VMs:
-
-| VM | Role |
+| Environment | Layout |
 | --- | --- |
-| VM 1 — Edge and application | Reverse proxy, frontend assets, API |
-| VM 2 — Data | PostgreSQL, plus private object storage if no dedicated storage server exists |
-| VM 3 — Optional worker | Background jobs and document processing, when load or isolation requires |
-
-With only one physical server, keep the same **logical** separation through containers, network rules, separate credentials and persistent volumes.
+| **Production (recommended)** | 1 application server + a **3-member** MongoDB replica set (3 hosts, or 2 hosts + 1 member on the application server) |
+| **Launch minimum** | 1 server with a **single-node replica set**, accepted only with tested nightly backups and an agreed recovery time |
+| Staging | Mirrors production versions exactly (Node 12.4, same MongoDB version) |
 
 ---
 
-## 4. Database design
+## 4. Database design (MongoDB)
 
-The initial PostgreSQL model: tables, relationships, indexes, constraints and transaction rules. It is more normalized than a typical listing site, because rights, version history, permissions and deal outcomes must stay independently auditable.
+MongoDB is schemaless, but a technology exchange needs **auditable rights, versions, permissions and deal outcomes**. The design therefore adds discipline on top: validators on every core collection, explicit indexes, immutable version collections, a least-privilege application role, and transactions for every multi-document business change.
 
-### 4.1 Entity relationship diagram
+All definitions below are **verified** on MongoDB 4.4.30 and 5.0.33 with Node 12.4.0 (see [`verification/node12-mongodb/`](verification/node12-mongodb/README.md)).
+
+### 4.1 Data model
 
 ```mermaid
 erDiagram
     USERS ||--o{ ORGANIZATION_MEMBERSHIPS : joins
     ORGANIZATIONS ||--o{ ORGANIZATION_MEMBERSHIPS : has
+    ORGANIZATIONS ||--o{ ORGANIZATION_AUTHORIZATIONS : delegates
     ORGANIZATIONS ||--o{ TECHNOLOGIES : owns
-    TECHNOLOGIES ||--|{ TECHNOLOGY_VERSIONS : has
+    TECHNOLOGIES ||--|{ TECHNOLOGY_VERSIONS : "immutable versions"
+    TECHNOLOGIES ||--o| TECHNOLOGY_PUBLICATIONS : "live public snapshot"
     TECHNOLOGIES ||--o{ IP_ASSETS : references
     TECHNOLOGIES ||--o{ TECHNOLOGY_OFFERS : has
     ORGANIZATIONS ||--o{ DEMANDS : submits
-    DEMANDS ||--|{ DEMAND_VERSIONS : has
+    DEMANDS ||--|{ DEMAND_VERSIONS : "immutable versions"
     DEMAND_VERSIONS ||--o{ MATCHES : produces
     TECHNOLOGY_OFFERS ||--o{ MATCHES : considered
-    MATCHES ||--o{ SHORTLIST_ITEMS : shortlisted
     MATCHES ||--o{ INTRODUCTION_REQUESTS : initiates
-    INTRODUCTION_REQUESTS ||--o| DEALS : may_create
-    DEALS ||--|{ DEAL_PARTIES : includes
+    INTRODUCTION_REQUESTS ||--o| DEALS : "converts to"
     DEALS ||--o{ DEAL_MILESTONES : tracks
     ORGANIZATIONS ||--o{ DOCUMENTS : owns
-    DOCUMENTS ||--o{ DOCUMENT_LINKS : "linked via"
+    DOCUMENTS ||--o{ DOCUMENT_ACCESS_GRANTS : "shared via"
     ORGANIZATIONS ||--o{ REVIEW_CASES : undergoes
     TECHNOLOGIES ||--o{ REVIEW_CASES : undergoes
     USERS ||--o{ AUDIT_EVENTS : performs
 ```
 
-The diagram is conceptual. A document may belong to a technology, demand, organization or deal through `document_links`, but its ownership and access rules must be explicit in the implementation.
+Embedded (not separate collections): deal **parties** (inside `deals`), document **links** (inside `documents`), bilingual text (`{ zh, en }`), money (`{ currency, amountMinor }`) and verification summaries.
 
-### 4.2 Database-wide conventions
+### 4.2 Modeling conventions
 
-- UUID primary keys for business entities.
-- `TIMESTAMPTZ` for timestamps; store UTC, localize in the frontend.
-- ISO 4217 currency codes for monetary amounts.
-- `NUMERIC` or integer minor units for money, never floating point.
-- Foreign keys for stable relational references.
-- Uniqueness constraints for invariants that must hold under concurrency.
-- Separate immutable revision records for important published content.
-- Separate state-transition records from mutable current-state columns.
-- Soft deletion only where justified; preserve legally and operationally necessary history.
-- Explicit tenant and resource access checks.
-- Migrations committed to source control (for example Alembic).
-
-Do not use free-form status text. Use constrained values, reference tables or PostgreSQL enums where the state set is stable. For workflows that evolve often, a `CHECK`-constrained text column plus a centralized domain state machine is easier to change than an enum. **The `CHECK` lists below must match the state machines in §6 exactly.**
-
-### 4.3 Identity and organizations
-
-Executable starting point. Assumes PostgreSQL 15+ and migrations applied in dependency order.
-
-```sql
--- gen_random_uuid() is built into PostgreSQL 13+; no extension is needed.
-
--- Keeps updated_at current on every UPDATE.
-CREATE OR REPLACE FUNCTION set_updated_at() RETURNS trigger AS $$
-BEGIN
-    NEW.updated_at := now();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TABLE users (
-    id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email             TEXT NOT NULL,
-    display_name      TEXT NOT NULL,
-    auth_subject      TEXT UNIQUE,              -- subject id at the identity provider
-    status            TEXT NOT NULL DEFAULT 'pending',
-    email_verified_at TIMESTAMPTZ,
-    created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT users_status_chk
-        CHECK (status IN ('pending', 'active', 'suspended', 'closed'))
-);
-
-CREATE UNIQUE INDEX users_email_lower_uq ON users (lower(email));
-
-CREATE TABLE organizations (
-    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    legal_name          TEXT NOT NULL,
-    display_name        TEXT NOT NULL,
-    organization_type   TEXT NOT NULL,          -- university, company, institute, ...
-    jurisdiction_code   CHAR(2) NOT NULL,       -- ISO 3166-1 alpha-2
-    registration_number TEXT,                   -- e.g. unified social credit code in China
-    website_url         TEXT,
-    description         TEXT,
-    verification_status TEXT NOT NULL DEFAULT 'pending',
-    status              TEXT NOT NULL DEFAULT 'active',
-    created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT organization_verification_chk
-        CHECK (verification_status IN (
-            'pending', 'in_review', 'verified',
-            'rejected', 'expired', 'suspended'
-        )),
-    CONSTRAINT organization_status_chk
-        CHECK (status IN ('active', 'suspended', 'closed'))
-);
-
-CREATE UNIQUE INDEX organizations_registration_uq
-    ON organizations (jurisdiction_code, registration_number)
-    WHERE registration_number IS NOT NULL;
-
-CREATE TABLE organization_memberships (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id),
-    user_id         UUID NOT NULL REFERENCES users(id),
-    role_code       TEXT NOT NULL,
-    status          TEXT NOT NULL DEFAULT 'invited',
-    invited_by      UUID REFERENCES users(id),
-    accepted_at     TIMESTAMPTZ,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE (organization_id, user_id, role_code),
-    CONSTRAINT membership_role_chk
-        CHECK (role_code IN (
-            'org_owner', 'org_admin',
-            'technology_manager', 'demand_manager',
-            'deal_manager', 'viewer'
-        )),
-    CONSTRAINT membership_status_chk
-        CHECK (status IN ('invited', 'active', 'revoked'))
-);
-
-CREATE INDEX memberships_user_status_idx ON organization_memberships (user_id, status);
-CREATE INDEX memberships_org_status_idx  ON organization_memberships (organization_id, status);
-
--- Platform staff roles are separate from organization roles, so an organization
--- admin can never acquire platform-wide privileges by accident.
-CREATE TABLE platform_role_assignments (
-    user_id     UUID NOT NULL REFERENCES users(id),
-    role_code   TEXT NOT NULL,
-    granted_by  UUID NOT NULL REFERENCES users(id),
-    granted_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-    expires_at  TIMESTAMPTZ,
-    PRIMARY KEY (user_id, role_code),
-    CHECK (role_code IN (
-        'platform_admin', 'verification_officer', 'listing_reviewer',
-        'ip_specialist', 'case_manager', 'finance_officer',
-        'compliance_officer', 'dispute_reviewer', 'security_admin', 'auditor'
-    ))
-);
-
-CREATE TRIGGER users_updated_at BEFORE UPDATE ON users
-    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
-CREATE TRIGGER organizations_updated_at BEFORE UPDATE ON organizations
-    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
-```
-
-Implementation notes:
-
-1. `auth_subject` identifies the user at the identity provider. It is **not** a password field.
-2. If authentication is internal, store password hashes with a proper password-hashing library (Argon2id or bcrypt). Never store plaintext passwords.
-3. The registration-number uniqueness constraint helps detect duplicates. It does not replace verification.
-4. A user may belong to several organizations, with different roles in each.
-5. Membership revocation must affect the very next authorization decision (no long-lived cached permissions).
-
-### 4.4 Technology registry, versions, offers and IP assets
-
-```sql
-CREATE TABLE technologies (
-    id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    owner_organization_id UUID NOT NULL REFERENCES organizations(id),
-    technology_type       TEXT NOT NULL,        -- validated against the taxonomy
-    created_by            UUID NOT NULL REFERENCES users(id),
-    current_version       INTEGER NOT NULL DEFAULT 1,
-    published_version     INTEGER,              -- version currently visible to the public
-    lifecycle_status      TEXT NOT NULL DEFAULT 'draft',
-    visibility            TEXT NOT NULL DEFAULT 'private',
-    created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT technology_lifecycle_chk
-        CHECK (lifecycle_status IN (
-            'draft', 'submitted', 'in_review', 'changes_requested',
-            'approved', 'rejected', 'published', 'update_pending',
-            'suspended', 'archived'
-        )),
-    CONSTRAINT technology_visibility_chk
-        CHECK (visibility IN ('private', 'public', 'restricted'))
-);
-
-CREATE INDEX technologies_owner_idx
-    ON technologies (owner_organization_id, lifecycle_status);
-
-CREATE TABLE technology_versions (
-    technology_id         UUID NOT NULL REFERENCES technologies(id),
-    version               INTEGER NOT NULL,
-    title                 TEXT NOT NULL,
-    public_summary        TEXT,
-    technical_description TEXT,
-    industry_codes        TEXT[] NOT NULL DEFAULT '{}',
-    application_codes     TEXT[] NOT NULL DEFAULT '{}',
-    claimed_trl           SMALLINT,
-    development_stage     TEXT,
-    technical_attributes  JSONB NOT NULL DEFAULT '{}',
-    created_by            UUID NOT NULL REFERENCES users(id),
-    created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
-    PRIMARY KEY (technology_id, version),
-    CHECK (claimed_trl IS NULL OR claimed_trl BETWEEN 1 AND 9)
-);
-
-CREATE TABLE ip_assets (
-    id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    technology_id        UUID NOT NULL REFERENCES technologies(id),
-    asset_type           TEXT NOT NULL,         -- patent, application, software_copyright, know_how, ...
-    jurisdiction_code    CHAR(2),
-    identifier           TEXT,                  -- patent or registration number
-    title                TEXT,
-    rights_holder_name   TEXT,
-    rights_status        TEXT NOT NULL DEFAULT 'unverified',
-    evidence_document_id UUID,                  -- FK added after documents exists (§4.7)
-    verified_at          TIMESTAMPTZ,
-    verified_by          UUID REFERENCES users(id),
-    created_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CHECK (rights_status IN (
-        'unverified', 'under_review', 'supported',
-        'disputed', 'expired', 'not_applicable'
-    ))
-);
-
-CREATE INDEX ip_assets_technology_idx ON ip_assets (technology_id);
-
-CREATE TABLE technology_offers (
-    id                       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    technology_id            UUID NOT NULL REFERENCES technologies(id),
-    technology_version       INTEGER NOT NULL,
-    supplier_organization_id UUID NOT NULL REFERENCES organizations(id),
-    transaction_type         TEXT NOT NULL,
-    offer_status             TEXT NOT NULL DEFAULT 'draft',
-    rights_scope             JSONB NOT NULL DEFAULT '{}',
-    territory_codes          TEXT[] NOT NULL DEFAULT '{}',
-    field_of_use             TEXT,
-    exclusivity              TEXT NOT NULL DEFAULT 'unspecified',
-    currency_code            CHAR(3),
-    price_type               TEXT NOT NULL DEFAULT 'negotiable',
-    indicative_amount        NUMERIC(18,2),
-    valid_from               TIMESTAMPTZ,
-    valid_until              TIMESTAMPTZ,
-    created_by               UUID NOT NULL REFERENCES users(id),
-    created_at               TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at               TIMESTAMPTZ NOT NULL DEFAULT now(),
-    FOREIGN KEY (technology_id, technology_version)
-        REFERENCES technology_versions (technology_id, version),
-    CHECK (transaction_type IN (
-        'license', 'assignment', 'partnership',
-        'joint_development', 'pilot', 'evaluation'
-    )),
-    CHECK (offer_status IN (
-        'draft', 'submitted', 'active', 'paused',
-        'under_negotiation', 'closed', 'expired', 'rejected'
-    )),
-    CHECK (exclusivity IN ('exclusive', 'non_exclusive', 'unspecified')),
-    CHECK (price_type IN (
-        'fixed', 'indicative', 'negotiable',
-        'royalty_based', 'milestone_based', 'undisclosed'
-    )),
-    CHECK (indicative_amount IS NULL OR indicative_amount >= 0),
-    CHECK (valid_until IS NULL OR valid_from IS NULL OR valid_until > valid_from)
-);
-
-CREATE INDEX offers_technology_status_idx ON technology_offers (technology_id, offer_status);
-CREATE INDEX offers_supplier_status_idx   ON technology_offers (supplier_organization_id, offer_status);
-```
-
-Notes:
-
-- `technical_attributes` and `rights_scope` (JSONB) hold flexible, sector-specific information. **Never** keep mandatory access rules, offer state, legal ownership relationships or financial amounts only inside JSON.
-- `published_version` lets a revision be reviewed (`update_pending`) while the previously approved version stays public.
-- For cross-industry support, introduce controlled **taxonomy tables** before the catalogue grows. Use reference IDs for industry and application categories so administrators can manage synonyms, translations, hierarchies and deprecation.
-
-### 4.5 Demand and matching
-
-```sql
-CREATE TABLE demands (
-    id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    buyer_organization_id UUID NOT NULL REFERENCES organizations(id),
-    created_by            UUID NOT NULL REFERENCES users(id),
-    current_version       INTEGER NOT NULL DEFAULT 1,
-    status                TEXT NOT NULL DEFAULT 'draft',
-    visibility            TEXT NOT NULL DEFAULT 'private',
-    assigned_manager_id   UUID REFERENCES users(id),
-    closure_reason        TEXT,
-    created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CHECK (status IN (
-        'draft', 'submitted', 'clarification', 'approved', 'rejected',
-        'matching', 'shortlisted', 'no_candidates', 'introduction',
-        'in_evaluation', 'negotiation', 'fulfilled', 'withdrawn', 'expired'
-    )),
-    CHECK (visibility IN ('private', 'anonymous_public', 'verified_users', 'broker_only'))
-);
-
-CREATE TABLE demand_versions (
-    demand_id             UUID NOT NULL REFERENCES demands(id),
-    version               INTEGER NOT NULL,
-    title                 TEXT NOT NULL,
-    problem_statement     TEXT NOT NULL,
-    desired_outcome       TEXT,
-    required_capabilities JSONB NOT NULL DEFAULT '{}',
-    hard_constraints      JSONB NOT NULL DEFAULT '{}',   -- filters (must be met)
-    preferred_attributes  JSONB NOT NULL DEFAULT '{}',   -- ranking preferences
-    industry_codes        TEXT[] NOT NULL DEFAULT '{}',
-    transaction_types     TEXT[] NOT NULL DEFAULT '{}',
-    currency_code         CHAR(3),
-    budget_min            NUMERIC(18,2),
-    budget_max            NUMERIC(18,2),
-    target_date           DATE,
-    created_by            UUID NOT NULL REFERENCES users(id),
-    created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
-    PRIMARY KEY (demand_id, version),
-    CHECK (budget_min IS NULL OR budget_min >= 0),
-    CHECK (budget_max IS NULL OR budget_max >= 0),
-    CHECK (budget_min IS NULL OR budget_max IS NULL OR budget_min <= budget_max)
-);
-
-CREATE TABLE matches (
-    id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    demand_id          UUID NOT NULL,
-    demand_version     INTEGER NOT NULL,
-    offer_id           UUID NOT NULL REFERENCES technology_offers(id),
-    technology_version INTEGER NOT NULL,        -- version that was scored
-    retrieval_method   TEXT NOT NULL,           -- structured, full_text, semantic, manual
-    ranking_version    TEXT NOT NULL,           -- algorithm and weights version
-    score              NUMERIC(5,2),
-    score_components   JSONB NOT NULL DEFAULT '{}',
-    explanation        JSONB NOT NULL DEFAULT '{}',
-    eligibility_status TEXT NOT NULL DEFAULT 'eligible',
-    review_status      TEXT NOT NULL DEFAULT 'pending',
-    rejection_reason   TEXT,
-    created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
-    FOREIGN KEY (demand_id, demand_version)
-        REFERENCES demand_versions (demand_id, version),
-    -- Re-running the same matching job must not create duplicates.
-    UNIQUE (demand_id, demand_version, offer_id, ranking_version),
-    CHECK (score IS NULL OR score BETWEEN 0 AND 100),
-    CHECK (eligibility_status IN ('eligible', 'ineligible', 'needs_review')),
-    CHECK (review_status IN ('pending', 'accepted', 'rejected', 'shortlisted'))
-);
-
-CREATE INDEX matches_demand_version_idx ON matches (demand_id, demand_version, score DESC);
-CREATE INDEX matches_offer_idx          ON matches (offer_id);
-```
-
-Matching results must be **reproducible**. Record the demand version, technology version, retrieval method, ranking version, score components and evidence. When a demand changes, create new match records; never silently rewrite historical results.
-
-### 4.6 Introductions and deals
-
-```sql
-CREATE TABLE introduction_requests (
-    id                       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    match_id                 UUID NOT NULL REFERENCES matches(id),
-    buyer_organization_id    UUID NOT NULL REFERENCES organizations(id),
-    supplier_organization_id UUID NOT NULL REFERENCES organizations(id),
-    requested_by             UUID NOT NULL REFERENCES users(id),
-    status                   TEXT NOT NULL DEFAULT 'requested',
-    buyer_message            TEXT,
-    supplier_response        TEXT,
-    disclosure_scope         JSONB NOT NULL DEFAULT '{}',
-    assigned_manager_id      UUID REFERENCES users(id),
-    created_at               TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at               TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CHECK (status IN (
-        'requested', 'under_review', 'supplier_pending',
-        'approved', 'rejected', 'withdrawn',
-        'introduced', 'converted_to_deal'
-    )),
-    CHECK (buyer_organization_id <> supplier_organization_id)
-);
-
-CREATE INDEX introductions_supplier_status_idx
-    ON introduction_requests (supplier_organization_id, status);
-
-CREATE TABLE deals (
-    id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    introduction_request_id UUID UNIQUE REFERENCES introduction_requests(id),  -- one deal per introduction
-    deal_type               TEXT NOT NULL,
-    status                  TEXT NOT NULL DEFAULT 'opportunity',
-    deal_name               TEXT NOT NULL,
-    assigned_manager_id     UUID REFERENCES users(id),
-    expected_close_date     DATE,
-    estimated_value         NUMERIC(18,2),
-    currency_code           CHAR(3),
-    loss_reason             TEXT,
-    created_by              UUID NOT NULL REFERENCES users(id),
-    created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CHECK (estimated_value IS NULL OR estimated_value >= 0),
-    CHECK (status IN (
-        'opportunity', 'qualified', 'due_diligence',
-        'negotiation', 'contract_draft', 'approval',
-        'signed', 'conditions_pending', 'completed',
-        'on_hold', 'lost', 'disputed'
-    ))
-);
-
-CREATE TABLE deal_parties (
-    deal_id              UUID NOT NULL REFERENCES deals(id),
-    organization_id      UUID NOT NULL REFERENCES organizations(id),
-    party_role           TEXT NOT NULL,
-    participation_status TEXT NOT NULL DEFAULT 'active',
-    created_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
-    PRIMARY KEY (deal_id, organization_id, party_role),
-    CHECK (party_role IN ('buyer', 'supplier', 'broker', 'licensor', 'licensee', 'other'))
-);
-
-CREATE TABLE deal_milestones (
-    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    deal_id      UUID NOT NULL REFERENCES deals(id),
-    title        TEXT NOT NULL,
-    description  TEXT,
-    due_date     DATE,
-    status       TEXT NOT NULL DEFAULT 'pending',
-    completed_at TIMESTAMPTZ,
-    completed_by UUID REFERENCES users(id),
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CHECK (status IN ('pending', 'in_progress', 'completed', 'blocked', 'cancelled'))
-);
-
-CREATE INDEX deals_manager_status_idx ON deals (assigned_manager_id, status);
-CREATE INDEX deal_milestones_due_idx  ON deal_milestones (due_date, status);
-```
-
-- A deal can have several parties, including several licensors or licensees. Never hard-code a single buyer–supplier pair.
-- Keep proposal versions, contract references and completion evidence in dedicated tables or well-defined document records (see §4.9 and [07 §8](07-roles-workflows-and-money.md)). Never store signed contract files as free text in the deal record.
-
-### 4.7 Documents, review cases and audit
-
-```sql
-CREATE TABLE documents (
-    id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    owner_organization_id UUID NOT NULL REFERENCES organizations(id),
-    uploaded_by           UUID NOT NULL REFERENCES users(id),
-    storage_key           TEXT NOT NULL UNIQUE,
-    original_filename     TEXT NOT NULL,
-    media_type            TEXT NOT NULL,
-    byte_size             BIGINT NOT NULL,
-    sha256_hex            CHAR(64),
-    classification        TEXT NOT NULL DEFAULT 'organization_only',
-    scan_status           TEXT NOT NULL DEFAULT 'pending',
-    lifecycle_status      TEXT NOT NULL DEFAULT 'quarantined',
-    created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CHECK (byte_size >= 0),
-    CHECK (classification IN (
-        'public', 'organization_only', 'deal_restricted', 'highly_confidential'
-    )),
-    CHECK (scan_status IN ('pending', 'clean', 'infected', 'failed')),
-    CHECK (lifecycle_status IN ('quarantined', 'available', 'suspended', 'deleted'))
-);
-
-ALTER TABLE ip_assets
-    ADD CONSTRAINT ip_assets_evidence_fk
-    FOREIGN KEY (evidence_document_id) REFERENCES documents(id);
-
-CREATE TABLE document_links (
-    document_id   UUID NOT NULL REFERENCES documents(id),
-    resource_type TEXT NOT NULL,     -- technology, demand, deal, organization
-    resource_id   UUID NOT NULL,
-    purpose       TEXT NOT NULL,     -- evidence, data_room, contract, ...
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-    PRIMARY KEY (document_id, resource_type, resource_id, purpose)
-);
-
-CREATE TABLE review_cases (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    case_type       TEXT NOT NULL,   -- organization_verification, technology_review, ...
-    resource_type   TEXT NOT NULL,
-    resource_id     UUID NOT NULL,
-    resource_version INTEGER,        -- exact version under review
-    status          TEXT NOT NULL DEFAULT 'open',
-    priority        TEXT NOT NULL DEFAULT 'normal',
-    assigned_to     UUID REFERENCES users(id),
-    decision        TEXT,
-    decision_reason TEXT,
-    due_at          TIMESTAMPTZ,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-    closed_at       TIMESTAMPTZ,
-    CHECK (status IN (
-        'open', 'assigned', 'in_review', 'waiting_for_submitter',
-        'approved', 'rejected', 'escalated', 'closed'
-    )),
-    CHECK (priority IN ('low', 'normal', 'high', 'urgent'))
-);
-
-CREATE INDEX review_cases_queue_idx ON review_cases (status, priority, due_at);
-
-CREATE TABLE audit_events (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    actor_user_id   UUID REFERENCES users(id),
-    actor_type      TEXT NOT NULL DEFAULT 'user',   -- user, system, integration
-    organization_id UUID REFERENCES organizations(id),
-    action          TEXT NOT NULL,
-    resource_type   TEXT NOT NULL,
-    resource_id     UUID NOT NULL,
-    correlation_id  UUID,
-    reason          TEXT,
-    details         JSONB NOT NULL DEFAULT '{}',
-    occurred_at     TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE INDEX audit_resource_time_idx ON audit_events (resource_type, resource_id, occurred_at DESC);
-CREATE INDEX audit_actor_time_idx    ON audit_events (actor_user_id, occurred_at DESC);
-```
-
-- The generic `document_links` table is convenient but has no foreign key to each linked resource. The application must validate every link. For stronger referential integrity, use explicit link tables per resource type.
-- A normal table is not tamper-proof. Revoke `UPDATE`/`DELETE` on `audit_events` from the application role, and consider shipping audit logs to external storage or signing audit batches for higher assurance.
-
-### 4.8 Workflow infrastructure tables
-
-These three tables make transitions auditable, retries safe and events reliable:
-
-```sql
--- Every state change, with who, why and from which command.
-CREATE TABLE workflow_transitions (
-    id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    resource_type TEXT NOT NULL,
-    resource_id   UUID NOT NULL,
-    from_status   TEXT,
-    to_status     TEXT NOT NULL,
-    action        TEXT NOT NULL,
-    actor_user_id UUID REFERENCES users(id),
-    reason        TEXT,
-    evidence      JSONB NOT NULL DEFAULT '{}',
-    occurred_at   TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-CREATE INDEX workflow_transitions_resource_idx
-    ON workflow_transitions (resource_type, resource_id, occurred_at);
-
--- Stores the result of retriable commands (Idempotency-Key header).
-CREATE TABLE idempotency_keys (
-    key           TEXT NOT NULL,
-    actor_user_id UUID NOT NULL REFERENCES users(id),
-    request_hash  CHAR(64) NOT NULL,      -- detects key reuse with a different payload
-    response_code INTEGER,
-    response_body JSONB,
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-    expires_at    TIMESTAMPTZ NOT NULL,
-    PRIMARY KEY (actor_user_id, key)
-);
-
--- Transactional outbox: written in the same transaction as the business change,
--- then published by a worker (indexing, notifications, integrations).
-CREATE TABLE outbox_events (
-    id             BIGSERIAL PRIMARY KEY,
-    event_type     TEXT NOT NULL,          -- e.g. technology.published
-    aggregate_type TEXT NOT NULL,
-    aggregate_id   UUID NOT NULL,
-    payload        JSONB NOT NULL,
-    created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
-    published_at   TIMESTAMPTZ,
-    attempts       INTEGER NOT NULL DEFAULT 0,
-    last_error     TEXT
-);
-CREATE INDEX outbox_unpublished_idx ON outbox_events (id) WHERE published_at IS NULL;
-```
-
-### 4.9 Additional tables required before launch
-
-| Table group | Required tables |
+| Topic | Rule |
 | --- | --- |
-| Taxonomy | `industry_categories`, `technology_categories`, `applications`, `taxonomy_translations` |
-| Rights and evidence | `ip_asset_evidence`, `rights_claims`, `verification_decisions` |
-| Publication | `technology_publication_snapshots`, `publication_review_items` |
-| Demands | `demand_constraints`, or validated versioned structured fields |
-| Shortlists | `shortlists`, `shortlist_items` |
-| Communication | `conversations`, `conversation_participants`, `messages` |
-| Workflow | `workflow_tasks` (plus the §4.8 tables) |
-| Deals | `deal_proposals`, `proposal_versions`, `deal_contracts`, `deal_completion_checks` |
-| Access | `document_access_grants`, `document_access_events` |
-| Notifications | `notifications`, `notification_deliveries` |
-| Finance (when introduced) | `invoices`, `payment_records`, `refunds`, `reconciliation_items` (see [08 §9](08-china-operating-model.md)) |
+| Identifiers | `_id` is an `ObjectId`. Every business object users talk about also gets a **human-readable reference** (`TEC-000123`, `DEM-…`, `DEAL-…`, `CASE-…`), generated by an atomic counter and indexed as unique. Support staff and users quote references, never raw IDs |
+| Field names | camelCase; enums are lower-case strings validated by `$jsonSchema` |
+| Text | Bilingual objects `{ zh: string, en?: string }`: Chinese is required, English optional (machine-translated drafts must be reviewed) |
+| Time | BSON `Date` in UTC; display in `Asia/Shanghai` |
+| Money | `{ currency: 'CNY', amountMinor: Int64 }` (fen). Never floating point; percentages and royalty rates as `Decimal128` |
+| Concurrency | Every mutable document has `rev` (int). Updates filter on `rev` and `$inc` it; a mismatch returns `409 VERSION_CONFLICT` |
+| History | Content that is reviewed or published lives in **immutable version collections** (`technology_versions`, `demand_versions`); state changes are appended to `workflow_transitions` |
+| Embed vs reference | Embed small, bounded data that is always read with its parent (deal parties ≤ 10, document links). Reference anything with its own lifecycle, its own permissions, or unbounded growth (versions, milestones, messages, matches) |
+| Arrays | No unbounded arrays. Conversations, audit events and matches are separate collections |
+| Validation | `validationLevel: strict`, `validationAction: error`. The API validates first with `zod` (user-friendly messages); the database validator is the safety net |
+| Transactions | Every multi-document business change runs in one transaction with read concern `snapshot` and write concern `majority` (§4.7) |
+| Tenancy | No row-level security in MongoDB: all tenant data is accessed through `TenantScopedRepository` (§4.8) |
+| Schema changes | Only through `migrate-mongo` scripts run by the `tex_migrator` user; expand-and-contract for breaking changes |
+| Taxonomy codes | National standards where they exist: industry codes from **GB/T 4754-2017** (国民经济行业分类, e.g. `C384` battery manufacturing), strategic emerging industries (战略性新兴产业分类 2018), **IPC** for patents |
 
-Build the schema with migrations in dependency order, with rollback procedures where practical. The application must never depend on manually created, production-only tables.
+### 4.3 Collection catalogue
+
+| Collection | Purpose | Key fields | Indexes |
+| --- | --- | --- | --- |
+| `users` | People and login identities | `phoneE164`, `emailNormalized`, `passwordHash`, `status`, `realName.status`, `locale` | unique partial: phone, email, authSubject |
+| `organizations` | Legal or institutional participants | `ref`, `legalName`, `organizationType`, `jurisdictionCode`, `registrationNumber` (unified social credit code), `verification.{status,level,expiresAt}` | unique `ref`; unique partial (`jurisdictionCode`, `registrationNumber`) |
+| `organization_memberships` | User ↔ organization, roles | `organizationId`, `userId`, `roleCodes[]`, `status` | unique (`organizationId`, `userId`); (`userId`, `status`) |
+| `organization_authorizations` | Delegated authority: sign, approve payment, approve disclosure; limits, expiry, evidence | `organizationId`, `userId`, `scope`, `limitMinor`, `validUntil`, `status` | (`organizationId`, `userId`, `scope`, `status`) |
+| `platform_role_assignments` | Staff roles, separate from organization roles | `userId`, `roleCode`, `expiresAt` | unique (`userId`, `roleCode`) |
+| `technologies` | Stable identity and lifecycle of a technology | `ref`, `ownerOrganizationId`, `technologyType`, `lifecycleStatus`, `visibility`, `currentVersion`, `publishedVersion`, `rev` | unique `ref`; (`ownerOrganizationId`, `lifecycleStatus`) |
+| `technology_versions` | Immutable revisions (frozen on submission) | `technologyId`, `version`, `title`, `publicSummary`, `claimedTrl`, `assessedTrl`, `technicalAttributes`, `frozen` | unique (`technologyId`, `version`) |
+| `technology_publications` | **Approved public snapshot**: the only technology data sent to search and public pages | `technologyId`, `version`, `ref`, `status`, owner summary, title, summary, codes, TRL, offer types, badges | unique partial `technologyId` where `status: 'live'` |
+| `ip_assets` | Patents, applications, software copyrights, know-how claims | `technologyId`, `assetType`, `jurisdictionCode`, `identifier`, `rightsStatus`, `legalStatusCheckedAt` | `technologyId`; (`jurisdictionCode`, `identifier`) |
+| `technology_offers` | Licence, assignment, partnership, pilot, equity-investment offers | `ref`, `technologyId`, `technologyVersion`, `transactionType`, `offerStatus`, `exclusivity`, `price`, `validFrom/Until` | unique `ref`; (`technologyId`, `offerStatus`) |
+| `demands`, `demand_versions` | Buyer needs and their immutable revisions | status, visibility, `hardConstraints`, `preferredAttributes`, `budget` | unique `ref`; unique (`demandId`, `version`) |
+| `matches` | Scored demand ↔ offer candidates, reproducible | `demandId`, `demandVersion`, `offerId`, `technologyVersion`, `rankingVersion`, `score`, `scoreComponents`, `explanation` | **unique** (`demandId`, `demandVersion`, `offerId`, `rankingVersion`) |
+| `introduction_requests` | Consent-based introductions | `ref`, `matchId`, `buyerOrganizationId`, `supplierOrganizationId`, `status`, `disclosureScope` | (`supplierOrganizationId`, `status`); validator: buyer ≠ supplier |
+| `deals` | Managed negotiations and transactions (parties embedded) | `ref`, `dealType`, `status`, `parties[]`, `estimatedValue`, `assignedManagerId` | unique partial `introductionRequestId`; (`parties.organizationId`, `status`) |
+| `deal_milestones` | Deliverables and conditions | `dealId`, `dueDate`, `status`, evidence | (`dealId`, `dueDate`); (`status`, `dueDate`) |
+| `documents` | File metadata, classification, scan status, links | `storageKey`, `sha256`, `classification`, `scanStatus`, `lifecycleStatus`, `links[]` | unique `storageKey`; (`links.resourceType`, `links.resourceId`) |
+| `document_access_grants` | Per-document access for a grantee (view/download, watermark, expiry) | `documentId`, `granteeOrganizationId`, `permissions`, `expiresAt`, `revokedAt` | (`documentId`, `granteeOrganizationId`) |
+| `review_cases` | Verification, listing, IP, demand and introduction reviews | `ref`, `caseType`, `resource.{type,id,version}`, `status`, `priority`, `assignedTo`, `dueAt` | (`status`, `priority`, `dueAt`); (`assignedTo`, `status`) |
+| `workflow_transitions` | Every state change with actor and reason | `resource`, `fromStatus`, `toStatus`, `action`, `actorUserId`, `correlationId` | (`resource.type`, `resource.id`, `occurredAt`) |
+| `idempotency_keys` | Results of retriable commands | `actorUserId`, `key`, `requestHash`, `response*`, `expiresAt` | unique (`actorUserId`, `key`); **TTL** on `expiresAt` |
+| `outbox_events` | Events written in the business transaction, relayed by the worker | `eventType`, `aggregate`, `payload`, `status`, `attempts`, `lockedUntil` | partial (`createdAt`) where `status: 'pending'` |
+| `counters` | Atomic sequences for human-readable references | `_id` (prefix), `seq` | — |
+| `tex_audit.audit_events` | Append-only audit trail, **separate database**, insert-only for the app | `actor`, `organizationId`, `action`, `resource`, `correlationId`, `reason`, `details` | (`resource.type`, `resource.id`, `occurredAt`); (`actor.userId`, `occurredAt`) |
+
+### 4.4 Example documents
+
+Illustrative values (shell notation):
+
+```javascript
+// technologies — identity and lifecycle (small, frequently updated)
+{
+  _id: ObjectId("6716f1c2a1b2c3d4e5f60001"),
+  ref: "TEC-000123",
+  ownerOrganizationId: ObjectId("6716f1c2a1b2c3d4e5f6aaaa"),
+  technologyType: "process_technology",
+  lifecycleStatus: "published",            // see state machine §6.1
+  visibility: "public",
+  currentVersion: 4,                        // version 4 may be in review…
+  publishedVersion: 3,                      // …while version 3 stays public
+  createdBy: ObjectId("6716f1c2a1b2c3d4e5f6bbbb"),
+  createdAt: ISODate("2026-09-01T02:00:00Z"),
+  updatedAt: ISODate("2026-10-12T06:30:00Z"),
+  rev: 9
+}
+
+// technology_publications — approved public snapshot (source for search and public pages)
+{
+  _id: ObjectId("6716f1c2a1b2c3d4e5f60101"),
+  technologyId: ObjectId("6716f1c2a1b2c3d4e5f60001"),
+  version: 3,
+  ref: "TEC-000123",
+  status: "live",
+  owner: { organizationId: ObjectId("6716f1c2a1b2c3d4e5f6aaaa"), displayName: "某某大学", type: "university", verified: true },
+  title:   { zh: "锂电池极片缺陷在线检测技术", en: "Inline defect detection for lithium-battery electrodes" },
+  summary: { zh: "基于机器视觉的电极缺陷实时检测，准确率超过99%。", en: "Machine-vision inspection of electrode defects in real time, >99% accuracy." },
+  keywords: ["机器视觉", "锂电池", "缺陷检测"],
+  industryCodes: ["C384"],                  // GB/T 4754-2017: battery manufacturing
+  trl: { claimed: 6, assessed: null },
+  offerTypes: ["license", "joint_development"],
+  territories: ["CN"],
+  ipSummary: { grantedPatents: 3, pendingApplications: 2 },
+  badges: ["ownership_verified", "patent_verified"],
+  price: { type: "negotiable" },
+  publishedAt: ISODate("2026-10-01T03:00:00Z")
+}
+
+// deals — parties embedded, money in minor units
+{
+  _id: ObjectId("6716f1c2a1b2c3d4e5f60301"),
+  ref: "DEAL-000042",
+  introductionRequestId: ObjectId("6716f1c2a1b2c3d4e5f60201"),
+  dealType: "ip_license",
+  status: "negotiation",
+  name: "电极缺陷检测技术 普通许可",
+  parties: [
+    { organizationId: ObjectId("6716f1c2a1b2c3d4e5f6aaaa"), role: "licensor", status: "active" },
+    { organizationId: ObjectId("6716f1c2a1b2c3d4e5f6cccc"), role: "licensee", status: "active" }
+  ],
+  assignedManagerId: ObjectId("6716f1c2a1b2c3d4e5f6dddd"),
+  estimatedValue: { currency: "CNY", amountMinor: NumberLong("30000000") },   // RMB 300,000.00
+  createdBy: ObjectId("6716f1c2a1b2c3d4e5f6bbbb"),
+  createdAt: ISODate("2026-10-05T01:00:00Z"),
+  updatedAt: ISODate("2026-10-15T08:00:00Z"),
+  rev: 6
+}
+```
+
+### 4.5 Migrations: validators and indexes
+
+The complete, verified migration is [`verification/node12-mongodb/migrations/001-core-schema.js`](verification/node12-mongodb/migrations/001-core-schema.js) (all collections above). An excerpt showing the pattern:
+
+```javascript
+// migrations/001-core-schema.js (excerpt) — run by migrate-mongo as tex_migrator
+const STR = { bsonType: 'string' };
+const OID = { bsonType: 'objectId' };
+const DATE = { bsonType: 'date' };
+const INT = { bsonType: 'int' };
+const enumOf = (...values) => ({ bsonType: 'string', enum: values });
+const i18nText = { bsonType: 'object', required: ['zh'], properties: { zh: STR, en: STR } };
+const audit = { createdAt: DATE, updatedAt: DATE, rev: INT };
+
+async function ensureCollection(db, name, jsonSchema, extraValidator) {
+  const validator = extraValidator ? { $and: [{ $jsonSchema: jsonSchema }, extraValidator] } : { $jsonSchema: jsonSchema };
+  const exists = await db.listCollections({ name }).hasNext();
+  if (exists) {
+    await db.command({ collMod: name, validator, validationLevel: 'strict', validationAction: 'error' });
+  } else {
+    await db.createCollection(name, { validator, validationLevel: 'strict', validationAction: 'error' });
+  }
+}
+
+module.exports = {
+  async up(db, client) {
+    await ensureCollection(db, 'technologies', {
+      bsonType: 'object',
+      required: ['ref', 'ownerOrganizationId', 'technologyType', 'lifecycleStatus', 'visibility',
+                 'currentVersion', 'createdBy', 'createdAt', 'updatedAt', 'rev'],
+      properties: {
+        ref: { bsonType: 'string', pattern: '^TEC-[0-9]{6,}$' },
+        ownerOrganizationId: OID,
+        technologyType: STR,
+        lifecycleStatus: enumOf('draft', 'submitted', 'in_review', 'changes_requested', 'approved',
+                                'rejected', 'published', 'update_pending', 'suspended', 'archived'),
+        visibility: enumOf('private', 'public', 'restricted'),
+        currentVersion: INT,
+        publishedVersion: { bsonType: ['int', 'null'] },
+        createdBy: OID,
+        ...audit,
+      },
+    });
+    await db.collection('technologies').createIndexes([
+      { key: { ref: 1 }, unique: true },
+      { key: { ownerOrganizationId: 1, lifecycleStatus: 1 } },
+    ]);
+
+    // Cross-field rule with $expr: budget.minMinor <= budget.maxMinor
+    await ensureCollection(db, 'demand_versions', { /* … */ }, {
+      $expr: { $lte: [
+        { $ifNull: ['$budget.minMinor', 0] },
+        { $ifNull: ['$budget.maxMinor', { $ifNull: ['$budget.minMinor', 0] }] },
+      ] },
+    });
+
+    // Re-running a matching job must not create duplicates.
+    await db.collection('matches').createIndexes([
+      { key: { demandId: 1, demandVersion: 1, offerId: 1, rankingVersion: 1 }, unique: true },
+      { key: { demandId: 1, demandVersion: 1, score: -1 } },
+    ]);
+
+    // Idempotency keys expire automatically (TTL index).
+    await db.collection('idempotency_keys').createIndexes([
+      { key: { actorUserId: 1, key: 1 }, unique: true },
+      { key: { expiresAt: 1 }, expireAfterSeconds: 0 },
+    ]);
+  },
+};
+```
+
+What the verification run proves the validators reject: phone numbers not in E.164 form, duplicate unified social credit codes, TRL outside 1–9, titles without Chinese text, unknown lifecycle states, money stored as a floating-point number, offers whose validity ends before it starts, budgets with min > max, duplicate matches, introductions where buyer = supplier, a second deal for the same introduction, deals with fewer than two parties, and reused idempotency keys.
+
+### 4.6 Database roles and users
+
+```javascript
+// migrations/002-db-roles.js — least privilege for the application user
+const privileges = [
+  // CRUD on business collections; no drop, no createIndex, no collMod.
+  { resource: { db: 'tex', collection: '' }, actions: ['find', 'insert', 'update', 'remove'] },
+  // The audit trail is append-only for the application.
+  { resource: { db: 'tex_audit', collection: 'audit_events' }, actions: ['find', 'insert'] },
+];
+await admin.command({ createRole: 'texApp', privileges, roles: [] });   // updateRole on re-run
+```
+
+| Database user | Role | Used by |
+| --- | --- | --- |
+| `tex_app` | `texApp` | API and worker processes |
+| `tex_migrator` | `dbAdmin` + `readWrite` on `tex`, `tex_audit`; `userAdmin` only when changing roles | Release pipeline (migrations) |
+| `tex_backup` | `backup` / `restore` | Backup jobs |
+| `tex_readonly` | `read` on `tex` (not on documents' storage) | Reporting, support investigations |
+
+### 4.7 Transactions
+
+Every multi-document business change is one transaction: the state change, the immutable version freeze, the review case, the transition record, the outbox event and the audit event (in the separate audit database) commit together or not at all. Verified example (driver 3.7 style):
+
+```typescript
+// src/modules/technology/submit-technology.service.ts
+// Target runtime: Node.js 12.x, MongoDB Node driver 3.7.x, MongoDB server 4.4 / 5.0 replica set.
+import { MongoClient, ObjectId, ClientSession } from 'mongodb';
+
+export class InvalidTransitionError extends Error {}
+export interface Actor { userId: ObjectId; organizationIds: ObjectId[] }
+
+export async function submitTechnologyForReview(
+  client: MongoClient, actor: Actor, technologyId: ObjectId, expectedRev: number, correlationId: string,
+): Promise<{ reviewCaseRef: string }> {
+  const db = client.db('tex');
+  const auditDb = client.db('tex_audit');
+  const session: ClientSession = client.startSession();
+  // Driver 3.x: withTransaction() resolves to the commit result, NOT the callback's value.
+  let reviewCaseRef = '';
+  try {
+    await session.withTransaction(async () => {
+      const now = new Date();
+
+      // 1. Tenant scope + allowed state + optimistic concurrency in ONE filter.
+      const res = await db.collection('technologies').findOneAndUpdate(
+        { _id: technologyId, ownerOrganizationId: { $in: actor.organizationIds },
+          lifecycleStatus: { $in: ['draft', 'changes_requested'] }, rev: expectedRev },
+        { $set: { lifecycleStatus: 'submitted', updatedAt: now }, $inc: { rev: 1 } },
+        { session, returnOriginal: false },
+      );
+      const tech = res.value;
+      if (!tech) {
+        // Same error for "not yours" and "not found": never reveal other tenants' data.
+        throw new InvalidTransitionError('Technology not found, not submittable, or changed since read');
+      }
+
+      // 2. Freeze the submitted version.
+      await db.collection('technology_versions').updateOne(
+        { technologyId, version: tech.currentVersion }, { $set: { frozen: true } }, { session });
+
+      // 3. Human-readable case reference.
+      const counter = await db.collection('counters').findOneAndUpdate(
+        { _id: 'review_case' }, { $inc: { seq: 1 } }, { session, upsert: true, returnOriginal: false });
+      reviewCaseRef = 'CASE-' + String(counter.value.seq).padStart(6, '0');
+
+      // 4. Review case, transition, outbox and audit event in the same transaction.
+      await db.collection('review_cases').insertOne({
+        ref: reviewCaseRef, caseType: 'technology_review',
+        resource: { type: 'technology', id: technologyId, version: tech.currentVersion },
+        status: 'open', priority: 'normal', createdAt: now,
+        dueAt: new Date(now.getTime() + 5 * 24 * 3600 * 1000),      // SLA: first review within 5 days
+      }, { session });
+      await db.collection('workflow_transitions').insertOne({
+        resource: { type: 'technology', id: technologyId }, fromStatus: 'draft', toStatus: 'submitted',
+        action: 'submit', actorUserId: actor.userId, correlationId, occurredAt: now,
+      }, { session });
+      await db.collection('outbox_events').insertOne({
+        eventType: 'technology.submitted', aggregate: { type: 'technology', id: technologyId },
+        payload: { version: tech.currentVersion, reviewCaseRef }, status: 'pending', attempts: 0, createdAt: now,
+      }, { session });
+      await auditDb.collection('audit_events').insertOne({
+        actor: { type: 'user', userId: actor.userId }, organizationId: tech.ownerOrganizationId,
+        action: 'technology.submit', resource: { type: 'technology', id: technologyId }, correlationId, occurredAt: now,
+      }, { session });
+    }, { readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' } });
+    return { reviewCaseRef };
+  } finally {
+    session.endSession();
+  }
+}
+```
+
+Rules:
+
+- Keep transactions short and small; never call external services (SMS, search, payment) inside one. Those run from the outbox **after** commit.
+- `withTransaction` retries on transient errors (for example a primary election), so the callback must be safe to re-run: no side effects outside the database.
+- The verification run proves that a stale `rev`, or another tenant's attempt, leaves **no partial writes**.
+
+### 4.8 Tenant isolation without row-level security
+
+MongoDB has no row-level security. Isolation is enforced in code, and the code paths are deliberately narrow:
+
+```typescript
+// src/core/data/tenant-scoped.repository.ts — services never receive raw collections.
+import { ClientSession, Collection, FilterQuery, ObjectId, UpdateQuery } from 'mongodb';
+
+export interface TenantContext { organizationIds: ObjectId[] }
+export class TenantScopeError extends Error {}
+
+export class TenantScopedRepository<T extends { _id: ObjectId }> {
+  constructor(private readonly col: Collection<T>, private readonly tenantField: keyof T & string) {}
+
+  private scoped(ctx: TenantContext, filter: FilterQuery<T>): FilterQuery<T> {
+    if (!ctx.organizationIds.length) throw new TenantScopeError('Tenant scope is required');
+    return { $and: [filter, { [this.tenantField]: { $in: ctx.organizationIds } }] } as FilterQuery<T>;
+  }
+
+  findOne(ctx: TenantContext, filter: FilterQuery<T>, session?: ClientSession) {
+    return this.col.findOne(this.scoped(ctx, filter), { session });
+  }
+
+  findPage(ctx: TenantContext, filter: FilterQuery<T>, limit: number, afterId?: ObjectId) {
+    const page = afterId ? { $and: [filter, { _id: { $gt: afterId } }] } as FilterQuery<T> : filter;
+    return this.col.find(this.scoped(ctx, page)).sort({ _id: 1 }).limit(Math.min(limit, 100)).toArray();
+  }
+
+  /** Optimistic concurrency: the update only applies if `rev` still matches. */
+  async updateWithRev(ctx: TenantContext, id: ObjectId, rev: number, update: UpdateQuery<T>, session?: ClientSession) {
+    const res = await this.col.updateOne(
+      this.scoped(ctx, { _id: id, rev } as FilterQuery<T>),
+      ({ ...update, $inc: { ...(update.$inc || {}), rev: 1 } } as unknown) as UpdateQuery<T>,
+      { session },
+    );
+    return res.modifiedCount === 1;   // false -> 409 VERSION_CONFLICT (or 404 if not visible)
+  }
+}
+```
+
+Controls around it:
+
+1. A lint rule forbids importing the raw `Db` or `Collection` outside `src/core/data`.
+2. Staff access goes through a separate `StaffRepository` that requires a case-related reason and writes an audit event.
+3. Every list endpoint has an automated cross-tenant test (Organization A must never see Organization B's data).
+4. Highly sensitive fields (bank account numbers, ID-card numbers) use **explicit client-side field-level encryption** through the driver, or are stored only with the payment or identity provider. Automatic encryption needs MongoDB Enterprise.
+
+### 4.9 Additional collections before launch
+
+| Group | Collections |
+| --- | --- |
+| Taxonomy | `taxonomy_terms` (industry, technology field, application, with `zh`/`en` labels, synonyms, parent, deprecation) |
+| Rights and evidence | `ip_asset_evidence`, `rights_claims`, `verification_decisions` |
+| Shortlists and feedback | `shortlists`, `match_feedback` |
+| Communication | `conversations`, `messages` (contact details masked until an introduction is approved) |
+| Negotiation and contracts | `proposal_versions`, `proposal_responses`, `approval_requests`, `contracts`, `contract_signatures`, `contract_registrations` (see [08 §9](08-china-operating-model.md)) |
+| Workflow | `workflow_tasks`, `jobs` (leased background jobs) |
+| Sessions and security | `sessions` (TTL), `login_attempts` (TTL), `sms_codes` (TTL, hashed codes) |
+| Notifications | `notifications`, `notification_deliveries`, `notification_templates` |
+| Content and events | `articles`, `events`, `event_registrations` (see [10](10-product-requirements.md)) |
+| Commercial | `subscriptions`, `service_orders`, `invoices` (finance tables from [08 §9](08-china-operating-model.md) when payments start) |
+| Calendar | `calendar_days` (official holidays and make-up working days per year; all working-day timers use it, FR-ADM-09) |
+| University tools | `public_notices`, `notice_objections`, `reward_notices` (FR-UNI-03, FR-UNI-06) |
+| Challenges | `challenges`, `challenge_tracks`, `solutions`, `evaluations` (FR-DEM-07, FR-DEM-08) |
+| Technology managers | `manager_profiles`, `manager_assignments`, `points_ledger` (FR-MAT-04 … FR-MAT-07) |
+| Venue route | `venue_submissions`, `buyer_registrations`, `venue_certificates` (FR-VEN, R3) |
+| Evidence | `evidence_chain` (hash chain over snapshots, notices, proposals and contracts, FR-CMP-02) |
 
 ---
 
 ## 5. API specifications
 
-Expose a versioned REST API under `/api/v1`, with generated OpenAPI documentation, typed request and response models, and centralized authentication and authorization dependencies.
+Expose a versioned REST API under `/api/v1` (Express 4). Request and response models are **zod schemas** in `packages/contracts`, shared with the frontend. The OpenAPI 3 document is generated from them on CI and published with each release. Authentication and authorization run as shared Express middleware, never inside individual handlers.
 
 ### 5.1 Conventions
 
@@ -1412,33 +1227,75 @@ Being a `technology_manager` does not grant access to another organization's unp
 
 ### 8.4 Implementation
 
-Use centralized policy functions with resource-specific checks:
+Policies are written once with **CASL 5** (verified on Node 12.4). The API checks them on every request; the frontend uses the same rules only to hide unavailable actions.
 
-```python
-def can_view_technology(actor, technology, context) -> bool:
-    # Platform reviewers with a case-related need.
-    if actor.is_authorized_platform_reviewer(context):
-        return True
+```typescript
+// src/modules/identity/abilities.ts — RBAC + ABAC policy with CASL 5 (verified on Node 12.4).
+import { Ability, AbilityBuilder, AbilityClass, ForcedSubject } from '@casl/ability';
+import { ObjectId } from 'mongodb';
 
-    # Members of the owning organization.
-    if actor.is_active_member(technology.owner_organization_id):
-        return True
+type Action = 'read' | 'update' | 'submit' | 'review' | 'suspend';
+type SubjectName = 'Technology' | 'Demand' | 'Deal' | 'Document';
 
-    # Everyone else: only published, non-suspended technologies.
-    if technology.lifecycle_status != "published":
-        return False
+// Fields that permission conditions may refer to. Documents are wrapped with
+// subject('Technology', doc) when checked, so TypeScript can verify the condition objects.
+interface TechnologySubject extends ForcedSubject<'Technology'> {
+  _id: ObjectId;
+  ownerOrganizationId: ObjectId;
+  lifecycleStatus: string;
+  visibility: string;
+}
+interface GenericSubject extends ForcedSubject<Exclude<SubjectName, 'Technology'>> { _id: ObjectId }
 
-    # Restricted listings need an explicit grant.
-    if technology.visibility != "public":
-        return context.has_explicit_access_grant(
-            actor=actor,
-            resource=technology,
-        )
+export type AppAbility = Ability<[Action, SubjectName | TechnologySubject | GenericSubject]>;
+const AppAbility = Ability as AbilityClass<AppAbility>;
 
-    return True
+export interface SessionUser {
+  userId: ObjectId;
+  memberships: { organizationId: ObjectId; roleCodes: string[]; status: 'active' | 'invited' | 'revoked' }[];
+  platformRoles: string[];                                            // from platform_role_assignments
+  accessGrants: { resourceType: SubjectName; resourceId: ObjectId }[]; // explicit grants (e.g. NDA-covered)
+}
+
+const MANAGES_TECHNOLOGY = ['org_owner', 'org_admin', 'technology_manager'];
+
+export function defineAbilityFor(user: SessionUser | null): AppAbility {
+  const { can, cannot, build } = new AbilityBuilder(AppAbility);
+
+  // Everyone, including anonymous visitors: published public listings only.
+  can('read', 'Technology', { lifecycleStatus: 'published', visibility: 'public' });
+
+  if (user) {
+    for (const m of user.memberships.filter((x) => x.status === 'active')) {
+      can('read', 'Technology', { ownerOrganizationId: m.organizationId });
+      if (m.roleCodes.some((r) => MANAGES_TECHNOLOGY.includes(r))) {
+        can(['update', 'submit'], 'Technology', { ownerOrganizationId: m.organizationId });
+      }
+    }
+    for (const g of user.accessGrants) {
+      can('read', g.resourceType, { _id: g.resourceId });
+    }
+    if (user.platformRoles.includes('listing_reviewer')) {
+      can('review', 'Technology', { lifecycleStatus: { $in: ['submitted', 'in_review'] } });
+    }
+    if (user.platformRoles.includes('compliance_officer')) {
+      can('suspend', 'Technology', { lifecycleStatus: 'published' });
+    }
+  }
+
+  // State rules apply on top of role rules ("cannot" wins over "can").
+  cannot('submit', 'Technology', { lifecycleStatus: { $nin: ['draft', 'changes_requested'] } });
+  cannot('update', 'Technology', { lifecycleStatus: { $in: ['submitted', 'in_review', 'suspended', 'archived'] } });
+  return build();
+}
+
+// In a route handler, after loading the document through the tenant-scoped repository:
+//   if (!ability.can('submit', subject('Technology', tech))) throw new ForbiddenError();
 ```
 
-*Illustrative pseudocode.* Production code must also enforce approved publication snapshots, field-level visibility and restrictions on the relevant offer. Test authorization at the **service layer and the API boundary**; never rely on the frontend.
+The verification run checks this policy: a technology manager can submit their own draft but not a submitted one, nor another organization's technology. A viewer can read but not submit. Anonymous visitors see only published public listings. A reviewer can review submitted listings but not drafts.
+
+The policy decides **what** an actor may do. The tenant-scoped repository (§4.8) decides **which documents can be loaded at all**. Both are required. Field-level visibility (public, registered-user, NDA-covered fields) is applied by the response serializer of each endpoint. Test authorization at the **service layer and the API boundary**; never rely on the frontend.
 
 ---
 
@@ -1454,7 +1311,7 @@ sequenceDiagram
     participant OS as Object storage (quarantine)
     participant Q as Job queue
     participant SC as Scanner worker
-    participant DB as PostgreSQL
+    participant DB as MongoDB
     User->>API: Request upload session
     API->>POL: Check upload permission
     POL-->>API: Allowed
@@ -1488,11 +1345,16 @@ If the scanner is unavailable, files **stay quarantined**. Never make documents 
 
 ### 9.2 Authentication and sessions
 
-- Use an OIDC identity provider if feasible, or a well-maintained authentication library.
-- Require MFA for platform staff; strongly encourage it for organization owners.
-- In the browser, prefer secure, `HttpOnly`, `SameSite` cookies or a correctly implemented OIDC flow.
-- Protect state-changing requests against CSRF when cookies are used.
-- Rotate session identifiers on login and privilege changes; revoke sessions on suspension.
+| Topic | Design |
+| --- | --- |
+| Login methods | **Mobile number + SMS code** (the norm for Chinese users), or e-mail / mobile + password. WeChat QR login can be added later through WeChat Open Platform OAuth |
+| Passwords | `bcryptjs`, cost 12; at least 10 characters; checked against a common-password list |
+| SMS codes | 6 digits, valid 5 minutes, stored hashed in `sms_codes` (TTL); at most 1 send per 60 s and 10 per day per number; image CAPTCHA after repeated sends; SMS templates registered with the SMS provider |
+| MFA | TOTP (`otplib`) **mandatory for platform staff**, strongly encouraged for organization owners and signatories |
+| Sessions | Opaque random session ID in a `Secure`, `HttpOnly`, `SameSite=Lax` cookie; session data in the MongoDB `sessions` collection (TTL 8 h idle, 7 days absolute); rotate the ID on login and on privilege change; revoke all sessions on suspension or password change |
+| CSRF | `SameSite` cookies plus a CSRF token header on every state-changing request |
+| Brute force | Nginx `limit_req` on `/api/v1/auth/` plus per-account lockout (`login_attempts`, TTL) |
+| Real-name and enterprise verification | Through provider APIs (see [10](10-product-requirements.md)); results stored as verification levels, never raw ID-card images in the main database |
 
 ### 9.3 Audit and incident response
 
@@ -1515,46 +1377,40 @@ Never put full confidential document contents, passwords, tokens or other secret
 
 ## 10. Search and matching implementation
 
-For the first version, combine **structured filtering with PostgreSQL full-text search**.
+MongoDB 4.4/5.0 cannot search Chinese text: its text index splits words on spaces, so `缺陷检测` returns nothing (verified). Search therefore uses **Meilisearch**, which segments Chinese words. Structured eligibility filtering stays in MongoDB, and scoring runs in the Node worker. Details: [11 §6](11-target-runtime-node12-mongodb.md).
 
-### 10.1 Retrieval pipeline
+### 10.1 Retrieval and matching pipeline
 
 ```mermaid
 flowchart TD
-    A["1. Determine offers the user may discover"] --> B["2. Mandatory filters: offer status, visibility,<br/>transaction type, territory, hard constraints"]
-    B --> C["3. Retrieve candidates: structured indexes<br/>+ full-text search"]
-    C --> D["4. Score: technical fit, maturity, commercial fit,<br/>rights, evidence, deployment"]
-    D --> E["5. Persist match records with ranking version"]
-    E --> F["6. Present best candidates with explanations"]
-    F --> G["7. Capture shortlist and rejection feedback"]
-    G --> H["8. Broker reviews high-value or uncertain candidates"]
+    A["1. Load demand version and the buyer's permissions<br/>(MongoDB)"] --> B["2. Hard filters in MongoDB: offer status active,<br/>transaction type, territory, exclusivity, TRL minimum"]
+    B --> C["3. Text retrieval in Meilisearch: problem keywords<br/>and synonyms in zh/en, restricted to eligible IDs"]
+    C --> D["4. Score in the worker: technical fit, maturity,<br/>commercial fit, rights, evidence, deployment"]
+    D --> E["5. Persist matches with rankingVersion<br/>(unique index prevents duplicates)"]
+    E --> F["6. Broker review queue for high-value or<br/>uncertain candidates"]
+    F --> G["7. Buyer sees explained results;<br/>feedback captured"]
 ```
 
-Never rely on a single embedding-similarity score to decide legal or commercial eligibility.
+Never rely on a single similarity score to decide legal or commercial eligibility. Hard constraints are filters (step 2), not score components.
 
-### 10.2 Full-text search starting point
+### 10.2 Search index setup
 
-```sql
--- Search document per published technology version (approved fields only).
-ALTER TABLE technology_versions
-    ADD COLUMN search_vector tsvector
-    GENERATED ALWAYS AS (
-        setweight(to_tsvector('simple', coalesce(title, '')), 'A') ||
-        setweight(to_tsvector('simple', coalesce(public_summary, '')), 'B')
-    ) STORED;
-
-CREATE INDEX technology_versions_search_idx
-    ON technology_versions USING GIN (search_vector);
-
--- Fuzzy title matching for typos and partial words.
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
-CREATE INDEX technology_versions_title_trgm_idx
-    ON technology_versions USING GIN (title gin_trgm_ops);
+```bash
+# Run once per environment (and after a full rebuild). Master key only in admin tooling.
+curl -X PATCH "$MEILI_URL/indexes/publications/settings" \
+  -H "Authorization: Bearer $MEILI_MASTER_KEY" -H 'Content-Type: application/json' \
+  --data '{
+    "searchableAttributes": ["title.zh", "title.en", "keywords", "summary.zh", "summary.en", "owner.displayName"],
+    "filterableAttributes": ["status", "industryCodes", "trl.claimed", "offerTypes", "territories", "badges", "owner.type"],
+    "sortableAttributes": ["publishedAt"],
+    "synonyms": { "锂电": ["锂电池", "锂离子电池"], "锂电池": ["锂电", "lithium battery"] },
+    "pagination": { "maxTotalHits": 1000 }
+  }'
 ```
 
-> **Chinese-language note:** PostgreSQL's built-in parsers do not segment Chinese words. For a China launch, add a Chinese text-search parser extension (for example `zhparser` or `pg_jieba`) and a matching text-search configuration, or move search to OpenSearch with a Chinese analyzer (for example IK). Test recall on real Chinese technology titles before launch.
-
-Only fields from **approved publication snapshots** go into the public search document. Restricted fields need a separate, permission-filtered search path.
+- Only `technology_publications` (and anonymized public demands, in a second index) are sent to Meilisearch; never drafts, restricted fields or document text.
+- The worker upserts or deletes documents when it relays `technology.published`, `technology.updated`, `technology.suspended` and `technology.archived` outbox events. A nightly job reconciles counts and `publishedAt`, and `npm run search:rebuild` recreates the index from MongoDB.
+- The API uses a **search-only key**, and re-checks status and permissions in MongoDB before returning results.
 
 ### 10.3 Initial ranking model
 
@@ -1564,133 +1420,100 @@ S = 0.35·T + 0.20·M + 0.15·C + 0.15·R + 0.10·E + 0.05·G
 
 T, M, C, R, E and G are normalized (0–100) technical fit, maturity, commercial fit, rights compatibility, evidence quality and geographic compatibility (see [05 §7.3](05-system-design-blueprint.md)).
 
-- The weights are **hypotheses for testing**, not industry benchmarks. Store them with a `ranking_version`.
+- The weights are **hypotheses to test**, not benchmarks. Store them under a `rankingVersion` in configuration.
 - Mandatory constraints apply **before** ranking. A rights incompatibility makes a candidate ineligible or sends it to manual review; it does not just lower the score.
 
 ### 10.4 Matching quality loop
 
-For every recommendation, keep: demand version · offer and technology version · retrieval method · ranking version · score components · evidence · broker decision · buyer feedback · eventual deal outcome.
-
-This allows evaluation against expert decisions and completed transactions. Without it, nobody can tell whether a matching change actually improves deal conversion.
+For every recommendation, keep: demand version · offer and technology version · retrieval method · ranking version · score components · evidence · broker decision · buyer feedback · eventual deal outcome. This lets the team test whether a ranking change actually improves introductions and deals.
 
 ---
 
 ## 11. Self-hosted infrastructure and deployment
 
-### 11.1 Starting topology
+Full configuration (systemd units, Nginx, release procedure, backups) is in [11 §5 and §9](11-target-runtime-node12-mongodb.md). This section gives the layout and the repository structure.
 
-For a small team: Linux VMs with Docker Compose, not Kubernetes.
+### 11.1 Hosts
 
-| Host | Components | Notes |
+| Host | Components | Exposure |
 | --- | --- | --- |
-| VM 1 — Edge and application | Reverse proxy · TLS · React frontend · FastAPI · authentication integration | Only host exposed to the internet |
-| VM 2 — Data services | PostgreSQL · private object storage · persistent job storage | Reachable only from VM 1 and VM 3 |
-| VM 3 — Optional worker and operations | Background worker · document scanner · scheduled tasks · metrics and log forwarding | Introduce when load or security isolation justifies it |
-| Separate backup target | Encrypted database and object-storage backups, recovery credentials, restore tests | Separate failure domain and credentials |
+| Application server | Nginx · `tex-api@3001`, `tex-api@3002` · `tex-worker` · Meilisearch · file storage volume | Only Nginx on 80/443 |
+| MongoDB hosts (3 recommended) | `mongod` replica set `rs0` (4.4 or 5.0), authentication on | Private network only |
+| Backup target | Nightly `mongodump --oplog` archives, file-storage copies | Separate credentials and failure domain |
 
 ### 11.2 Network layout
 
 | Zone | Contents | Exposure |
 | --- | --- | --- |
-| Public internet | Reverse proxy only, on HTTP/HTTPS | Public |
-| Application network | API, worker, internal services | Private |
-| Data network | PostgreSQL, object storage | Authorized hosts only |
-| Administration network | SSH and management access | Approved addresses or VPN only |
-| Backup network / target | Backup storage | Separate credentials, restricted access |
+| Public internet | Nginx only (HTTP → HTTPS redirect, HTTPS) | Public |
+| Application | API instances on `127.0.0.1:3001-3002`, worker, Meilisearch on `127.0.0.1:7700` | Localhost / private |
+| Data | MongoDB on `27017`, reachable only from the application server and other members | Private, firewall-restricted |
+| Administration | SSH, monitoring | Approved addresses or VPN only |
 
-Never expose PostgreSQL, Redis, object-storage administration or worker ports to the internet.
+Never expose MongoDB, Meilisearch, the API ports or monitoring endpoints to the internet.
 
 ### 11.3 Initial resource planning
 
-Planning estimates, not measured capacity guarantees:
+Planning estimates, not measured capacity:
 
 | Component | Starting allocation |
 | --- | --- |
-| Application VM | 2–4 vCPU, 4–8 GB RAM |
-| Data VM | 4–8 vCPU, 8–16 GB RAM |
-| Optional worker VM | 2–4 vCPU, 4–8 GB RAM |
-| Database storage | SSD/NVMe sized for data, indexes, WAL and growth |
-| Document storage | Separate capacity budget with lifecycle and backup policy |
-| Backup storage | Separate failure domain where practical |
+| Application server | 4 vCPU, 8 GB RAM (two API instances at ≤ 1 GB heap each, worker, Meilisearch ≈ 1–2 GB) |
+| Each MongoDB member | 2–4 vCPU, 8 GB RAM (WiredTiger cache ≈ 50% of RAM), SSD sized for data, indexes and oplog (≥ 24 h of writes) |
+| File storage | Separate volume or bucket with lifecycle and backup policy |
+| Backup storage | Separate failure domain, ≥ 30 daily + 12 monthly archives |
 
-Actual sizing depends on document volume, search load, number of organizations, indexing, concurrency and retention. Measure CPU, memory, I/O latency, database connections, queue backlog and response times before adding capacity.
+Measure CPU, memory, disk latency, connection counts, slow queries (MongoDB profiler at 100 ms), outbox backlog and response times before adding capacity.
 
 ### 11.4 Repository structure
 
 ```text
 technology-exchange/
-├── frontend/
-│   ├── src/
-│   │   ├── app/
-│   │   ├── features/
-│   │   │   ├── organizations/
-│   │   │   ├── technologies/
-│   │   │   ├── offers/
-│   │   │   ├── demands/
-│   │   │   ├── matching/
-│   │   │   ├── exchange/
-│   │   │   ├── deals/
-│   │   │   └── admin/
-│   │   ├── components/
-│   │   └── api/
-│   └── tests/
-├── backend/
-│   ├── app/
-│   │   ├── api/
-│   │   ├── core/
-│   │   ├── identity/
-│   │   ├── organizations/
-│   │   ├── technology/
-│   │   ├── offers/
-│   │   ├── demands/
-│   │   ├── matching/
-│   │   ├── exchange/
-│   │   ├── deals/
-│   │   ├── documents/
-│   │   ├── workflow/
-│   │   ├── notifications/
-│   │   ├── audit/
-│   │   └── reporting/
-│   ├── migrations/
-│   └── tests/
+├── apps/
+│   ├── api/                       # Express 4 + TypeScript → dist/ (ES2019, CommonJS), runs on Node 12
+│   │   ├── src/
+│   │   │   ├── main.ts            # HTTP server bootstrap, graceful shutdown
+│   │   │   ├── worker.ts          # outbox relay, search indexer, page renderer, notifications, cron jobs
+│   │   │   ├── core/              # config, Mongo client, repositories, errors, auth middleware, logging
+│   │   │   └── modules/
+│   │   │       ├── identity/      ├── organizations/  ├── taxonomy/   ├── technology/
+│   │   │       ├── offers/        ├── demands/        ├── discovery/  ├── matching/
+│   │   │       ├── exchange/      ├── deals/          ├── documents/  ├── workflow/
+│   │   │       ├── notifications/ ├── content/        ├── audit/      └── reporting/
+│   │   ├── migrations/            # migrate-mongo: validators, indexes, roles, data fixes
+│   │   ├── templates/             # EJS: public technology pages, sitemap, e-mails
+│   │   ├── test/                  # jest 27 (runs on node:12.4.0 + MongoDB 4.4 container)
+│   │   └── package.json           # engines.node = 12.4.0; lockfile readable by npm 6
+│   └── web/                       # React 18 + Vite + Ant Design 5 (built on CI only)
+├── packages/
+│   └── contracts/                 # zod schemas and types shared by api and web (compiled into both)
 ├── deploy/
-│   ├── compose.yaml
-│   ├── nginx/
-│   ├── env.example
-│   ├── backup/
-│   └── scripts/
-├── docs/
-│   ├── architecture/
-│   ├── api/
-│   ├── workflows/
-│   ├── security/
-│   └── operations/
-└── README.md
+│   ├── nginx/                     # tex.conf, proxy_params.inc
+│   ├── systemd/                   # tex-api@.service, tex-worker.service
+│   ├── scripts/                   # release.sh, rollback.sh, backup.sh, restore.sh, search-rebuild.sh
+│   └── env.example
+├── verification/node12-mongodb/   # compatibility kit (doc 11)
+└── docs/
 ```
 
-Keep domain logic outside the HTTP controllers so business rules can be tested without a running web server.
+Each module folder contains `*.routes.ts` (HTTP and zod validation), `*.service.ts` (business rules, transactions), `*.repository.ts` (data access only through `core/data`), `*.policy.ts` (CASL rules) and `*.test.ts`. Keep business logic out of route handlers, so it can be tested without HTTP.
 
 ### 11.5 Release and recovery process
 
-```mermaid
-flowchart LR
-    A["Build and test<br/>release artifact"] --> B["Unit, integration and<br/>authorization tests"]
-    B --> C["Back up database,<br/>verify backup"]
-    C --> D["Apply backward-compatible<br/>migrations"]
-    D --> E["Deploy API and<br/>worker versions"]
-    E --> F["Health checks<br/>and smoke tests"]
-    F --> G["Verify queues, file<br/>access and search"]
-    G --> H["Monitor errors<br/>and performance"]
-    H -->|"Problem"| R["Roll back application;<br/>tested DB recovery if needed"]
-```
-
-Do not rely on automatic database rollback for every schema change. Prefer **expand-and-contract** migrations for changes that span several releases.
+Follow the release procedure in [11 §9.4](11-target-runtime-node12-mongodb.md): build and test on CI (unit tests on `node:12.4.0`) → back up the database → run migrations → switch the release symlink → restart API instances one at a time with health checks → restart the worker → smoke tests. Migrations are **expand-and-contract**, so rollback is a symlink switch. A database restore is the last resort and is rehearsed monthly.
 
 ---
 
 ## 12. Testing and acceptance criteria
 
 Test business rules, not only whether endpoints return HTTP 200.
+
+| Layer | Tooling | Runs on |
+| --- | --- | --- |
+| Unit and service tests | `jest@27.5.1` | `node:12.4.0` container (the real runtime) |
+| Integration tests | jest + a **MongoDB 4.4 single-node replica set** container (transactions need a replica set) + Meilisearch container | CI |
+| Compatibility gate | `verification/node12-mongodb/run.sh` on every dependency change | CI |
+| End-to-end tests | Playwright against a staging deployment | CI (modern Node) |
 
 ### 12.1 Critical end-to-end scenarios
 
@@ -1843,9 +1666,9 @@ Start with these concrete tasks rather than the full marketplace UI:
 
 | Order | Task | Definition of done |
 | --- | --- | --- |
-| 1 | Establish repository and coding standards | Reproducible frontend and backend development environment |
-| 2 | Create deployment baseline | Application starts in a repeatable self-hosted environment |
-| 3 | Add database migrations | Identity and organization schema builds from an empty database |
+| 1 | Establish repository, TypeScript ES2019 build and lint rules | Reproducible build; ESLint blocks ES2020+ APIs; CI runs tests on `node:12.4.0` |
+| 2 | Create deployment baseline | Staging server with the same Node 12.4 and MongoDB version, a replica set, Nginx and systemd units; release script works |
+| 3 | Add database migrations | `migrate-mongo` creates validators, indexes and roles on an empty database (based on the verified migration) |
 | 4 | Implement authentication | Protected API routes and secure sessions work |
 | 5 | Implement organization membership | Role checks operate in the backend |
 | 6 | Implement audit events | Sensitive actions produce structured records |
@@ -1871,15 +1694,16 @@ It validates the most important foundations: identity, tenant isolation, version
 
 | Area | Baseline |
 | --- | --- |
-| Frontend | React and TypeScript |
-| Backend | FastAPI modular monolith |
-| Database | PostgreSQL with explicit constraints and migrations |
-| Search | PostgreSQL full-text search initially (Chinese segmentation for China) |
-| Documents | Private object storage with quarantine and access grants |
-| Workflow | Explicit state machines, persisted tasks, audit trail, outbox |
-| Deployment | Linux VMs and Docker Compose |
+| Runtime | Node.js 12.4 (upgrade to 12.22.12 recommended); TypeScript compiled to ES2019/CommonJS |
+| Frontend | React 18, Vite and Ant Design 5, built on CI and served by Nginx; public pages pre-rendered |
+| Backend | Express 4 modular monolith: API instances + one worker |
+| Database | MongoDB 4.4 / 5.0 replica set, driver 3.7.4, validators, indexes and roles via migrations |
+| Search | Meilisearch (Chinese segmentation), fed by the outbox; rebuildable from MongoDB |
+| Documents | Private storage with quarantine, scanning, per-document grants and watermarks |
+| Workflow | Explicit state machines, transactions, transition history, outbox |
+| Deployment | systemd + Nginx on the target server; nightly `mongodump --oplog` |
 | Business model | Managed exchange: offers, demands, introductions, deal management |
-| Security | Organization roles + resource-level permissions |
+| Security | Organization roles + CASL policies + tenant-scoped repositories |
 | Delivery | One complete vertical workflow at a time |
 
 The biggest risk is not choosing the wrong framework. It is failing to distinguish **claims from verified facts, listings from offers, matches from introductions, and signed contracts from completed transfers**. Enforce those distinctions in the database, API, workflow engine, admin console and reporting from the beginning.

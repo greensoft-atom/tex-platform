@@ -51,7 +51,7 @@ The platform supports all requested deal types, but the transaction engine appli
 | Electronic contracts | **Electronic Signature Law**: a *reliable* electronic signature has the same legal effect as a handwritten signature or seal, under specified conditions | Keep the exact signed version, signer identity and authority, timestamps and integrity evidence. Use a qualified e-signature provider (licensed certification authority) and support company seals (电子印章) |
 | Personal information and data | **PIPL**, **Data Security Law** and the 2024 **Provisions on Promoting and Regulating Cross-border Data Flows** | China-based data storage and access controls from day one; assess before sending personal or important data overseas (including to AI providers) |
 | Technology-contract registration | Revised **Measures for the Administration of the Recognition and Registration of Technology Contracts** (《技术合同认定登记管理办法》, issued by MIIT, effective **1 March 2026**). Registration is generally voluntary, but in practice it unlocks tax incentives; records are generally kept five years | Generate registration-ready contract packages and track registration status (see §5.5) |
-| Licensed trading venues (Shanghai) | 《上海市技术交易场所管理细则》 (2025): rights registration, transaction certification, disclosure, third-party settlement | Applies only if the platform seeks venue status, or partners with a licensed venue such as STEX |
+| Licensed trading venues (Shanghai) | 《上海市技术交易场所管理细则》 (2025): venues approved by the municipal government under total-quantity control (Art. 6); rights registration, transaction certification, disclosure, third-party settlement are venue duties. STEX rules require buyers to act through a registered agent, who verifies materials with joint liability | Default route: become a **registered practising agent** of STEX (≥ 2 years registered, capital ≥ RMB 1 M, ≥ 2 recognised practitioners, clean 24-month record) or CTEX, and route formal listing, bidding, settlement and certificates through the venue ([09 §2.1](09-reference-platform-features.md)) |
 
 > This table is an implementation baseline, not a legal opinion that a particular holding structure, company licence or cross-border transaction is permitted. Before production, PRC counsel and the proposed financial institution must validate the legal entities, funds flow, contract wording, regulated activities, tax and foreign-exchange handling.
 
@@ -575,9 +575,9 @@ The existing technology, demand, organization, introduction and deal records ([0
 
 ### 9.1 Financial database rules
 
-- Use integer minor units (fen for RMB) or fixed-precision decimals; never binary floating point.
+- Store amounts as `{ currency, amountMinor }` with `amountMinor` as a 64-bit integer (fen for RMB; BSON `long`), and rates as `Decimal128`; never binary floating point. The database validator rejects floating-point amounts (verified).
 - Store the currency on every amount.
-- Make external provider transaction and event IDs unique.
+- Make external provider transaction and event IDs unique (unique indexes on `provider` + `providerEventId`).
 - Process webhooks idempotently and verify their signatures.
 - Never delete a confirmed financial event to fix an error; record an adjustment, reversal or correction.
 - Keep contractual obligations separate from actual cash movements.
@@ -587,7 +587,7 @@ The existing technology, demand, organization, introduction and deal records ([0
 - No arbitrary edits to ledger entries by administrators.
 - Keep immutable versions of contracts, proposals and approval decisions.
 
-For the self-hosted first version, keep the **FastAPI modular monolith + PostgreSQL + private object storage** architecture. Use separate modules and transaction boundaries for deals, compliance and payments instead of introducing microservices early. Host data inside mainland China.
+For the self-hosted first version, keep the **Node.js (Express) modular monolith + MongoDB replica set + private file storage** architecture on the given servers ([06](06-implementation-design-v1.md), [11](11-target-runtime-node12-mongodb.md)). Every financial state change runs in a MongoDB transaction with write concern `majority`, together with its ledger entries, transition record and outbox event. Use separate modules for deals, compliance and payments instead of introducing microservices early. Host data inside mainland China.
 
 ---
 
@@ -625,6 +625,11 @@ These are **release gates**, not optional enhancements.
 
 - [ ] Contract templates per deal type validated.
 - [ ] Authority checks, signature and seal process, document integrity and evidence retention validated.
+
+### F0. Venue route
+
+- [ ] Decision taken: register as a STEX (or CTEX) practising agent, partner with an existing agent, or apply for venue status ([10 §12 D-01](10-product-requirements.md)).
+- [ ] Agent obligations understood: verification opinion and joint liability for submissions, annual review, change reports within 10 working days.
 
 ### F. Technology-contract registration and tax
 

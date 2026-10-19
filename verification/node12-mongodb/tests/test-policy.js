@@ -1,0 +1,33 @@
+'use strict';
+const { MongoClient, ObjectId } = require('mongodb');
+const { subject } = require('@casl/ability');
+const { defineAbilityFor } = require('../dist/abilities.js');
+const { TenantScopedRepository } = require('../dist/tenant-scoped.repository.js');
+let pass = 0, fail = 0; const ok = (n, c) => { c ? pass++ : fail++; console.log((c ? 'PASS ' : 'FAIL ') + n); };
+(async () => {
+  const orgA = new ObjectId(), orgB = new ObjectId(), u = new ObjectId();
+  const mgr = defineAbilityFor({ userId: u, memberships: [{ organizationId: orgA, roleCodes: ['technology_manager'], status: 'active' }], platformRoles: [], accessGrants: [] });
+  const viewer = defineAbilityFor({ userId: u, memberships: [{ organizationId: orgA, roleCodes: ['viewer'], status: 'active' }], platformRoles: [], accessGrants: [] });
+  const anon = defineAbilityFor(null);
+  const reviewer = defineAbilityFor({ userId: u, memberships: [], platformRoles: ['listing_reviewer'], accessGrants: [] });
+  const t = (o) => subject('Technology', Object.assign({ _id: new ObjectId(), ownerOrganizationId: orgA, visibility: 'private', lifecycleStatus: 'draft' }, o));
+  ok('manager can submit own draft', mgr.can('submit', t({})));
+  ok('manager cannot submit already-submitted', !mgr.can('submit', t({ lifecycleStatus: 'submitted' })));
+  ok('manager cannot update other org', !mgr.can('update', t({ ownerOrganizationId: orgB })));
+  ok('viewer can read but not submit', viewer.can('read', t({})) && !viewer.can('submit', t({})));
+  ok('anonymous reads published public only', anon.can('read', t({ lifecycleStatus: 'published', visibility: 'public' })) && !anon.can('read', t({})));
+  ok('reviewer can review submitted, not draft', reviewer.can('review', t({ lifecycleStatus: 'submitted' })) && !reviewer.can('review', t({})));
+
+  const client = await MongoClient.connect(process.env.MONGO_URL, { useUnifiedTopology: true });
+  const col = client.db('tex_policy_test').collection('technologies'); await col.deleteMany({});
+  const id = new ObjectId(); await col.insertOne({ _id: id, ownerOrganizationId: orgA, rev: 0, title: 'x' });
+  const repo = new TenantScopedRepository(col, 'ownerOrganizationId');
+  ok('own tenant can read', !!(await repo.findOne({ organizationIds: [orgA] }, { _id: id })));
+  ok('other tenant gets null', (await repo.findOne({ organizationIds: [orgB] }, { _id: id })) === null);
+  let threw = false; try { await repo.findOne({ organizationIds: [] }, { _id: id }); } catch (e) { threw = true; } ok('empty tenant scope throws', threw);
+  ok('update with current rev succeeds', await repo.updateWithRev({ organizationIds: [orgA] }, id, 0, { $set: { title: 'y' } }));
+  ok('update with stale rev fails', !(await repo.updateWithRev({ organizationIds: [orgA] }, id, 0, { $set: { title: 'z' } })));
+  const d = await col.findOne({ _id: id }); ok('rev=1 and title=y', d.rev === 1 && d.title === 'y');
+  await client.db('tex_policy_test').dropDatabase(); await client.close();
+  console.log(pass + ' passed, ' + fail + ' failed'); process.exit(fail ? 1 : 0);
+})().catch((e) => { console.error('FATAL', e); process.exit(2); });

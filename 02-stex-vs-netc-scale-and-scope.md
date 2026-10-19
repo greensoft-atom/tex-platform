@@ -78,7 +78,7 @@ flowchart TB
     IM ==> COM["Commercialization<br/>pilots, transactions, new ventures"]
 ```
 
-Self-reported 2024 figures (see [01 §2.3](01-shanghai-landscape.md); not independently re-verified):
+Official figures: NETC facilitated **≈ ¥4.2 billion** of signed deals in 2024 and **≈ ¥40 billion** cumulatively (STCSM 2024 report). Platform figures published by NETC for 2024 (self-reported, see [01 §2.3](01-shanghai-landscape.md)):
 
 | Metric | Value |
 | --- | --- |
@@ -181,7 +181,7 @@ flowchart TD
 | --- | --- |
 | "STEX ~¥189B transaction volume" in 2024 | STEX's **2023** value was **¥18.922B** (a decimal error). 2024 on-exchange value was **¥30.933B**. |
 | "NETC revenue not found reliably" | NETC's operating company reported **¥46.20M** revenue and ¥1.75M net profit in 2023. |
-| "NETC ¥40B cumulative" vs "¥400B cumulative" (two drafts disagreed) | A cumulative total below one year's ¥42B is impossible. The cumulative figure is unverified; confirm it against NETC's report before use. |
+| "NETC ¥42B facilitated in 2024" and "¥40B" vs "¥400B" cumulative | The official text says 近42亿元 (**≈ ¥4.2 billion**) for 2024 and 近400亿元 (**≈ ¥40 billion**) cumulative. The "¥42B" figure misread 亿 (100 million) as billions. |
 | The STEX profile source was labelled "Shanxi Provincial Government" | The source (xyd.shyp.gov.cn) is the **Shanghai Yangpu District** government. |
 
 ---

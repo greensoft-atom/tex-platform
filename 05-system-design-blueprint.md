@@ -121,9 +121,10 @@ An ordinary commercial marketplace may record agreements and coordinate transact
 | Rights | Record ownership *claims* and evidence | Issue legally recognized rights-registration certificates (in Shanghai, a licensed technology trading venue issues 技术权益登记凭证) |
 | Transactions | Record agreements and outcomes | Issue official transaction certificates (交易鉴证) |
 | Money | Show invoices and record provider-confirmed payments | Hold, pool, escrow or settle client funds (in China, only banks and licensed payment institutions; Shanghai rules require third-party settlement) |
-| Pricing | Support negotiation and auctions between private parties | Run public listing and auction processes for state-owned technology where law prescribes them |
+| Pricing | Support negotiation and prepare competitive processes | Formal listing, binding online bidding, tenders and auctions (auctions also need a licensed auction house); public listing of state-owned technology where law prescribes it |
+| Venue access | Act as a **registered practising agent** of a licensed venue: prepare and verify submissions, represent clients | Becoming a venue: municipal approval under total-quantity control (Shanghai rules Art. 6) |
 
-The architecture keeps these functions in **separate modules with feature flags**, so they can be enabled only when the legal basis exists.
+The architecture keeps these functions in **separate modules with feature flags**, so they can be enabled only when the legal basis exists. The default route is the agent model: the platform prepares, submits and tracks; the venue (STEX or CTEX) performs the regulated steps and issues the certificates ([09 §1–§2](09-reference-platform-features.md), [10 §3.10](10-product-requirements.md)).
 
 ---
 
@@ -185,29 +186,30 @@ For the first production release, use a **modular monolith with asynchronous bac
 Rules:
 
 - Each module owns its domain model and its data access.
-- Modules **never** manipulate another module's tables directly; they call that module's service interface or react to its events.
+- Modules **never** manipulate another module's collections directly; they call that module's service interface or react to its events.
 - Candidates for later extraction: search, document processing, AI matching, notifications, analytics and payment integrations.
 
-### 3.2 Suggested technology stack
+### 3.2 Technology stack
 
-A practical starting point, not the only acceptable stack:
+The target servers run **Node.js 12.4** and **MongoDB 4.4 / 5.0**. The stack below is chosen for, and verified on, that runtime ([11](11-target-runtime-node12-mongodb.md) lists exact versions and the upgrade path):
 
-| Component | Recommendation | Reason |
+| Component | Choice | Reason |
 | --- | --- | --- |
-| Web frontend | React + TypeScript | Mature ecosystem for complex business portals |
-| UI framework | One component system with design tokens | Accessible, consistent admin and marketplace screens |
-| Backend | Python + FastAPI (or another strongly structured backend) | Python suits AI, document processing and matching |
-| Primary database | PostgreSQL | Relational integrity, JSONB, mature transactions, row-level security |
-| Search | OpenSearch or Elasticsearch (later); PostgreSQL full-text search initially | Faceted, multilingual search and relevance tuning |
-| Vector search | PostgreSQL with pgvector initially | Semantic matching without another mandatory datastore |
-| File storage | S3-compatible object storage | Large documents, versioning, retention, private files |
-| Background jobs | Durable queue (database-backed or Redis-backed); dedicated broker when volume requires | Matching, document parsing, notifications |
-| Workflow | Explicit state machines persisted in the database | Clear, auditable business transitions |
-| Analytics | PostgreSQL reporting first; warehouse later | Avoid premature infrastructure |
-| Deployment | Docker on managed services or controlled VMs | Repeatable, predictable deployments |
-| Observability | Centralized logs, metrics, tracing, error tracking | Diagnosis and reliability |
+| Web frontend | React 18 + TypeScript + Ant Design 5, built with Vite on CI | Mature ecosystem for complex business portals; strong Chinese enterprise components |
+| Public pages | Pre-rendered static HTML on publication + sitemap | Search-engine indexing (Baidu) without a server-rendering framework |
+| Backend | Node.js + TypeScript (compiled to ES2019), Express 4, modular monolith | Runs on the given Node 12 runtime; one language across the stack |
+| Validation | zod schemas shared by API and frontend | One definition for input checks, forms and the OpenAPI document |
+| Primary database | MongoDB replica set (4.4 / 5.0), native driver 3.7 | Given target; multi-document transactions, validators, flexible technical attributes |
+| Search | Meilisearch | Chinese word segmentation, facets, typo tolerance; MongoDB 4.4/5.0 cannot search Chinese text |
+| Vector search | Later phase: Meilisearch hybrid search, or MongoDB Vector Search after an upgrade to 8.2+ | Not needed to prove the core business |
+| File storage | Storage adapter: encrypted volume, S3-compatible store or Aliyun OSS | Large documents, versioning, retention, private files |
+| Background jobs | One worker process: transactional outbox + leased job collection in MongoDB | No extra queue infrastructure at launch |
+| Workflow | Explicit state machines persisted in MongoDB | Clear, auditable business transitions |
+| Analytics | MongoDB aggregation reports first; warehouse later | Avoid premature infrastructure |
+| Deployment | systemd + Nginx on the target servers | Matches the existing server environment |
+| Observability | Structured logs (pino), metrics (Prometheus format), request IDs, error tracking | Diagnosis and reliability |
 
-Do **not** introduce Kubernetes, Kafka, a graph database and several AI services on day one unless scale or deployment constraints really require them.
+Do **not** introduce Kubernetes, Kafka, Redis, a graph database and several AI services on day one unless scale or deployment constraints really require them.
 
 ---
 
@@ -251,7 +253,7 @@ erDiagram
     DEAL ||--o{ DISPUTE_CASE : "may raise"
 ```
 
-The diagrams show logical relationships, not every physical table.
+The diagrams show logical relationships, not every physical collection (06 §4 has the collection catalogue).
 
 ### 4.3 Entity catalogue
 
@@ -280,7 +282,7 @@ The diagrams show logical relationships, not every physical table.
 | AuditEvent | An append-only record of an important action |
 | DisputeCase | A complaint, contested right, or contractual or transaction dispute |
 
-**Modeling rule:** technology, offer, demand, deal, contract and payment are **different entities**. Never merge their fields into one large `technology` table.
+**Modeling rule:** technology, offer, demand, deal, contract and payment are **different entities**. Never merge their fields into one large `technology` document.
 
 - A technology can have several offers, many interested buyers, several matching demands and a history of deals.
 - An offer can change without rewriting the technology's identity.
@@ -725,7 +727,7 @@ sequenceDiagram
     participant API as Backend API
     participant IAM as Identity and access
     participant DOC as Document service
-    participant DB as PostgreSQL
+    participant DB as MongoDB
     participant WF as Workflow service
     actor Reviewer
     participant IDX as Indexing worker
@@ -763,7 +765,7 @@ Implementation requirements:
 sequenceDiagram
     actor Buyer
     participant API as Backend API
-    participant DB as PostgreSQL
+    participant DB as MongoDB
     participant Q as Job queue
     participant MW as Matching worker
     participant SE as Search and vector index
@@ -796,7 +798,7 @@ sequenceDiagram
     actor Supplier
     participant DEAL as Deal service
     participant POL as Policy engine
-    participant DB as PostgreSQL
+    participant DB as MongoDB
     participant CON as Contract service
     participant FIN as Finance integration
     Buyer->>DEAL: Propose terms
@@ -1036,139 +1038,77 @@ These epics are an initial backlog, not a substitute for acceptance tests coveri
 
 ## 11. Database and data architecture
 
-Start with PostgreSQL and a normalized transactional schema. Add dedicated search and analytics systems as needed.
+The system of record is **MongoDB** (target servers run 4.4 / 5.0; see [11](11-target-runtime-node12-mongodb.md)). MongoDB is schemaless, so the design adds the discipline a technology exchange needs: validators, explicit indexes, immutable versions, transactions and least-privilege roles. Search runs in a separate, rebuildable index.
 
-### 11.1 Core database conventions
+### 11.1 Core data conventions
 
-Every major business table should have:
+Every major business collection has:
 
-- A stable primary key (UUID).
-- `created_at` and `updated_at`.
-- An organization or tenant ownership field where applicable.
-- An explicit, constrained status.
-- A version number or immutable revision record where history matters.
-- Foreign keys and uniqueness constraints.
-- Indexes for common access patterns.
+- An `ObjectId` primary key **and** a human-readable reference (`TEC-000123`, `DEAL-000042`) for users and support staff.
+- `createdAt` and `updatedAt`.
+- An organization (tenant) ownership field where applicable.
+- An explicit status, validated as an enum.
+- A `rev` counter for optimistic concurrency, plus an immutable version collection where history matters.
+- A `$jsonSchema` validator and unique indexes for invariants that must hold under concurrency.
+- Indexes for its common access patterns.
 - Audit events for sensitive transitions.
 
-Use relational columns for core relationships, state, rights, money and permissions. Use JSONB only for flexible technical attributes, extraction metadata and rarely queried extensions.
+Use structured, validated fields for relationships, state, rights, money and permissions. Use flexible sub-documents only for sector-specific technical attributes and extraction metadata. Money is stored as **integer minor units with a currency** (`{ currency: 'CNY', amountMinor: Int64 }`), never as floating point.
 
-### 11.2 Illustrative schema
+### 11.2 Document model (excerpt)
 
-A design excerpt, not a complete deployable schema (the full baseline is in [06 §4](06-implementation-design-v1.md)):
+A technology is split into a small, frequently updated **identity document**, **immutable versions**, and an **approved public snapshot**, the only part that search and public pages ever see:
 
-```sql
-CREATE TABLE organizations (
-    id                  UUID PRIMARY KEY,
-    legal_name          TEXT NOT NULL,
-    organization_type   TEXT NOT NULL,
-    jurisdiction_code   TEXT NOT NULL,
-    verification_status TEXT NOT NULL DEFAULT 'pending',
-    created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+```javascript
+// technologies: identity and lifecycle
+{ _id: ObjectId("…"), ref: "TEC-000123", ownerOrganizationId: ObjectId("…"),
+  technologyType: "process_technology", lifecycleStatus: "published", visibility: "public",
+  currentVersion: 4, publishedVersion: 3, rev: 9, createdAt: ISODate("…"), updatedAt: ISODate("…") }
 
-CREATE TABLE organization_memberships (
-    organization_id UUID NOT NULL REFERENCES organizations(id),
-    user_id         UUID NOT NULL,
-    role_code       TEXT NOT NULL,
-    status          TEXT NOT NULL DEFAULT 'invited',
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-    PRIMARY KEY (organization_id, user_id, role_code)
-);
+// technology_versions: immutable once submitted
+{ technologyId: ObjectId("…"), version: 3, frozen: true,
+  title: { zh: "锂电池极片缺陷在线检测技术", en: "Inline defect detection for battery electrodes" },
+  publicSummary: { zh: "…", en: "…" }, claimedTrl: 6, assessedTrl: null,
+  technicalAttributes: { lineSpeed: "≤ 80 m/min", accuracy: "> 99%" }, createdAt: ISODate("…") }
 
-CREATE TABLE technologies (
-    id                    UUID PRIMARY KEY,
-    owner_organization_id UUID NOT NULL REFERENCES organizations(id),
-    created_by            UUID NOT NULL,
-    technology_type       TEXT NOT NULL,
-    lifecycle_status      TEXT NOT NULL DEFAULT 'draft',
-    current_version       INTEGER NOT NULL DEFAULT 1,
-    created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at            TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE technology_versions (
-    technology_id        UUID NOT NULL REFERENCES technologies(id),
-    version              INTEGER NOT NULL,
-    title                TEXT NOT NULL,
-    public_summary       TEXT,
-    technical_attributes JSONB NOT NULL DEFAULT '{}',
-    claimed_trl          SMALLINT,
-    rights_status        TEXT NOT NULL DEFAULT 'unverified',
-    publication_status   TEXT NOT NULL DEFAULT 'draft',
-    created_by           UUID NOT NULL,
-    created_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
-    PRIMARY KEY (technology_id, version),
-    CHECK (claimed_trl IS NULL OR claimed_trl BETWEEN 1 AND 9)
-);
-
-CREATE TABLE demands (
-    id                    UUID PRIMARY KEY,
-    buyer_organization_id UUID NOT NULL REFERENCES organizations(id),
-    status                TEXT NOT NULL DEFAULT 'draft',
-    current_version       INTEGER NOT NULL DEFAULT 1,
-    created_by            UUID NOT NULL,
-    created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at            TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE deals (
-    id                  UUID PRIMARY KEY,
-    status              TEXT NOT NULL DEFAULT 'opportunity',
-    deal_type           TEXT NOT NULL,
-    currency_code       CHAR(3),
-    assigned_manager_id UUID,
-    created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE audit_events (
-    id              UUID PRIMARY KEY,
-    actor_user_id   UUID,
-    organization_id UUID REFERENCES organizations(id),
-    action          TEXT NOT NULL,
-    resource_type   TEXT NOT NULL,
-    resource_id     UUID NOT NULL,
-    correlation_id  UUID,
-    details         JSONB NOT NULL DEFAULT '{}',
-    occurred_at     TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+// technology_publications: approved public snapshot (search index source)
+{ technologyId: ObjectId("…"), version: 3, ref: "TEC-000123", status: "live",
+  title: { zh: "…", en: "…" }, summary: { zh: "…" }, industryCodes: ["C384"],
+  trl: { claimed: 6, assessed: null }, offerTypes: ["license"], badges: ["patent_verified"] }
 ```
 
-**Intentionally missing.** A production schema also needs tables for: users and authentication identities; technology offers and IP assets; versioned demands and matching results; verification cases, evidence and decisions; deal parties, negotiations and communications; NDAs, data rooms and document permissions; contract versions, signatures and completion conditions; invoices, payments, refunds and reconciliation; service engagements and milestones; subscription entitlements and billing; notifications, workflow tasks and idempotency keys; disputes, legal holds and retention requirements.
+The full collection catalogue, validators, indexes, roles and verified code are in [06 §4](06-implementation-design-v1.md).
 
-Use **database migrations from the beginning**. Never change a production schema manually without a reproducible migration and a rollback or recovery plan.
+**Intentionally deferred.** Payment obligations, provider transactions, payouts, ledger entries and reconciliation ([08 §9](08-china-operating-model.md)) are added when money starts flowing through the platform.
+
+Use **migrations from the beginning** (`migrate-mongo`). Never change validators, indexes or roles manually in production.
 
 ### 11.3 Multi-tenant isolation
 
 When many organizations share the platform, tenant isolation is a first-class security requirement:
 
-1. Every tenant-owned resource has an explicit ownership or access relationship.
-2. Backend queries enforce that relationship.
-3. PostgreSQL **Row-Level Security (RLS)** adds a second layer of protection.
-4. Privileged administrative access is separate from normal user access.
+1. Every tenant-owned document has an explicit ownership or access relationship.
+2. All tenant data is read and written through a **tenant-scoped repository** that adds the tenant filter to every query (06 §4.8). MongoDB has no row-level security, so this code path is narrow and covered by automated cross-tenant tests.
+3. The application connects with a **least-privilege role**: CRUD on business collections, insert-only on the audit trail, no schema changes.
+4. Privileged staff access goes through a separate path that requires a case-related reason and writes an audit event.
 5. Background jobs carry and validate their tenant and resource scope.
 6. Search results, caches, exports and document URLs obey the same access policy.
 
-RLS is **defence in depth**, not a replacement for application authorization. Run the application with a restricted database role and tightly control any table-owner access that could bypass RLS.
-
 ### 11.4 Search architecture
-
-Keep transactional data and search representations separate:
 
 ```mermaid
 flowchart LR
-    PG[("PostgreSQL<br/>source of truth: technologies, demands,<br/>rights, deals, permissions")] -->|"transactional outbox events"| W["Indexing worker"]
-    W --> SI[("Search index<br/>approved fields, facets,<br/>multilingual text")]
-    W --> VI[("Vector index<br/>embeddings")]
-    OS[("Object storage<br/>original documents")] --> W
-    PG --> AN[("Analytics store<br/>aggregated metrics")]
-    SI -. "never decides access" .-> API["Backend API<br/>(access checks against PostgreSQL)"]
+    DB[("MongoDB<br/>source of truth: technologies, demands,<br/>rights, deals, permissions")] -->|"transactional outbox events"| W["Worker: indexer"]
+    W --> SI[("Meilisearch<br/>approved public snapshots,<br/>Chinese segmentation, facets")]
+    W --> PG["Pre-rendered public pages<br/>+ sitemap"]
+    OS[("File storage<br/>original documents")] -.->|"never indexed publicly"| W
+    DB --> AN[("Reporting views /<br/>analytics exports")]
+    SI -. "never decides access" .-> API["Backend API<br/>(re-checks status and permissions in MongoDB)"]
 ```
 
-- The search index is a **derived** representation. It never decides whether a user may access a confidential document.
-- When a technology is suspended or its visibility changes, the change must reach every index and cache. Use a **transactional outbox** (or an equivalent reliable mechanism) so updates are not lost when indexing fails.
+- The search index is a **derived** representation. It never decides whether a user may access a confidential document, and it can be rebuilt from MongoDB at any time.
+- When a technology is suspended or its visibility changes, the change must reach the index, the pre-rendered page and any cache. The **transactional outbox** guarantees that the event is not lost when indexing fails.
+- Semantic (vector) matching is a later phase: Meilisearch hybrid search, or MongoDB Search / Vector Search after a database upgrade to 8.2+.
 
 ### 11.5 Document lifecycle
 
@@ -1183,7 +1123,7 @@ flowchart TD
     D --> E["Access classification and review"]
     E --> F["Approved private storage"]
     F --> G["Authorized search fields"]
-    F --> H["Restricted deal room"]
+    F --> H["Restricted deal room<br/>(watermarked downloads)"]
     F --> I["Versioned evidence record"]
 ```
 
@@ -1216,7 +1156,7 @@ The backend exposes **business operations**. It never lets the frontend edit sta
 | Notifications | Email, in-app notifications and delivery status |
 | Reporting | Operational, marketplace and commercial analytics |
 
-These can start as Python packages inside one deployable backend.
+These start as module folders inside one deployable Express application (06 §11.4).
 
 ### 12.2 Example REST API
 
@@ -1260,33 +1200,50 @@ For privileged operations, use explicit endpoints such as `POST /v1/admin/verifi
 
 Do not scatter business rules as conditions across controllers. Each workflow is a **state machine with explicit transition rules**.
 
-```python
-def transition_deal(deal, command, actor, policy):
-    current_state = deal.status
+```typescript
+// src/modules/deals/deal-transitions.ts — transitions are data, not scattered if-statements.
+type DealStatus =
+  | 'opportunity' | 'qualified' | 'due_diligence' | 'negotiation' | 'contract_draft' | 'approval'
+  | 'signed' | 'conditions_pending' | 'ready_to_complete' | 'completed' | 'on_hold' | 'lost' | 'disputed';
+type DealAction =
+  | 'qualify' | 'start_diligence' | 'agree_terms' | 'record_signatures'
+  | 'confirm_conditions' | 'confirm_completion' | 'open_dispute';
 
-    # Verify actor, resource access and assigned responsibility.
-    policy.require_permission(
-        actor=actor,
-        resource=deal,
-        action=command.action,
-    )
+interface Deal { status: DealStatus; rev: number }
+interface Command { action: DealAction; evidence?: Record<string, unknown> }
+interface Actor { userId: string; can(action: DealAction, deal: Deal): boolean }
 
-    # Resolve the transition from a controlled transition table.
-    transition = TRANSITION_TABLE.get((current_state, command.action))
-    if transition is None:
-        raise InvalidTransition(
-            f"Action {command.action!r} is not allowed from {current_state!r}"
-        )
+interface Transition {
+  to: DealStatus;
+  validate(deal: Deal, cmd: Command): void;                  // throws PreconditionFailed with a reason
+}
 
-    # Enforce domain-specific prerequisites (evidence, approvals, holds).
-    transition.validate(deal, command)
+export class InvalidTransitionError extends Error {}
+export class ForbiddenError extends Error {}
 
-    # Update state and append the transition record
-    # within one database transaction; queue events via the outbox.
-    return transition.execute(deal, command, actor)
+const ACTIVE: DealStatus[] = ['opportunity', 'qualified', 'due_diligence', 'negotiation', 'contract_draft', 'approval', 'signed', 'conditions_pending'];
+const noCheck = () => undefined;
+
+const TRANSITIONS = new Map<string, Transition>([
+  ['opportunity:qualify',            { to: 'qualified',          validate: noCheck }],
+  ['qualified:start_diligence',      { to: 'due_diligence',      validate: noCheck }],
+  ['negotiation:agree_terms',        { to: 'contract_draft',     validate: noCheck }],
+  ['approval:record_signatures',     { to: 'signed',             validate: noCheck }],
+  ['conditions_pending:confirm_conditions', { to: 'ready_to_complete', validate: noCheck }],
+  ['ready_to_complete:confirm_completion',  { to: 'completed',         validate: noCheck }],
+  ...ACTIVE.map((from): [string, Transition] => [`${from}:open_dispute`, { to: 'disputed', validate: noCheck }]),
+]);
+
+export function resolveTransition(deal: Deal, cmd: Command, actor: Actor): Transition {
+  if (!actor.can(cmd.action, deal)) throw new ForbiddenError(`Not allowed: ${cmd.action}`);
+  const t = TRANSITIONS.get(`${deal.status}:${cmd.action}`);
+  if (!t) throw new InvalidTransitionError(`Action ${cmd.action} is not allowed from ${deal.status}`);
+  t.validate(deal, cmd);                                    // evidence, approvals, holds
+  return t;   // caller applies it in one MongoDB transaction: status + rev check + transition record + outbox
+}
 ```
 
-*Illustrative pseudocode, not production code.*
+*Type-checked sketch: real transitions add evidence, approval and hold checks in `validate`.*
 
 An excerpt from the transition table:
 
@@ -1312,7 +1269,7 @@ An excerpt from the transition table:
 - Timeout and exception handling.
 - Versioned workflow definitions, so old cases continue under their original rules.
 
-State machines implemented in the application and persisted in PostgreSQL are enough for the first release. Consider a dedicated engine such as **Temporal** when workflows become long-running, distributed, timer-heavy and dependent on reliable retries across many systems.
+State machines implemented in the application and persisted in MongoDB (status + `rev` + `workflow_transitions`, changed in one transaction) are enough for the first release. Consider a dedicated engine such as **Temporal** when workflows become long-running, distributed, timer-heavy and dependent on reliable retries across many systems.
 
 ---
 
@@ -1432,7 +1389,7 @@ Every AI-generated fact keeps its **provenance**: source document, page or passa
 
 ### 15.4 Do you need a graph database?
 
-Not at the beginning. Start with relational entities and explicit relationship tables. Add graph traversal or a dedicated graph database only when real workloads need complex multi-hop queries that are otherwise hard to run efficiently. The technology graph in [04 §7](04-product-strategy.md) can be a logical model long before it becomes a separate database.
+Not at the beginning. Start with collections and explicit reference fields; MongoDB's `$graphLookup` covers simple multi-hop traversals. Add a dedicated graph database only when real workloads need complex multi-hop queries that are otherwise hard to run efficiently. The technology graph in [04 §7](04-product-strategy.md) can be a logical model long before it becomes a separate database.
 
 ---
 
@@ -1513,7 +1470,7 @@ The platform needs more than unit tests for CRUD endpoints.
 | Test layer | What to validate |
 | --- | --- |
 | Unit tests | Domain rules, pricing, state transitions, permission decisions |
-| Integration tests | PostgreSQL, object storage, search, queues and external APIs |
+| Integration tests | MongoDB replica set (transactions), file storage, Meilisearch, outbox worker and external APIs |
 | API contract tests | Request validation, response schemas and error behaviour |
 | Authorization tests | Cross-tenant access, role escalation and restricted documents |
 | Workflow tests | Valid and invalid transitions, timeouts and recovery |
@@ -1553,24 +1510,20 @@ For the initial release, deploy a small number of clearly separated components:
 
 ```mermaid
 flowchart TB
-    U["Web and enterprise users"] --> EDGE["CDN / WAF / TLS"]
-    EDGE --> FE["React frontend"]
-    EDGE --> BE["Backend application"]
-    FE --> BE
-    BE --> PG[("PostgreSQL")]
-    BE --> OS[("Private object storage")]
-    BE --> RD[("Redis")]
-    BE --> Q[["Background job queue"]]
-    Q --> WK["Workers"]
-    WK --> PG
+    U["Web and enterprise users"] --> EDGE["Nginx: TLS, WAF rules, rate limits,<br/>static web and pre-rendered pages"]
+    EDGE --> BE["Backend API instances<br/>(Node.js, Express)"]
+    BE --> DB[("MongoDB replica set")]
+    BE --> OS[("Private file storage")]
+    BE --> SI[("Meilisearch")]
+    WK["Worker: outbox, indexing,<br/>rendering, notifications"] --> DB
+    WK --> SI
     WK --> OS
-    WK --> SI[("Search / vector index")]
-    WK --> AI["AI providers or local models"]
-    WK --> EM["Email / notification provider"]
-    BE --> INT["Payment / signature integrations"]
-    BE -.-> OBS["Logs / metrics / traces"]
+    WK --> AI["AI providers or local models<br/>(later phase)"]
+    WK --> EM["SMS / e-mail / WeChat providers"]
+    BE --> INT["E-signature / payment integrations"]
+    BE -.-> OBS["Logs / metrics / alerts"]
     WK -.-> OBS
-    PG -.-> BK["Backup and recovery"]
+    DB -.-> BK["Backup and recovery"]
     OS -.-> BK
 ```
 
@@ -1587,7 +1540,7 @@ flowchart TB
 - Track infrastructure costs per major subsystem.
 - Never store confidential documents in public buckets or unprotected application logs.
 
-For an early-stage system, one backend deployment plus separate workers is enough. Search and AI workloads can scale independently later. The self-hosted variant chosen for the first release is in [06 §11](06-implementation-design-v1.md).
+For an early-stage system, two API instances plus one worker are enough. Search and AI workloads can scale independently later. The self-hosted deployment for the first release is in [06 §11](06-implementation-design-v1.md) and [11 §9](11-target-runtime-node12-mongodb.md).
 
 ---
 
@@ -1626,11 +1579,12 @@ Several business decisions change the detailed design. They were settled step by
 | 5 | Team size | 1–4 · 5–12 · multiple squads | **1–4 developers** | 06 §13 |
 | 6 | Transactions at launch | Managed introductions and deal records · contracts and payments · formal exchange mechanisms | Managed introductions and deal tracking first ([06](06-implementation-design-v1.md)); later **all deal types with provider-backed conditional funds handling** ([08](08-china-operating-model.md)) | 06, 07, 08 |
 | 7 | Technology scope | All industries · deep tech · specific industries | **Broad, cross-industry** | 06 §1 |
+| 8 | Backend stack | Python + PostgreSQL · Node.js + MongoDB | **Node.js + MongoDB on the given servers: Node 12.4, MongoDB 4.4 / 5.0** | 06 §3, 11 |
 
 ### Final architectural recommendation
 
 Start with the hybrid model: a demand-driven marketplace, rigorous technology records, controlled verification, explainable matching and a complete transfer workflow.
 
-Use a modular backend, PostgreSQL as the source of truth, dedicated search, private document storage, explicit state machines and strong resource-level permissions. Keep **transaction completion, financial records and legal status** as separate, auditable concepts.
+Use a modular Node.js backend, MongoDB as the source of truth (with validators, transactions and least-privilege roles), a dedicated Chinese-capable search index, private document storage, explicit state machines and strong resource-level permissions. Keep **transaction completion, financial records and legal status** as separate, auditable concepts.
 
 Above all, design the business operations alongside the software. Verification staff, technology brokers, deal managers, finance operators and administrators are not secondary users. They are part of the service that makes the marketplace trustworthy.
