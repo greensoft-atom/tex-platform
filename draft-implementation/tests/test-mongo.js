@@ -7,8 +7,10 @@ const { ok, rejects, is, connect, clearAll, run } = require('./helpers');
 const M = require('../dist/models');
 const { syncIndexes } = require('../dist/scripts/sync-indexes');
 const { inTransaction } = require('../dist/core/db/transaction');
-const m1 = require('../migrations/001-core-schema.js');
-const m2 = require('../migrations/002-db-roles.js');
+const fs = require('fs');
+const path = require('path');
+const migrationsDir = path.join(__dirname, '..', 'migrations');
+const migrations = fs.readdirSync(migrationsDir).filter((f) => f.endsWith('.js')).sort().map((f) => require(path.join(migrationsDir, f)));
 
 const { ObjectId } = mongoose.Types;
 const { Long } = mongoose.mongo;
@@ -19,8 +21,9 @@ run(async () => {
   await clearAll();
 
   // ---------- Schema control ----------
-  await m1.up(conn.db, client); await m2.up(conn.db, client);
-  ok('migrations re-run safely (validators, roles)', true);
+  for (const m of migrations) await m.up(conn.db, client);       // all of them, in order: later ones refine earlier validators
+  ok('migrations re-run safely (' + migrations.length + ' files: validators, roles, system user)', migrations.length >= 3);
+  ok('migration 003: the worker\'s system user exists', !!(await M.User.findById(require('../dist/core/actor').SYSTEM_USER_ID).lean()));
   const drift = (await syncIndexes(true)).filter((r) => r.toCreate.length || r.toDrop.length);
   ok('indexes of all ' + M.allModels.length + ' models match their schemas', drift.length === 0, JSON.stringify(drift));
   const ttl = (await M.IdempotencyKey.listIndexes()).find((i) => i.name === 'expiresAt_1');
@@ -101,9 +104,12 @@ run(async () => {
   await rejects('frozen version: save() refused', () => frozen.save(), is.named('ImmutableRecordError'));
   const upd = await M.TechnologyVersion.updateOne({ _id: v1._id }, { $set: { claimedTrl: 7 } });
   ok('frozen version: query update matches nothing', upd.n === 0 && (await M.TechnologyVersion.findById(v1._id)).claimedTrl === 6);
+  await M.TechnologyVersion.findOneAndReplace({ _id: v1._id }, { technologyId: tech._id, version: 1, title: { zh: '替换' }, createdBy: userId, frozen: true });
+  ok('frozen version: findOneAndReplace matches nothing', (await M.TechnologyVersion.findById(v1._id)).title.zh !== '替换');
   const tr = await save(new M.WorkflowTransition({ resource: { type: 'technology', id: tech._id }, fromStatus: 'draft', toStatus: 'submitted', action: 'submit', actorUserId: userId, correlationId: 'c1' }));
   await rejects('transition history: updateOne refused', () => M.WorkflowTransition.updateOne({ _id: tr._id }, { $set: { action: 'x' } }), is.named('ImmutableRecordError'));
   await rejects('transition history: document deleteOne() refused', () => tr.deleteOne(), is.named('ImmutableRecordError'));
+  await rejects('transition history: findOneAndReplace refused', () => M.WorkflowTransition.findOneAndReplace({ _id: tr._id }, { action: 'x' }), is.named('ImmutableRecordError'));
   const role = await conn.db.admin().command({ rolesInfo: 'texApp', showPrivileges: true });
   const auditPriv = role.roles[0].privileges.find((p) => p.resource.db === 'tex_audit');
   ok('texApp role: audit trail is insert-only in the database too', JSON.stringify(auditPriv.actions.sort()) === '["find","insert"]');

@@ -53,6 +53,8 @@ run(async () => {
   const agg = await M.Technology.aggregate([{ $group: { _id: '$ownerOrganizationId', n: { $sum: 1 } } }]).option(scopeA);
   ok('aggregate gets the tenant $match prepended', agg.length === 1 && String(agg[0]._id) === String(orgA) && agg[0].n === 3);
   await rejects('aggregate without tenant scope throws', () => M.Technology.aggregate([{ $match: {} }]), is.named('TenantScopeError'));
+  await rejects('findOneAndReplace without tenant scope throws', () => M.Technology.findOneAndReplace({ _id: anyB._id }, { ref: 'TEC-999999' }), is.named('TenantScopeError'));
+  await rejects('estimatedDocumentCount (cannot be filtered) needs an audited staff reason', () => M.Technology.estimatedDocumentCount().setOptions(scopeA), is.named('TenantScopeError'));
   const del = await M.Technology.deleteMany({ ownerOrganizationId: orgB }).setOptions(scopeA);
   ok('deleteMany cannot reach another tenant even when asked to', del.deletedCount === 0);
 

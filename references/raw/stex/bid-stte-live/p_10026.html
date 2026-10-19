@@ -1,0 +1,1406 @@
+
+
+
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>正式披露</title>
+    
+
+
+
+
+
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+
+
+
+
+
+<title></title>
+
+
+
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+
+<link rel="icon" href="/res/prj/images/favicon.ico" type="image/x-icon"/>
+<link rel="shortcut icon" href="/res/prj/images/favicon.ico" type="image/x-icon"/>
+<link rel="stylesheet" type="text/css" href="/res/prj/layui/css/layui.css"/>
+
+
+
+
+
+    
+        
+            
+            <link rel="stylesheet" type="text/css" href="/res/prj/css/all.min.c05424ab.css?uris=%2Fres%2Fprj%2Fcss%2Fall.csss&alias=%2Fres%2Fprj%2Fcss%2Fall.csss&isCompress=true&token=58bf026ce10cb8d7f9a7759543718a00" />
+        
+        
+    
+
+<script type="text/javascript" src="/res/prj/js/jquery-3.4.1.min.js?t=1792379565884"></script>
+<script type="text/javascript" src="/res/prj/js/jquery-migrate.min.js?t=1792379565884"></script>
+<script type="text/javascript" src="/res/prj/js/vue.js?t=1792379565884"></script>
+
+<script type="text/javascript">
+    window["P_basePath"] = "";
+    window["DesKey"] = "04F52223578C2F64F91F5C6DB139E934";
+    window["enableWebSocket"] = "true" == "true";
+    window["P_connectWSSyncTime"] = parseInt("10");
+    window["P_connectWSLimit"] = parseInt("-1");
+    window["P_connectWSTimeout"] = parseInt("0");
+    // 设置token
+    window["Token"] = 'MpRMjZ6n2KBNBjJ/wFFjrOaLkRuDjNeTPS5aPDA8TyuleOZgr42VrwPlN2NFXrNwRpXuA4GbPv5+hMe0uzDSVA==';
+</script>
+
+<link rel="stylesheet" href="/res/plugin/jbox/css/jbox.css?t=1792379565884" type="text/css"/>
+<script type="text/javascript" src="/res/plugin/jbox/js/jquery.jBox.js?t=1792379565884"></script>
+
+
+<link rel="stylesheet" href="/res/plugin/layer/skin/layer.css?t=1792379565884" type="text/css"/>
+<script type="text/javascript" src="/res/plugin/layer/layer.min.js?t=1792379565884"></script>
+<script type="text/javascript" src="/res/prj/layui/layui.js"></script>
+
+
+
+<script type="text/javascript" src="/res/js/des.js?t=1792379565884"></script>
+<script type="text/javascript" src="/res/js/utils-base-all.js?t=1792379565884"></script>
+<script type="text/javascript" src="/res/js/dialog.js?t=1792379565884"></script>
+<script type="text/javascript" src="/res/plugin/autocomplete/jquery.autocomplete.js?t=1792379565884"></script>
+<link rel="stylesheet" href="/res/plugin/autocomplete/jquery.autocomplete.css?t=1792379565884" type="text/css"/>
+
+<script type="text/javascript">
+    window["P_basePath"] = "";
+    window["DesKey"] = "04F52223578C2F64F91F5C6DB139E934";
+    window["enableWebSocket"] = "true" == "true";
+    window["P_connectWSSyncTime"] = parseInt("10");
+    window["P_connectWSLimit"] = parseInt("-1");
+    window["P_connectWSTimeout"] = parseInt("0");
+
+    function P_checkIsLogin() {
+        if("false" != "true"){
+            Base.Tip.confirm("温馨提示","您还未登录，是否现在登录？",
+                function () {
+                    var reqUri = location.pathname + location.search;
+                    reqUri = reqUri.substr("".length);
+                    location.href="/page/login?reqUri=" + encodeURIComponent(reqUri);
+                }, function () {
+
+                }
+            );
+            return false;
+        }
+        return true;
+    }
+
+    $(function(){
+        if("false" == "true"){
+            isLogin();
+        }
+        //设置图片访问失败的错误图片
+        $('img').error(function(){
+            if($(this).attr('src').indexOf("/editorUpload/image") != -1){
+                $(this).attr('src',"/res/prj/images/bd_default.jpg");
+            }
+        });
+    });
+    function isLogin() {
+        Base.Ajax.post("/service/psncenter/account/session_sx",
+            true,
+            {
+            },
+            "json",
+            function (json, status) {
+                if (json.success) {
+                    setTimeout(function () {
+                        isLogin();
+                    }, 10000);
+                }else{
+                    window.location='/page/login';
+                }
+            }
+        );
+
+    }
+</script>
+
+
+
+
+
+    
+    <script type="text/javascript">
+        $(function () {
+            //设置标杆
+            var _line = parseInt($(window).height() / 10);
+            $(window).scroll(function () {
+                //滚动，导航固定定位
+                if ($(window).scrollTop() > $(".default_detail_box").offset().top) {
+                    $('.monitor_tab').css({'margin': '0 auto', 'border-bottom:': 'none'});
+                    $('.monitor_detail_top').css({
+                        'position': 'fixed',
+                        'top': '0',
+                        'width': '100%',
+                        'border-bottom': 'solid 1px #e5e5e5'
+                    })
+                } else {
+                    $('.monitor_tab').css({'border-bottom': 'solid 1px #e5e5e5'});
+                    $('.monitor_detail_top').css({'position': '', 'width': '', 'border-bottom': 'none',})
+                }
+                ;
+                $('.monitor_tab li').eq(0).addClass('current');
+                //滚动到标杆位置,导航加current
+                $('.monitor_tab_cont li').each(function () {
+                    var _target = parseInt($(this).offset().top - $(window).scrollTop() - _line);
+                    var _i = $(this).index();
+                    if (_target <= 0) {
+                        $('.monitor_tab li').removeClass('current');
+                        $('.monitor_tab li').eq(_i).addClass('current');
+                    }
+                    //如果到达页面底部，给左侧导航最后一个加active
+                    else if ($(document).height() == $(window).scrollTop() + $(window).height()) {
+                        $('.monitor_tab li').removeClass('current');
+                        $('.monitor_tab li').eq($('.monitor_tab_cont li').length - 1).addClass('current');
+                    }
+                });
+            });
+            $('.monitor_tab li').click(function () {
+                $(this).addClass('current').siblings().removeClass('current');
+                var _i = $(this).index();
+                $('body, html').animate({scrollTop: $('.monitor_tab_cont li').eq(_i).offset().top - _line}, 500);
+            });
+        });
+    </script>
+</head>
+
+<body>
+
+
+
+<div class="main">
+    <div class="project_detail_head">
+
+        <div class="detail_head_box">
+            <div class="project_detail_top">
+                <p class="title">骨科机器人</p>
+                <div class="num">
+                    项目编号：Z20260093
+                </div>
+                <div class="clear"></div>
+            </div>
+            <div class="project_detail_cont">
+                <div class="project_price_box">
+                    <span class="project_price_name">挂牌价格</span>
+                    <span class="project_price_num">
+                        
+                            
+                            
+                                <span class="fs30">2,000.00</span> 万元
+                            
+                        
+                    </span>
+                </div>
+                <div class="xmjs_infor_box">
+
+                    <div class="xmjs_detail_label">
+                        <i class="xmjs_detail_category_icon"></i>
+                        <div class="xmjs_detail_label_infor">
+                            <span class="xmjs_detail_label_name">标的类型</span>
+                            <span class="xmjs_detail_label_cont">技术转让</span>
+                        </div>
+                    </div>
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    <div class="xmjs_detail_label">
+                        <i class="xmjs_detail_click_icon"></i>
+                        <div class="xmjs_detail_label_infor">
+                            <span class="xmjs_detail_label_name">点击数</span>
+                            <span class="xmjs_detail_label_cont" id="wgcs">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="detail_info">
+                    <table class="table_info">
+                        <col width="10">
+                        <col width="10">
+                        <tbody>
+                        <tr>
+                            <th>信息披露起始日期</th>
+                            <td>
+                                
+                                    
+                                        
+                                        2026-04-27
+                                    
+                                    
+                                
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>信息披露截止日期</th>
+                            <td>
+                                
+                                    
+                                        
+                                        2026-10-21
+                                    
+                                    
+                                
+                            </td>
+                        </tr>
+                        </tbody>
+
+                    </table>
+                </div>
+                <div class="clear"></div>
+            </div>
+            
+                <table class="swzc_table_sm">
+                    <tbody>
+                    <tr>
+                        <th width="16%" rowspan="2">
+                            技术服务机构
+                        </th>
+                        <td width="30%" colspan="2" class="ptpb10 lh26">
+                            机构名称：中国融通科技服务集团有限公司
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="30%" class="ptpb10 lh26">
+                            项目经办人：[姓名已删除]
+                        </td>
+                        <td width="30%" class="ptpb10 lh26">
+                            联系方式：[电话已删除]
+                        </td>
+                    </tr>
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                    </tbody>
+                </table>
+            
+            
+                <table class="swzc_table_sm">
+                    <tbody>
+                    <tr>
+                        <th width="16%" rowspan="2">
+                            交易机构
+                        </th>
+                        <td width="30%" colspan="2" class="ptpb10 lh26">
+                            交易机构部门：交易管理部
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="30%" class="ptpb10 lh26">
+                            交易机构业务负责人：[姓名已删除]
+                        </td>
+                        <td width="30%" class="ptpb10 lh26">
+                            交易机构联系方式：[电话已删除]
+                        </td>
+                    </tr>
+
+                    </tbody>
+                </table>
+            
+            <div class="clear"></div>
+        </div>
+        
+        
+        
+    </div>
+    <div class="default_detail_box">
+        <div class="monitor_detail_top">
+            <ul class="monitor_tab">
+
+                <li class="current">
+                    <a>标的基本情况</a>
+                </li>
+                <li>
+                    <a>转让方简况</a>
+                </li>
+                <li>
+                    <a>交易条件与受让方资格条件</a>
+                </li>
+                <li>
+                    <a>挂牌信息</a>
+                </li>
+                <li>
+                    <a>转让方承诺</a>
+                </li>
+                <li>
+                    <a>公示附件</a>
+                </li>
+
+            </ul>
+        </div>
+
+        <ul class="monitor_tab_cont">
+
+            <li>
+                <div class="tab_title">
+                    <div class="fl">标的基本情况</div>
+                    <div class="clear"></div>
+                </div>
+                <table class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    <tr>
+                        <td class="xmtd1" width="25%">项目名称</td>
+                        <td class="xmtd2" width="25%">骨科机器人</td>
+                        <td class="xmtd1" width="25%">项目编号</td>
+                        <td class="xmtd2" width="25%">Z20260093</td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1">项目类型</td>
+                        <td class="xmtd2">技术转让
+                            
+                        </td>
+                        <td class="xmtd1">交易专板</td>
+                        <td class="xmtd2">生物医药专板</td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1">挂牌起始日</td>
+                        <td class="xmtd2">
+                            2026-04-27
+                        </td>
+                        <td class="xmtd1">挂牌截止日</td>
+                        <td class="xmtd2">
+                            2026-10-21
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1">是否为技术成果组合</td>
+                        <td class="xmtd2">
+                            是
+                        </td>
+                        <td class="xmtd1">技术成果数量</td>
+                        <td class="xmtd2">24</td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1">标的名称</td>
+                        <td class="xmtd2" colspan="3">骨科机器人</td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1">技术领域</td>
+                        <td class="xmtd2" colspan="3">生物、医药和医疗器械
+                            </td>
+                    </tr>
+
+                    <tr>
+                        <td class="xmtd1">标的权证类型</td>
+                        <td class="xmtd2" colspan="3">
+                            专利
+                            
+                        </td>
+                    </tr>
+                    
+                    
+                    </tbody>
+                </table>
+                <table class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+
+                    <tr>
+                        <td class="xmtd1" width="25%" rowspan="25">权证编号</td>
+                        <td class="xmtd1" width="7%">序号</td>
+                        <td class="xmtd1" width="18%">名称</td>
+                        <td class="xmtd1" width="17%">权证编号</td>
+                        <td class="xmtd1" width="11%">申请日</td>
+                        <td class="xmtd1" width="11%">授权日</td>
+                        <td class="xmtd1" width="11%">失效日</td>
+                    </tr>
+
+                    
+                        <tr>
+                            <td class="xmtd2">1</td>
+                            <td class="xmtd2">基于Unity3D采集数据的模拟成像方法</td>
+                            <td class="xmtd2">ZL201911303311.4</td>
+                            <td class="xmtd2">
+                                
+                                2019-12-17
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2024-03-15
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2039-12-17</td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="xmtd2">2</td>
+                            <td class="xmtd2">基于二维视图进行三维空间划分的方法及系统</td>
+                            <td class="xmtd2">ZL202010167562.0</td>
+                            <td class="xmtd2">
+                                
+                                2020-03-11
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2023-09-19
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2040-03-11</td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="xmtd2">3</td>
+                            <td class="xmtd2">基于三维体数据和二维面数据的去背板方法及系统</td>
+                            <td class="xmtd2">ZL202010167547.6</td>
+                            <td class="xmtd2">
+                                
+                                2020-03-11
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2024-02-20
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2040-03-11</td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="xmtd2">4</td>
+                            <td class="xmtd2">基于Unity3D生成神经纤维素模型的方法、系统及介质</td>
+                            <td class="xmtd2">ZL202010167548.0</td>
+                            <td class="xmtd2">
+                                
+                                2020-03-11
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2023-09-19
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2040-03-11</td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="xmtd2">5</td>
+                            <td class="xmtd2">基于Unity3D的OBJ文件解析面渲染的方法、系统及介质</td>
+                            <td class="xmtd2">ZL202010261360.2</td>
+                            <td class="xmtd2">
+                                
+                                2020-04-03
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2023-06-06
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2040-04-03</td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="xmtd2">6</td>
+                            <td class="xmtd2">基于Unity3D 模型表面曲线测量方法、系统及介质</td>
+                            <td class="xmtd2">ZL202010260673.6</td>
+                            <td class="xmtd2">
+                                
+                                2020-04-03
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2021-07-06
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2040-04-03</td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="xmtd2">7</td>
+                            <td class="xmtd2">基于Unity3D体和面模型分区剔除渲染方法及系统</td>
+                            <td class="xmtd2">ZL202010271116.4</td>
+                            <td class="xmtd2">
+                                
+                                2020-04-08
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2023-10-31
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2040-04-08</td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="xmtd2">8</td>
+                            <td class="xmtd2">图像的小黑点提取方法及系统</td>
+                            <td class="xmtd2">ZL202010271121.5</td>
+                            <td class="xmtd2">
+                                
+                                2020-04-08
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2023-06-06
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2040-04-08</td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="xmtd2">9</td>
+                            <td class="xmtd2">读取DICOM数据并生成Texture3D的方法</td>
+                            <td class="xmtd2">ZL202010307524.0</td>
+                            <td class="xmtd2">
+                                
+                                2020-04-17
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2023-04-25
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2040-04-17</td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="xmtd2">10</td>
+                            <td class="xmtd2">模型切面轮廓的计算方法与系统</td>
+                            <td class="xmtd2">ZL202010260689.7</td>
+                            <td class="xmtd2">
+                                
+                                2020-04-03
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2024-02-20
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2040-04-03</td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="xmtd2">11</td>
+                            <td class="xmtd2">脊柱术前三维影像与术中二维影像配准的方法与系统</td>
+                            <td class="xmtd2">ZL202010168097.2</td>
+                            <td class="xmtd2">
+                                
+                                2020-03-11
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2024-02-20
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2040-03-11</td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="xmtd2">12</td>
+                            <td class="xmtd2">探针标定的方法</td>
+                            <td class="xmtd2">ZL202010168098.7</td>
+                            <td class="xmtd2">
+                                
+                                2020-03-11
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2021-10-15
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2040-03-11</td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="xmtd2">13</td>
+                            <td class="xmtd2">通过标识特征自动识别病人方位的方法和系统</td>
+                            <td class="xmtd2">ZL202010260772.4</td>
+                            <td class="xmtd2">
+                                
+                                2020-04-03
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2024-02-20
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2040-04-03</td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="xmtd2">14</td>
+                            <td class="xmtd2">基于深度学习的 CT 影像椎弓根植钉通道规划方法和系统</td>
+                            <td class="xmtd2">ZL202010260775.8</td>
+                            <td class="xmtd2">
+                                
+                                2020-04-03
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2024-02-20
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2040-04-03</td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="xmtd2">15</td>
+                            <td class="xmtd2">带手术导航定位图形用户界面的电脑</td>
+                            <td class="xmtd2">ZL202030128670.8</td>
+                            <td class="xmtd2">
+                                
+                                2020-04-03
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2020-10-16
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2035-04-03</td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="xmtd2">16</td>
+                            <td class="xmtd2">带医疗影像查看图形用户界面的手机</td>
+                            <td class="xmtd2">ZL202030128131.4</td>
+                            <td class="xmtd2">
+                                
+                                2020-04-03
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2020-10-16
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2035-04-03</td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="xmtd2">17</td>
+                            <td class="xmtd2">带医学图像处理图形用户界面的电脑</td>
+                            <td class="xmtd2">ZL202030128125.9</td>
+                            <td class="xmtd2">
+                                
+                                2020-04-03
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2020-10-16
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2035-04-03</td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="xmtd2">18</td>
+                            <td class="xmtd2">一种基于深度学习的亚像素角点检测方法、系统及介质</td>
+                            <td class="xmtd2">ZL202110832567.5</td>
+                            <td class="xmtd2">
+                                
+                                2021-07-22
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2023-12-01
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2041-07-22</td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="xmtd2">19</td>
+                            <td class="xmtd2">一种亚像素圆心检测方法及系统</td>
+                            <td class="xmtd2">ZL202110831234.0</td>
+                            <td class="xmtd2">
+                                
+                                2021-07-22
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2024-04-19
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2041-07-22</td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="xmtd2">20</td>
+                            <td class="xmtd2">一种轮式设备包装箱</td>
+                            <td class="xmtd2">ZL202120615023.9</td>
+                            <td class="xmtd2">
+                                
+                                2021-03-25
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2021-12-03
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2031-03-25</td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="xmtd2">21</td>
+                            <td class="xmtd2">基于 Unity3D 体渲染的数据开洞的方法及其存储介质</td>
+                            <td class="xmtd2">ZL201810950026.0</td>
+                            <td class="xmtd2">
+                                
+                                2018-08-20
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2023-03-14
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2038-08-20</td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="xmtd2">22</td>
+                            <td class="xmtd2">基于神经网络的非刚性机器人自动手眼标定方法</td>
+                            <td class="xmtd2">ZL201810948979.3</td>
+                            <td class="xmtd2">
+                                
+                                2018-08-20
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2020-10-16
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2038-08-20</td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="xmtd2">23</td>
+                            <td class="xmtd2">基于神经网络的机器人手眼标定方法</td>
+                            <td class="xmtd2">ZL201910276856.4</td>
+                            <td class="xmtd2">
+                                
+                                2019-04-08
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2020-10-16
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2039-04-08</td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="xmtd2">24</td>
+                            <td class="xmtd2">一种导航用分体式穿刺装置</td>
+                            <td class="xmtd2">ZL202223305728.4</td>
+                            <td class="xmtd2">
+                                
+                                2022-12-09
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2023-06-09
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2032-12-09</td>
+                        </tr>
+                    
+                    
+
+                    </tbody>
+                </table>
+                <table class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    
+
+                    
+
+                    
+                        <tr>
+                            <td class="xmtd1">获得资助情况<br>（国家计划课题等）</td>
+                            <td class="xmtd2" colspan="3">国家自然基金面上项目:单细胞测序解析骨巨细胞瘤中干细胞样基质细胞在肿瘤发生和发展中的作用及分子机制（项目批准号：31970663）</td>
+                        </tr>
+                    
+                    <tr>
+                        <td class="xmtd1" width="25%">项目阶段</td>
+                        <td class="xmtd2" colspan="3" width="75%">批量生产
+                            
+                        </td>
+                    </tr>
+                    
+                        <tr>
+                            <td class="xmtd1">技术成熟度（TRL）</td>
+                            <td class="xmtd2" width="25%">TRL9</td>
+                            <td class="xmtd2" colspan="2">经过成功地执行任务，真实系统得到检验,运行顺利。</td>
+                        </tr>
+                    
+                    <tr>
+                        <td class="xmtd1">样品/样机</td>
+                        <td class="xmtd2" colspan="3">
+                            
+                                无
+                                
+                                
+                            
+                        </td>
+                    </tr>
+                    
+                    
+                    
+                        <tr>
+                            <td class="xmtd1">是否有试用报告</td>
+                            <td class="xmtd2" colspan="3">
+                                否
+                            </td>
+                        </tr>
+                    
+                    
+                    <tr>
+                        <td class="xmtd1">项目简介</td>
+                        <td class="xmtd2" colspan="3">
+                            <pre><p><span style=";font-family:宋体;font-size:16px">1、该产品适用于成人脊柱外科手术中手术器械或植入物的导航定位；</span></p><p><span style=";font-family:宋体;font-size:16px">2、脊柱外科、骨肿瘤外科；</span></p><p><span style=";font-family:宋体;font-size:16px">3、产品通过术前CT规划与术中实时导航实现微创操作，可帮助医生降低手术风险，减少辐射伤害，提高手术成功率，并减少后遗症发生的可能性。该产品构建了一个高效的全自动脊柱检测系统，基于带有标注信息的CT图像，研发了一种深度神经网络学习技术，输入病患的CT图像，可对不同节段椎体进行自动分割，并进行椎弓根螺钉通道方位自动识别，减少医师的人工操作流程，同时也能为CT图像和X光图像的多模态图像配准及脊柱侧弯的椎弓根入钉手术路径规划做准备，提高整个手术方案规划流程的效率。</span></p><p><br/></p></pre>
+                        </td>
+                    </tr>
+                    
+                        <tr>
+                            <td class="xmtd1">技术效果与指标</td>
+                            <td class="xmtd2" colspan="3">产品通过术前CT规划与术中实时导航实现微创操作（辐射量降低70%），其精度≤0.9mm，钉置精度优良率评级达到98.9%，领先于国内同类产品，即便与跨国企业的同类产品也表现出强劲的竞争力，帮助医生提高手术成功率，减少后遗症发生的可能性。该产品已在国内三甲医院完成百余例手术，覆盖从常规到疑难病例，助力基层医疗精准化发展。</td>
+                        </tr>
+                    
+                    
+                        <tr>
+                            <td class="xmtd1">技术推广及应用前景效益（风险和效益）</td>
+                            <td class="xmtd2" colspan="3">产品是目前首个在国内获批的完成了与国外顶尖同类产品多中心、平行随机对照临床试验的骨科手术机器人。产品临床系统精度、手术效果（螺钉置入优良率）、手术实用性、影像清晰度等均优于临床对照的进口同类产品，真正实现了对国外高端产品的赶超。
+1、高精度：产品系统精度官方检测更是高达0.9毫米以下，领先于国内同类产品，即便与跨国企业的同类产品也表现出强劲的竞争力，帮助医生提高手术成功率，减少后遗症发生的可能性。
+2、兼容性升级：产品采用的图像配准技术可以将传统的三维到三维，升级至二维到三维，术前病人的三维CT数据与术中二维X光图像实现融合配准，避免了术中拍摄三维数据，适配常规二维C臂机，未来适应症进一步扩展到穿刺活检及椎体成形术等手术，使设备可下沉至基层医院，扩大服务范围。
+3、智能化操作简化流程：构建了一个高效的全自动脊柱检测系统，基于带有标注信息的CT图像，研发了一种深度神经网络学习技术，输入病患的CT图像，可对不同节段椎体进行自动分割，并进行椎弓根螺钉通道方位自动识别，减少医师的人工操作流程，同时也能为CT图像和X光图像的多模态图像配准及脊柱侧弯的椎弓根入钉手术路径规划做准备，提高整个手术方案规划流程的效率。
+4、产品适配普通C型臂机，兼具国产成本优势，已在国内三甲医院完成百余例手术，覆盖从常规到疑难病例，助力基层医疗精准化发展。
+在“2024第二届全球手术机器人大会”嘉奥科技荣获“手术机器人用户体验奖”，成为本次大会中唯一获得该奖项的骨科手术机器人企业。此外，嘉奥科技作为唯一一家骨科手术机器人企业荣登《2024年度上海市智能机器人标杆企业与应用场景推荐目录》，并获得“2024全球医疗科技新锐奖，Global MedTech Rising Star Award”。</td>
+                        </tr>
+                    
+                    
+                    
+                    
+                        
+                    
+                    
+                        
+                    
+                    
+                        
+                    
+                    
+                        
+                    
+                    
+                    
+                        
+                    
+                    
+                        
+
+                        <tr>
+                            <td class="xmtd1" rowspan="6" width="25%">技术团队结构</td>
+                        </tr>
+                        
+                            <tr>
+                                <td class="xmtd1" width="25%">技术团队名称</td>
+                                <td class="xmtd2" colspan="2" width="50%">海军军医大学第二附属医院（上海长征医院）骨科骨肿瘤病区</td>
+                            </tr>
+                        
+                        
+                            <tr>
+                                <td class="xmtd1" width="25%">技术团队人数</td>
+                                <td class="xmtd2" colspan="2" width="50%">10-50人</td>
+                            </tr>
+                        
+                        
+                            <tr>
+                                <td class="xmtd1" width="25%">技术团队简介</td>
+                                <td class="xmtd2" colspan="2" width="50%">骨肿瘤病区是长征医院的精品学科，也是国内第一家以脊柱肿瘤为主要专业特色的学科，入选国家骨科临床医学研究中心脊柱肿瘤研发中心。率先在国内外开展 10余项 脊柱肿瘤外科新技术，包括世界首例颈椎巨大肿瘤切除与3D打印全颈椎人工椎体置换术、上颈椎肿瘤切除与3D打印寰枢椎人工椎体置换术、椎动脉搭桥及颈椎全椎节整块切除与重建术等。年收治骨与软组织肿瘤约3000余例次，已成为国际最大的脊柱肿瘤治疗中心。骨盆四肢肿瘤外科发展迅速，相继开展了骨盆肿瘤切除3D打印半骨盆置换术、肢体肿瘤全股骨置换术、肩关节、肘关节、肩胛骨置换术等技术，在疑难手术技术突破与创新方面成绩斐然。</td>
+                            </tr>
+                        
+                        
+                            <tr>
+                                <td class="xmtd1" width="25%">技术负责人姓名</td>
+                                <td class="xmtd2" colspan="2" width="50%">[姓名已删除]</td>
+                            </tr>
+                        
+                        
+                        
+                            <tr>
+                                <td class="xmtd1" width="25%">技术团队负责人(附简历)</td>
+                                <td class="xmtd2" colspan="2" width="50%">[姓名已删除],主任医师、教授、博士生导师。中央军委保健委会诊专家。现任上海长征医院骨科医院院长（主任）、全军骨科研究所所长、上海市骨科临床医学研究中心主任、上海市重中之重脊柱疾病和创伤骨科研究中心主任。2019、2023年度中国工程院院士有效候选人。享受国务院政府特殊津贴、军队优秀技术人才一类岗位津贴。现任全军骨科专委会副主任委员、中华医学会骨肿瘤学组副主任委员兼脊柱骨盆组组长、中国医师协会脊柱肿瘤专委会主任委员、上海市医学会骨科分会副主任委员、上海医师协会骨科分会副会长，担任SPINE杂志中文版及脊柱外科杂志副主编、中华外科杂志编委、中华创伤杂志编委、解放军医学杂志编委、中国骨与关节杂志等杂志常务编委。长期以来，在脊柱外科的临床、科研、教学工作中积累了丰富的经验，熟练主刀高难度的脊柱创伤、退变、畸形、结核、肿瘤等手术；擅长脊柱常见病及疑难病症的诊断及治疗，擅长原发性、转移性脊柱肿瘤和脊椎管内外肿瘤的诊断与治疗，率先在国内外开展脊柱肿瘤外科新技术10项，填补脊柱肿瘤领域的多项空白。率领团队成功实施脊柱肿瘤手术达1万余例，长征骨科已成为国内最大的脊柱肿瘤治疗中心。以第一或通讯作者在Lancet Oncology、Nature Medicine，JBJS, Spine等杂志发表SCI论文280余篇，总分>1100分，单篇最高影响因子41.32分。获国际发明专利3项，国家发明专利及实用新型专利100余项。主编及参编骨科专著25部。担任科技部重点研发项目首席科学家，主持国家自然科学基金重点项目、上海市重大等课题40余项。以第一完成人在脊柱脊髓损伤救治的基础与临床、脊柱肿瘤外科相关的系列临床与基础研究方面先后获得国家、军队及上海市重大科技成果奖 6项（包括国家科技进步二等奖1项、军队医疗成果一等奖1项、中华医学科技一等奖1项、上海市科技进步一等奖2项、上海医学科技一等奖1项）。荣立个人二等功2次，个人三等功2次，荣获长征医院临床医学名医奖、长征医院科技金星、建功立业感动长征年度人物。指导硕士、博士、博士后研究生100余名。入选全军科技创新人才工程学科拔尖人才、上海市优秀学科带头人、上海市领军人才, 东方英才团队项目领衔人，荣获上海市十大科技精英、首届上海杰出人才、国之名医卓越建树奖、上海市十佳医生等荣誉称号。</td>
+                            </tr>
+                        
+                    
+
+
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                        
+                        
+                            <tr>
+                                <td class="xmtd1">法律意见</td>
+                                <td class="xmtd2" colspan="3">
+                                    无
+                                </td>
+                            </tr>
+                        
+                        
+                    
+
+                    <tr>
+                        <td class="xmtd1" rowspan="4">重要信息披露</td>
+                        
+                    </tr>
+                    <tr>
+                        <td class="xmtd1" width="25%">是否为职务发明创造</td>
+                        <td class="xmtd2" colspan="2" width="50%">
+                            是
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1">是否存在共有情况</td>
+                        <td class="xmtd2" colspan="1">
+                            是
+
+                        </td>
+                        
+                            <td class="xmtd2">共有权人:&nbsp;<br>上海嘉奥信息科技发展有限公司</td>
+                        
+
+                    </tr>
+                    
+                        <tr>
+                            <td class="xmtd1">其他披露内容</td>
+                            <td class="xmtd2" colspan="2">1.本项目涉及的“基于Unity3D采集数据的模拟成像方法”等23项专利技术所有权人为中国人民解放军海军军医大学第二附属医院和上海嘉奥信息科技发展有限公司，中国人民解放军海军军医大学第二附属医院享有部分所有权。上海嘉奥信息科技发展有限公司已知晓中国人民解放军海军军医大学第二附属医院拟转让专利技术的事宜，对该行为无异议，行使优先受让权，并且不参与转让收益的分配。
+2.中国人民解放军海军军医大学已授权委托中国融通科技服务集团有限公司代为处置本项目专利技术，参与交易洽谈，并签订技术交易合同等事项。</td>
+                        </tr>
+                    
+
+                    </tbody>
+                </table>
+            </li>
+            <li>
+                <div class="tab_title">
+                    <div class="fl">转让方简况</div>
+                    <div class="clear"></div>
+                </div>
+
+
+                
+                    
+                        
+                            <table class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                                <tbody>
+                                <tr>
+                                    <td class="xmtd1" width="25%">转让方类型</td>
+                                    <td class="xmtd2" colspan="3" width="75%">法人</td>
+                                </tr>
+                                <tr>
+                                    <td class="xmtd1" rowspan="4">基本情况</td>
+                                    <td class="xmtd1" width="25%">法人名称</td>
+                                    <td class="xmtd2" colspan="2" width="50%">中国融通科技服务集团有限公司</td>
+                                </tr>
+                                <tr>
+                                    <td class="xmtd1">注册地(地址)</td>
+                                    <td class="xmtd2" colspan="2">北京市海淀区复兴路乙63号1号楼3层</td>
+                                </tr>
+                                <tr>
+                                    <td class="xmtd1">注册资本(万元)</td>
+                                    <td class="xmtd2" colspan="2">300000.000000</td>
+                                </tr>
+                                <tr>
+                                    <td class="xmtd1">企业类型</td>
+                                    <td class="xmtd2" colspan="2">全民所有制企业</td>
+                                </tr>
+
+                                
+                                </tbody>
+                            </table>
+                        
+                        
+                    
+                
+            </li>
+            <li>
+                <div class="tab_title">
+                    <div class="fl">交易条件与受让方资格条件</div>
+                    <div class="clear"></div>
+                </div>
+                <table class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    
+                    <tr>
+                        <td class="xmtd1" width="25%">交易类型</td>
+                        <td class="xmtd2" colspan="3" width="75%">转让</td>
+                    </tr>
+                    
+                        
+                            
+                            <tr>
+                                <td class="xmtd1" rowspan="6" width="25%">
+                                    转让交易条件
+                                </td>
+                                
+                                    
+                                        <td class="xmtd1" width="25%" rowspan="1">交易金额</td>
+                                    
+                                    
+                                
+                                    
+                                <td class="xmtd1" width="25%">交易入门费/交易底价（万元）</td>
+                                <td class="xmtd2" width="25%">
+                                    
+                                        
+                                            2,000.00
+                                        
+                                        
+                                        
+                                    
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="xmtd1">是否包含产品销售分成</td>
+                                <td class="xmtd2" colspan="2">
+                                    
+                                        
+                                        
+                                            否
+                                        
+                                    
+                                </td>
+                            </tr>
+                            <tr  style="display: none" >
+                                <td class="xmtd1">产品销售分成说明</td>
+                                <td class="xmtd2">
+                                        
+                                        
+                                        
+                                    <pre></pre>
+                                        
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="xmtd1">结算方式</td>
+                                <td class="xmtd2" colspan="2">场外结算</td>
+                            </tr>
+                            <tr>
+                                <td class="xmtd1" rowspan="2">价款支付方式</td>
+                                <td class="xmtd2" colspan="2">
+                                    
+                                        
+                                        
+                                            分期付款
+                                        
+                                    
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="xmtd1">付款要求</td>
+                                <td class="xmtd2">
+                                    <pre>为人民币2000万元，包括首付款和里程碑付款，首付款不少于200万元，受让方应在技术交易合同生效之日起30个工作日内支付至转让方指定银行账户，后续里程碑付款在相对应的里程碑事件发生后30 个工作日内予以支付；
+具体付款时间及条件以技术交易合同约定为准。</pre>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="xmtd1">与交易相关的其他条件</td>
+                                <td class="xmtd2" colspan="2">
+                                    <pre>1、本项目为技术包整体转让项目，受让方需受让标的所包含的所有技术成果。
+2、本项目公告期即为尽职调查期，意向受让方在挂牌公告期间，有权利和义务自行对标的进行全面了解，一经递交受让申请即表明已完全了解与认可标的状况及相关约定，自愿接受转让标的的全部现状及瑕疵，并愿意承担一切责任与风险，成为受让方后，不得以不了解标的状况及资产质量瑕疵等为由，拒付价款，否则视为违约。
+3、意向受让方在充分了解标的情况下，在项目挂牌公告期内向上海技术交易所递交受让申请并缴纳保证金，经交易所和转让方审核后，即获得竞买人资格，交易所向意向受让方出具《受让资格确认通知书》。意向受让申请材料包括但不限于：主体资格证明材料、《意向受让申请书》、内部决策文件等，以及符合受让方资格条件要求的资格证明材料。
+4、意向受让方缴纳保证金后即为意向受让方对转让方做出接受交易条件并以不低于挂牌价格受让标的承诺的确认，成为标的竞买人。意向受让方逾期未交纳保证金的，视为放弃受让资格。
+5、信息发布期满，如只征集到一个符合条件的意向受让方，采用协议方式转让，意向受让方应当以不低于挂牌底价的价格受让标的；如征集到两个及以上符合条件的意向受让方的，则以竞争性谈判方式组织交易，按照交易规则确定受让方和受让价格。上技所在受让方确定后60个工作日内组织交易双方签订《技术交易合同》。
+6、受让方若发生以下行为即视为违约，该受让方须承担相关的全部经济责任与风险，上海技术交易所有权向受让方追偿作为对相关方的补偿：（1）以不了解技术交易标的现状、瑕疵或相关风险为由发生逾期，拒付交易价款，放弃受让，向转让方追责等情形的；（2）以转让方未尽实披露等为由发生逾期，拒付交易价款，放弃受让，向转让方追责等情形的；（3）其他扣除交易保证金的情形。
+7、《技术交易合同》签订后，受让方应依据合同约定按期支付交易价款至转让方指定银行账户，交易所出具技术交易凭证，通知交易双方领取，并发布成交公告。
+8、转让方应配合受让方在规定时间内完成标的权属转移变更登记事项，标的权属变更登记过程中所涉及的税费按国家法律法规相关规定由受让方自行承担。
+受让方应按照上海技术交易所收费标准支付交易服务费。</pre>
+                                </td>
+                            </tr>
+                        
+                        
+                        
+                        
+                    
+
+                    <tr>
+                        <td class="xmtd1">受让方资格条件</td>
+                        <td class="xmtd2" colspan="3">
+                            <pre><p>1、意向受让方应为依法设立并有效存续的境内企业法人、其他经济组织或具有完全民事行为能力的自然人。
+2、意向受让方须财务状况良好、有信誉、有足够的支付能力。 
+3、接受联合方式举牌受让，不接受委托（含隐名委托）、信托举牌受让。 
+4、	意向受让方应符合国家法律、法规规定的其他条件。</p></pre>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1" rowspan="4">保证金事项</td>
+                        <td class="xmtd1" width="25%">是否交纳保证金</td>
+                        <td class="xmtd2" colspan="2" width="50%">
+                            是
+                        </td>
+                    </tr>
+                    
+                        <tr>
+                            <td class="xmtd1">交纳金额（万元）</td>
+                            <td class="xmtd2" colspan="2">10.000000</td>
+                        </tr>
+                        <tr>
+                            <td class="xmtd1">交纳时间</td>
+                            <td class="xmtd2" colspan="2">信息披露期满前交纳</td>
+                        </tr>
+                        <tr>
+                            <td class="xmtd1">处置方式</td>
+                            <td class="xmtd2" colspan="2">
+                                <pre>1、本项目信息发布公告期内（挂牌到期之日17时前），意向受让方将竞价保证金支付至上海技术交易所保证金结算账户（户名：上海技术交易所有限公司，帐号：98300078801000003988），开户行：上海浦东发展银行徐汇支行，逾期无效。
+2、未成交的意向受让方的交易保证金，将在受让方确定后5个工作日无息退还。受让方的交易保证金，在支付首期交易价款后5个工作日内原额原途径退还。
+3、为保护交易各方合法利益，转让方在此做出特别提示，意向受让方一旦通过资格确认且交纳保证金，即成为竞买人，并对如下内容作出承诺：如竞买人存在以下任何一种情形，将承担缔约过失责任，转让方和上海技术交易所可扣除该竞买人的保证金，作为对相关方的补偿；该保证金不足以补偿的，相关方可按实际损失继续追偿。转让方同时承诺，如因转让方原因，导致项目无法正常推进或者发生其他违规违约行为时，以对竞买人设定的承诺条件承担同等损害赔偿责任。
+1）只征集到一个符合条件的竞买人，在被确定为受让方后，未在60个工作日内签订《技术交易合同》的。
+2）征集到两个及以上符合条件的竞买人①在组织交易过程中竞买人未提交竞买文件的；②在组织交易过程中各竞买人均未有效报价的；③竞买人被确定为受让方后，未在60个工作日内签订《技术交易合同》的。
+3）违反交易保证金的有关规定或其他违规违约情形的。</pre>
+                            </td>
+                        </tr>
+                    
+                    </tbody>
+                </table>
+            </li>
+            <li>
+                <div class="tab_title">
+                    <div class="fl">挂牌信息</div>
+                    <div class="clear"></div>
+                </div>
+                <table class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    <tr>
+                        <td class="xmtd1" width="25%">信息发布公告期（工作日）</td>
+                        <td class="xmtd2" width="75%">
+                            20
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1">信息披露期满后，如未征集到意向受让方</td>
+                        <td class="xmtd2">
+                            
+                                
+                                
+                                
+                                    延长信息披露：不变更信息披露内容，按照5个工作日为一个周期延长，直至征集到意向受让方。
+                                
+                                
+                            
+                        </td>
+                    </tr>
+                    <tr>
+                        
+                            
+                            
+                                <td class="xmtd1">信息发布期满，如征集到两个及以上符合条件的意向受让方组织交易方式</td>
+                            
+                        
+                        <!-- <td class="xmtd1">信息发布期满，如征集到两个及以上符合条件的意向受让方组织交易方式</td> -->
+                        <td class="xmtd2" colspan="2">竞争性谈判</td>
+                    </tr>
+                    
+                    
+                    
+                    
+                    <tr>
+                        <td class="xmtd1">会同转让方审查意向方资格</td>
+                        <td class="xmtd2" colspan="2">
+                            是
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </li>
+            <li>
+                <div class="tab_title">
+                    <div class="fl">转让方承诺</div>
+                    <div class="clear"></div>
+                </div>
+                <table class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    <tr>
+                        <td class="xmtd2 pd20 lh22" width="100%">
+                            <div style="height: 70px;overflow: hidden" id="cnhnr">
+                                <pre><p style="margin-top:5px;margin-right:0;margin-bottom:5px;margin-left: 0;text-indent:32px;line-height:21px"><span style="color:black">我方拟转让所持标的项目，通过上海技术交易所（以下简称“技交所”）公开披露项目信息和组织交易活动，依照公开、公平、公正和诚信的原则作如下承诺：</span></p><p style="margin-top:5px;margin-right:0;margin-bottom:5px;margin-left: 0;text-indent:19px;line-height:21px;font-variant-ligatures: normal;font-variant-caps: normal;orphans: 2;text-align:start;widows: 2;-webkit-text-stroke-width: 0px;word-spacing: 0px"><span style="color:black">（1）本次项目交易是我方真实意思表示，项目标的权属清晰，除已披露的事项外，我方对该项目拥有完全的处置权且不存在法律法规禁止或限制交易的情形；</span></p><p style="margin-top:5px;margin-right:0;margin-bottom:5px;margin-left: 0;text-indent:13px;line-height:21px;font-variant-ligatures: normal;font-variant-caps: normal;orphans: 2;text-align:start;widows: 2;-webkit-text-stroke-width: 0px;word-spacing: 0px"><span style="color:black">（2）本项目标的中所涉及的处置行为已履行了相应程序，经过有效的内部决策，并获得相应批准；交易标的涉及共有或交易标的上设置有他项权利，已获得相关权利人同意的有效文件。</span></p><p style="margin-top:5px;margin-right:0;margin-bottom:5px;margin-left: 0;text-indent:13px;line-height:21px;font-variant-ligatures: normal;font-variant-caps: normal;orphans: 2;text-align:start;widows: 2;-webkit-text-stroke-width: 0px;word-spacing: 0px"><span style="color:black">（3）我方所提交的信息发布申请及相关材料真实、完整、准确、合法、有效，不存在虚假记载、误导性陈述或重大遗漏；我方同意技交所按上述材料内容发布披露信息，并对披露内容和上述材料的真实性、完整性、准确性、合法性、有效性承担法律责任；</span></p><p style="margin-top:5px;margin-right:0;margin-bottom:5px;margin-left: 0;text-indent:13px;line-height:21px;font-variant-ligatures: normal;font-variant-caps: normal;orphans: 2;text-align:start;widows: 2;-webkit-text-stroke-width: 0px;word-spacing: 0px"><span style="color:black">（4）我方在交易过程中自愿遵守有关法律法规和技交所相关交易规则及规定，恪守信息发布公告约定，按照相关要求履行我方义务；</span></p><p style="margin-top:5px;margin-right:0;margin-bottom:5px;margin-left: 0;text-indent:13px;line-height:21px;font-variant-ligatures: normal;font-variant-caps: normal;orphans: 2;text-align:start;widows: 2;-webkit-text-stroke-width: 0px;word-spacing: 0px"><span style="color:black">（5）我方已认真考虑本次项目交易行为可能导致的企业经营、行业、市场、政策以及其他不可预计的各项风险因素，愿意自行承担可能存在的一切交易风险；</span></p><p style="margin-top:5px;margin-right:0;margin-bottom:5px;margin-left: 0;text-indent:13px;line-height:21px;font-variant-ligatures: normal;font-variant-caps: normal;orphans: 2;text-align:start;widows: 2;-webkit-text-stroke-width: 0px;word-spacing: 0px"><span style="color:black">（6）我方在技交所组织交易期间将不通过其他渠道对标的项目进行交易；</span></p><p style="margin-top:5px;margin-right:0;margin-bottom:5px;margin-left: 0;text-indent:13px;line-height:21px;font-variant-ligatures: normal;font-variant-caps: normal;orphans: 2;text-align:start;widows: 2;-webkit-text-stroke-width: 0px;word-spacing: 0px"><span style="color:black">（7）我方将按照技交所收费办法及相关交易文件的约定及时、足额支付相关费用，不因与受让方争议或合同解除、终止等原因拒绝、拖延、减少交纳或主张退还相关费用。</span></p><p style="margin-top:5px;margin-right:0;margin-bottom:5px;margin-left: 0;font-variant-ligatures: normal;font-variant-caps: normal;orphans: 2;text-align:start;widows: 2;-webkit-text-stroke-width: 0px;word-spacing:0px"><span style="color:black">我方保证遵守以上承诺，并同意技交所将相关承诺在本项目公告中披露。如违反上述承诺或有违规行为，给交易相关方及技交所造成损失的，我方愿意承担相应的赔偿责任及其他法律责任。</span><span style="font-size:14px;color:black">&nbsp;</span></p><p>&nbsp;</p><p><br/></p></pre>
+                            </div>
+                            <a onclick="lookCNH()" id="lookCnh">点击查看承诺全文</a>
+                            <a onclick="closeCNH()" id="closeCnh" style="display: none">点击收起承诺全文</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </li>
+            <li>
+                <div class="tab_title">
+                    <div class="fl">公示附件</div>
+                    <div class="clear"></div>
+                </div>
+                <table class="xm_tab mb10" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    
+                    </tbody>
+                </table>
+                
+            </li>
+        </ul>
+    </div>
+    <div class="clear"></div>
+</div>
+
+</body>
+<script>
+    layui.use(['form', 'element', 'carousel'], function() {
+        var $ = layui.jquery,
+            element = layui.element; //Tab的切换功能，切换事件监听等，需要依赖element模块
+
+        var form = layui.form,
+            layer = layui.layer;
+
+        var carousel = layui.carousel;
+
+        //图片轮播gsfj_img
+        carousel.render({
+            elem: '#gsfj_img',
+            anim: 'fade',
+            full: false,
+            interval: 4000,
+            width: '100%',
+            height: '500px'
+        });
+
+    });
+</script>
+<script>
+    function lookCNH() {
+        $("#cnhnr").show();
+        $("#cnhnr").css("height", "auto");
+        $("#closeCnh").show();
+        $("#lookCnh").hide();
+    }
+
+    function closeCNH() {
+        $("#cnhnr").css("height", "20px");
+        $("#closeCnh").hide();
+        $("#lookCnh").show();
+    }
+
+    $(function () {
+
+        Base.Ajax.post('/service/s/prjs/real_right/getWGCS', true,
+            {
+                id: '10026'
+            },
+            'json',
+            function (json) {
+                if (json.success) {
+                    $('#wgcs').html(json.object.data.WGCS);
+                } else {
+                    $('#wgcs').html('0');
+                }
+            }
+        )
+
+    });
+
+    function checkStatus() {
+        Base.Tip.showLoading($(document.body), true);
+        var status = false;
+        Base.Ajax.post('/service/signup/real_right/checkStatus'
+            , false
+            ,
+            {
+                id: '7771'
+            }
+            , 'json'
+            , function (json) {
+                Base.Tip.showLoading($(document.body), false);
+                if (json.success) {
+                    var num = json.object.NUM;
+                    if (num > 0) {
+                        //审核中
+                        Base.Tip.error('您已提交意向申请,请到<a href="/page/psncenter/signup/index?jypl=SWZC">我的报名</a>查看');
+                    } else {
+                        status = true;
+                    }
+
+                } else {
+                    Base.Tip.error(json.msg);
+                }
+            }
+        )
+        return status;
+    }
+
+    function signup() {
+        
+        
+        Base.Tip.alert('您尚未登录, 请登录后操作');
+        
+        
+        
+    }
+</script>
+<script>
+    
+
+    function lookCNH() {
+        $("#cnhnr").show();
+        $("#cnhnr").css("height", "auto");
+        $("#closeCnh").show();
+        $("#lookCnh").hide();
+    }
+
+    function closeCNH() {
+        $("#cnhnr").css("height", "70px");
+        $("#closeCnh").hide();
+        $("#lookCnh").show();
+    }
+</script>
+</html>

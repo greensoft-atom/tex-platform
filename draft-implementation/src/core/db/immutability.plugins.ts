@@ -6,7 +6,7 @@ export class ImmutableRecordError extends Error {
   constructor(message: string) { super(message); this.name = 'ImmutableRecordError'; }
 }
 
-const UPDATE_HOOKS = ['update', 'updateOne', 'updateMany', 'findOneAndUpdate', 'replaceOne'];
+const UPDATE_HOOKS = ['update', 'updateOne', 'updateMany', 'findOneAndUpdate', 'findOneAndReplace', 'replaceOne'];
 const DELETE_HOOKS = ['remove', 'deleteOne', 'deleteMany', 'findOneAndDelete', 'findOneAndRemove'];
 
 const modelName = (doc: Document) => (doc.constructor as Model<Document>).modelName;

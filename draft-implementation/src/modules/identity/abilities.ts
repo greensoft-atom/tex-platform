@@ -9,13 +9,17 @@ import type { DealDoc } from '../deals/deal.model';
 import type { DemandDoc } from '../demands/demand.model';
 import type { DocumentFileDoc } from '../documents/document.model';
 import type { TechnologyDoc } from '../technology/technology.model';
+import type { ReviewCaseDoc } from '../workflow/workflow.model';
 
-export type Action = 'create' | 'read' | 'update' | 'submit' | 'review' | 'suspend' | 'delete';
-export type SubjectName = 'Technology' | 'Demand' | 'Deal' | 'DocumentFile';
+export type Action =
+  | 'create' | 'read' | 'update' | 'submit' | 'review' | 'suspend' | 'reinstate' | 'delete'
+  | 'respond'                                        // answer a reviewer's question (06 §6.7)
+  | 'assign';                                        // assign or reassign a review case
+export type SubjectName = 'Technology' | 'Demand' | 'Deal' | 'DocumentFile' | 'ReviewCase';
 
 // Plain objects (e.g. API payloads, tests) can be checked with subject('Technology', obj).
 type PlainSubject = ForcedSubject<SubjectName> & Record<string, unknown>;
-export type AppSubject = SubjectName | TechnologyDoc | DemandDoc | DealDoc | DocumentFileDoc | PlainSubject;
+export type AppSubject = SubjectName | TechnologyDoc | DemandDoc | DealDoc | DocumentFileDoc | ReviewCaseDoc | PlainSubject;
 export type AppAbility = Ability<[Action, AppSubject]>;
 const AppAbility = Ability as AbilityClass<AppAbility>;
 
@@ -42,6 +46,7 @@ export function defineAbilityFor(user: SessionUser | null): AppAbility {
       can('read', 'Technology', { ownerOrganizationId: m.organizationId });
       if (m.roleCodes.some((r) => MANAGES_TECHNOLOGY.includes(r))) {
         can(['create', 'update', 'submit'], 'Technology', { ownerOrganizationId: m.organizationId });
+        can('respond', 'Technology', { ownerOrganizationId: m.organizationId, lifecycleStatus: { $in: ['in_review', 'update_pending'] } });
         can('delete', 'Technology', { ownerOrganizationId: m.organizationId, lifecycleStatus: 'draft', currentVersion: 1 });
       }
     }
@@ -49,7 +54,15 @@ export function defineAbilityFor(user: SessionUser | null): AppAbility {
       can('read', g.resourceType, { _id: g.resourceId });
     }
     if (user.platformRoles.includes('listing_reviewer')) {
-      can('review', 'Technology', { lifecycleStatus: { $in: ['submitted', 'in_review'] } });
+      can('review', 'Technology', { lifecycleStatus: { $in: ['submitted', 'in_review', 'update_pending'] } });
+      can('review', 'ReviewCase', { caseType: { $in: ['technology_review', 'ip_verification', 'demand_review'] } });
+      can('reinstate', 'Technology', { lifecycleStatus: 'suspended' });
+    }
+    if (user.platformRoles.includes('verification_reviewer')) {
+      can('review', 'ReviewCase', { caseType: 'organization_verification' });
+    }
+    if (user.platformRoles.includes('operations_manager')) {
+      can('assign', 'ReviewCase');
     }
     if (user.platformRoles.includes('compliance_officer')) {
       can('suspend', 'Technology', { lifecycleStatus: 'published' });

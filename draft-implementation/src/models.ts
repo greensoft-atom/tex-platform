@@ -1,6 +1,8 @@
 // src/models.ts — registers every model; used by the index-sync release step and by tests.
 import { Model } from 'mongoose';
+import { CalendarDay, CalendarYear } from './core/calendar/calendar.model';
 import { IdempotencyKey } from './core/http/idempotency-key.model';
+import { Job } from './core/jobs/job.model';
 import { AuditEvent } from './modules/audit/audit-event.model';
 import { Deal, DealMilestone } from './modules/deals/deal.model';
 import { Demand, DemandVersion } from './modules/demands/demand.model';
@@ -14,8 +16,8 @@ import { IpAsset, Technology, TechnologyPublication, TechnologyVersion } from '.
 import { Counter, OutboxEvent, ReviewCase, WorkflowTransition } from './modules/workflow/workflow.model';
 
 export {
-  AuditEvent, Counter, Deal, DealMilestone, Demand, DemandVersion, DocumentAccessGrant, DocumentFile,
-  IdempotencyKey, IntroductionRequest, IpAsset, Match, Organization, OrganizationAuthorization,
+  AuditEvent, CalendarDay, CalendarYear, Counter, Deal, DealMilestone, Demand, DemandVersion, DocumentAccessGrant, DocumentFile,
+  IdempotencyKey, IntroductionRequest, IpAsset, Job, Match, Organization, OrganizationAuthorization,
   OrganizationMembership, OutboxEvent, PlatformRoleAssignment, ReviewCase, Technology, TechnologyOffer,
   TechnologyPublication, TechnologyVersion, User, WorkflowTransition,
 };
@@ -26,5 +28,5 @@ export const allModels: Model<any>[] = [
   Technology, TechnologyVersion, TechnologyPublication, IpAsset, TechnologyOffer,
   Demand, DemandVersion, Match, IntroductionRequest, Deal, DealMilestone,
   DocumentFile, DocumentAccessGrant, ReviewCase, WorkflowTransition, OutboxEvent, Counter,
-  IdempotencyKey, AuditEvent,
+  IdempotencyKey, AuditEvent, Job, CalendarDay, CalendarYear,
 ];

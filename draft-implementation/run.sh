@@ -52,6 +52,7 @@ for v in $MONGO_VERSIONS; do
   run_node node tests/test-mongo.js
   run_node node tests/test-documents.js
   run_node node tests/test-policy.js
+  run_node node tests/test-workflow.js
   docker rm -f texdraft-mongo >/dev/null
 done
 

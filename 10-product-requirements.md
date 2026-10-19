@@ -12,10 +12,10 @@
 ## Summary
 
 - **Position:** a demand-driven **matching and service platform** with managed transfer workflows, acting as a **registered practising agent** of a licensed trading venue (STEX or CTEX). Formal listing, binding bidding, settlement and statutory certificates run **through the venue**; the platform prepares, tracks and records them.
-- **138 numbered functional requirements** in 17 modules (67 start in R1, 53 in R2, 18 in R3), each tagged with release, reference source and regulatory status. **17 non-functional requirements** have measurable targets.
+- **142 numbered functional requirements** in 18 modules (67 start in R1, 53 in R2, 22 in R3), each tagged with release, reference source and regulatory status. **17 non-functional requirements** have measurable targets.
 - **R0 (foundation)** sets up the runtime, CI, authentication, organizations and audit; it has no numbered requirements of its own (§9).
 - **R1 (MVP)** delivers verified organizations, reviewed technology listings with bulk import, demands and solution submissions, Chinese search, public pages, first-pass matching with broker review, inquiries with contact masking, introductions, university public notices, a working-day calendar, notifications, the admin console and audit.
-- The rest follows in **R2 (managed transfer and clients)** and **R3 (venue-routed transactions and payments)**, gated by the legal and partner decisions in §12.
+- The rest follows in **R2 (managed transfer and clients)** and **R3 (venue-routed transactions and payments)**. The decisions they depend on are in §12, with the proposed resolution of each in [12](12-decision-record.md).
 
 ---
 
@@ -37,12 +37,12 @@ flowchart LR
         V3["Third-party settlement of deposits and prices"]
         V4["Rights-registration and<br/>transaction certificates"]
     end
-    subgraph PAY["Bank / licensed payment institution"]
-        B1["Payments, conditional holding,<br/>payouts for platform-managed deals"]
+    subgraph PAY["Payment provider"]
+        B1["Owner's payment testing platform;<br/>a licensed bank or payment institution<br/>for live money"]
     end
     P4 -->|"submissions"| VENUE
     VENUE -->|"notices, results, certificate numbers"| P3
-    P3 -->|"payment instructions"| PAY
+    P3 -->|"payment requests, refunds"| PAY
     PAY -->|"verified events"| P3
 ```
 
@@ -212,7 +212,7 @@ Three groups use the platform. They need different interfaces, permissions and s
 | FR-DEAL-02 | Versioned proposals and counter-proposals; acceptance per party of an exact version; changed terms highlighted | R2 | 07 §4.1 | |
 | FR-DEAL-03 | **Contract generator** with the 12 mandatory clauses and patent fields, per deal type (Civil Code categories) | R2 | 09 §2.3 | C |
 | FR-DEAL-04 | E-signature with company e-seals through a licensed provider; signatory authority checked against FR-ORG-04; document hash stored | R2 | 08 §5.2 | L |
-| FR-DEAL-05 | Contract deadline tracking (e.g. sign within 5 WD of the buyer being fixed) with reminders and escalation | R2 | 09 §2.3 | |
+| FR-DEAL-05 | Contract deadline tracking with reminders and escalation: the period the parties or the listing set (e.g. 5 WD after the buyer is fixed under STEX rule 83; 60 WD in most 2026 STEX listings) | R2 | 09 §2.3 | |
 | FR-DEAL-06 | Milestones with deliverables, acceptance criteria, evidence, acceptance or rejection with reason | R2 | 07 §6.4 | |
 | FR-DEAL-07 | Regulatory checklist per deal: patent-assignment registration with CNIPA, licence filing, technology import/export review, anti-monopoly filing if applicable; documents linked | R2 | 08 §1.1 | C |
 | FR-DEAL-08 | **Technology-contract registration assistant**: registration package (contract, commitments, non-technical cost list), registration number and certified technical income recorded | R2 | 08 §5.5 | L (registration body) |
@@ -227,12 +227,12 @@ These requirements cover listing-based sales that must run on a licensed venue. 
 | --- | --- | --- | --- | --- |
 | FR-VEN-01 | Venue submission package for formal listing, intent listing, private-agreement registration and notices: application, agency contract, identity, decision documents, ownership proof, commitment letter; completeness checklist before submission | R3 | 09 §2.3 | L |
 | FR-VEN-02 | Disclosure announcement builder with all required fields (target, terms, buyer qualifications, material information, method, deposit, floor price, dates, board tags) | R3 | 09 §2.3 | L |
-| FR-VEN-03 | Listing timeline tracking with WD rules: review ≤ 3 WD, disclosure ≥ 5 WD (≥ 10 WD on CTEX), extensions ≥ 5 WD, maximum 12 months; clock restarts after changes | R3 | 09 §2.3, §4 | L |
-| FR-VEN-04 | **Buyer registration on behalf of clients**: intent form with buyer floor ≥ listing floor, consortium shares, risk statement, agent verification opinion; corrections ≤ 3 WD; seller confirmation ≤ 3 WD (silence = consent); objections ≤ 3 WD | R3 | 09 §2.3 | L |
+| FR-VEN-03 | Listing timeline tracking with WD rules: review ≤ 3 WD, disclosure ≥ 5 WD (≥ 10 WD on CTEX), extensions ≥ 5 WD (≥ 10 WD on CTEX), maximum 12 months; clock restarts after changes. Each listing's own terms are stored and override the minimums (2026 STEX listings: 10 WD disclosure, 5-WD extension cycles, signing within 60 WD) | R3 | 09 §2.3, §4 | L |
+| FR-VEN-04 | **Buyer registration on behalf of clients**: intent form with buyer floor ≥ listing floor, consortium shares, risk statement, agent verification opinion; corrections ≤ 3 WD; seller confirmation ≤ 3 WD (silence = consent); objections ≤ 3 WD. In one listing the platform acts for the seller or for one buyer, never both and never two buyers (CTEX 2022 Art. 18; applied on both venues) | R3 | 09 §2.1, §2.3 | L |
 | FR-VEN-05 | Outcome router: 0 buyers → extend or terminate; 1 → agreement at ≥ floor; ≥ 2 → the competitive method announced in advance | R3 | 09 §2.3 | L |
 | FR-VEN-06 | Competitive-method support: bidding plans for online bidding (timed ≥ 10 min, continuous cycles ≥ 60 s, increments, no self-outbidding, one-shot sealed bids; pre-emption: the highest bidder's extra final bid sets the exercise price, rule 179), auction hand-off to a licensed auction house, tender (deposit ≤ 30%, ≥ 10 WD preparation) | R3 | 09 §2.4 | L |
 | FR-VEN-07 | **Competitive negotiation on the platform** (non-binding preparation): odd-sized panel, ≥ one-third experts drawn at random from the expert pool, signed minutes, final quotes, panel report ≤ 5 WD | R3 | 09 §2.4 | |
-| FR-VEN-08 | Settlement tracking: deposit and price status from the venue (amounts, dates, refunds ≤ 5 WD, instalments with ≥ 30% down); the platform never holds the funds | R3 | 09 §2.4, §4 | L |
+| FR-VEN-08 | Settlement tracking: deposit and price status from the venue (amounts, dates, refunds ≤ 5 WD, instalments with ≥ 30% down). On-exchange (场内) or off-exchange (场外) settlement as the listing states; for off-exchange, the seller's confirmation of receipt with evidence. The platform never holds the funds | R3 | 09 §2.3, §2.4, §4 | L |
 | FR-VEN-09 | Certificates: store venue rights-registration, no-objection and transaction certificate numbers and PDFs; link them to deals, notices and reward records | R3 | 09 §1 | L |
 | FR-VEN-10 | Venue data interface: import and export listings and status updates with partner venues (API or file exchange), with reconciliation | R3 | 09 §2.2 | L |
 
@@ -314,6 +314,17 @@ These requirements cover listing-based sales that must run on a licensed venue. 
 | FR-CMP-06 | Retention schedule per record category, legal hold, and deletion jobs with reports | R2 | 08 §10 | C |
 | FR-CMP-07 | State-owned asset flags: valuation/filing proof, pre-disclosure and formal disclosure, buyer conditions filed in advance; route to a designated property exchange | R3 | 09 §2.4 | L |
 
+### 3.18 Payments (PAY)
+
+Kept deliberately simple by the owner's decision (D-02, [12](12-decision-record.md)): one adapter, with the owner's own payment testing platform as the first provider ([06 §6.11](06-implementation-design-v1.md)). The platform never receives or holds client money. Venue-routed deals settle through the venue (FR-VEN-08).
+
+| ID | Requirement | Rel | Ref | Reg |
+| --- | --- | --- | --- | --- |
+| FR-PAY-01 | Payment requests for deal milestones and platform fees: payer, payee, amount, purpose, due date and expiry. They are created through the `PaymentGateway` adapter, whose first provider is the owner's payment testing platform. The payer pays on the provider's page or QR code | R3 | 06 §6.11 | L (live money needs a licensed provider) |
+| FR-PAY-02 | Payment status changes only on a verified provider notification or a server-side status query. Duplicate notifications are ignored, and a status never moves backwards. Every provider event is stored append-only | R3 | 06 §6.11 | |
+| FR-PAY-03 | Refunds: finance requests with a reason and a second finance user approves; a refund never exceeds the amount paid; refund status comes from verified events | R3 | 06 §6.11 | |
+| FR-PAY-04 | Daily reconciliation of the provider statement with the payment records. Differences open a finance case and raise an alert. A succeeded milestone payment satisfies that milestone's payment condition | R3 | 06 §6.11, 08 §6 | |
+
 ---
 
 ## 4. Requirement map by release
@@ -338,7 +349,7 @@ flowchart LR
     end
     subgraph R3["R3 — Venue-routed transactions"]
         c1["VEN listing, buyer registration,<br/>competitive methods, certificates"]
-        c2["Payments via partner ·<br/>royalties · ownership grants"]
+        c2["PAY payments via the owner's<br/>testing platform · royalties ·<br/>ownership grants"]
     end
     R1 --> R2 --> R3
 ```
@@ -362,7 +373,8 @@ flowchart LR
 | ADM | 10 | 0 | 0 | 10 |
 | RPT | 2 | 2 | 0 | 4 |
 | CMP | 3 | 3 | 1 | 7 |
-| **Total** | **67** | **53** | **18** | **138** |
+| PAY | 0 | 0 | 4 | 4 |
+| **Total** | **67** | **53** | **22** | **142** |
 
 Counts use the release in which each requirement **starts**; some are completed in a later release (shown as "R1 / R2" in the tables).
 
@@ -426,7 +438,7 @@ Every notification is defined by an event, its recipients, the channels and the 
 | Proposal received / changed | Counterparty negotiators | ✓ | ✓ | — | ✓ | Immediate |
 | Signature requested | Authorized signatories | ✓ | ✓ | ✓ | ✓ | Immediate + daily reminder |
 | Milestone due / overdue | Responsible party, deal manager | ✓ | ✓ | ✓ (overdue) | ✓ | 7 days, 1 day before; on overdue |
-| Payment requested / confirmed / payout status (R3) | Payer, payee, finance approvers | ✓ | ✓ | ✓ | ✓ | On provider event |
+| Payment requested / succeeded / refunded (R3) | Payer, payee, finance approvers | ✓ | ✓ | ✓ | ✓ | On verified provider event |
 | Event registration confirmed / reminder | Registrant | ✓ | ✓ | ✓ (day before) | ✓ | Immediate; 1 day before |
 | Case assigned / SLA breach | Staff member / their lead | ✓ | ✓ | — | Work WeChat (optional) | Immediate |
 
@@ -472,7 +484,7 @@ Providers are examples to evaluate, not decisions. Every integration goes throug
 | Corporate bank-account verification | Prove control of the organization (small-amount transfer check) | Payment partner or bank service | R3 |
 | Patent data | Check patent number, holder, legal status | CNIPA public search (manual) at launch; commercial patent databases (e.g. incoPat, PatSnap) later | R1 (manual) / R2 |
 | E-signature | Sign NDAs and contracts with company e-seals | Licensed e-signature services (e.g. Fadada, eSignBao, BestSign) | R2 |
-| Payments and settlement | Payment requests, conditional holding, payouts | Bank fund-supervision accounts or licensed payment institutions (see [08 §1.2](08-china-operating-model.md)) | R3 |
+| Payments | Payment requests, verified events, refunds, statements (FR-PAY) | The owner's payment testing platform through the `PaymentGateway` adapter ([06 §6.11](06-implementation-design-v1.md)); a licensed bank or payment institution for live money ([08 §1.2](08-china-operating-model.md)) | R3 |
 | E-invoices | Issue platform invoices for services and subscriptions | Digital e-invoice (数电票) through the tax platform or an invoicing service | R2 |
 | Search engine submission | Fast indexing of new public pages | Baidu search-resource platform push API; sitemap | R1 |
 | OCR | Read business licences and patent certificates during verification | Cloud OCR services | R2 |
@@ -497,7 +509,7 @@ flowchart LR
 | **R0 — Foundation** | Server survey and target runtime set-up (doc 11), repository and CI with the Node 12 compatibility gate, migrations, authentication (SMS + password, staff MFA), organizations and memberships, audit, admin shell, design system | A staff user and a pilot organization can log in; cross-tenant tests pass; release and rollback rehearsed |
 | **R1 — Marketplace MVP** | All 67 **R1** requirements in §3, including: organization verification queue, technology listings with review and publication, bulk import, TTO workspace and negotiated-price public notices, demands with rewriting and solution submissions (揭榜), Chinese search, saved searches, pre-rendered public pages, matching jobs with a broker review queue, inquiries with contact masking, introductions, expert pool, notifications (in-app, e-mail, SMS), admin console with working-day calendar and maker-checker, content pages, audit, funnel and SLA reports | 3–5 pilot universities and 10 pilot companies use it; ≥ 300 reviewed listings; review SLA met for 4 weeks |
 | **R2 — Managed transfer and clients** | All 53 **R2** requirements, including: real-name verification and delegated authority, agents of record, technology-manager network (registration, assignment, outreach log, points), recommendations, AI-assisted demand structuring, challenge campaigns and special boards, NDA and data rooms with watermarks, deal workspace, proposals and negotiation, contract generator, e-signature, milestones, technology-contract registration packages, deal dossiers, services, expert panels and valuation, events and roadshows, enterprise client plans and scouting projects, institutional (TTO income ledger, programme) workspaces, e-invoices, WeChat notifications, evidence preservation, export-control screening, dispute mediation | First completed licence or service deals recorded end to end; first paying enterprise client |
-| **R3 — Venue-routed transactions and payments** | All 18 **R3** requirements: listing-based sales through a licensed venue partner as its agent (or under the platform's own licence if D-01 so decides): submission packages, disclosure, buyer registration, competitive methods, settlement tracking, certificates and venue data exchange (FR-VEN); enterprise procurement listings, staged subsidies, ownership grants (赋权), commission splits, royalty schedules, public market data, co-branded portals and state-owned asset routing. Also payment-partner integration (requests, confirmations, conditional holding if approved, payouts, reconciliation) as specified in [08 §6](08-china-operating-model.md); it has no numbered requirement yet | Legal and payment-partner sign-off ([08 §10](08-china-operating-model.md)); reconciliation runs clean for one month |
+| **R3 — Venue-routed transactions and payments** | All 22 **R3** requirements: listing-based sales through a licensed venue partner as its agent (or under the platform's own licence if D-01 so decides): submission packages, disclosure, buyer registration, competitive methods, settlement tracking, certificates and venue data exchange (FR-VEN); enterprise procurement listings, staged subsidies, ownership grants (赋权), commission splits, royalty schedules, public market data, co-branded portals and state-owned asset routing. Also payments through the owner's payment testing platform (FR-PAY: requests, verified events, refunds, reconciliation; [06 §6.11](06-implementation-design-v1.md)) | Venue agreement and legal sign-off for the venue route ([08 §10 G](08-china-operating-model.md)); UAT-16 and UAT-17 pass; payment reconciliation runs clean for one month. Live money only after [08 §10 B](08-china-operating-model.md) |
 
 ---
 
@@ -520,6 +532,10 @@ A release is accepted when the scenarios marked for it (and those of earlier rel
 | UAT-11 | R1 | Support | Use "view as" to diagnose a buyer's problem | Read-only, banner shown, audit event written, no confidential documents visible |
 | UAT-12 | R1 | Compliance | Suspend a listing after a rights dispute | Removed from search and public pages within 5 minutes; open introductions frozen; owner notified |
 | UAT-13 | R1 | Operations | Restore yesterday's backup into staging and run smoke tests | Completed within the RTO; data and documents consistent |
+| UAT-14 | R1 | Administrators | One administrator enters next year's holidays and make-up working days from the State Council notice; a second checks and publishes them. A review case is opened on the working day before a holiday | The preparer cannot publish their own year; the case deadline skips the holidays and counts the make-up working days ([06 §6.10](06-implementation-design-v1.md)) |
+| UAT-15 | R1 | Reviewer and supplier | The reviewer asks a question during a listing review; the supplier answers 3 working days later; another case passes its deadline unclaimed | The deadline moves by exactly 3 WD; the overdue case is escalated to the lead and appears on the dashboard ([06 §6.7](06-implementation-design-v1.md)) |
+| UAT-16 | R3 | TTO officer and platform agent | Sell a technology through the venue route: submission package, disclosure, buyer registration with the agent's verification opinion (maker-checker), outcome, contract within the listing's period, off-exchange settlement and transaction certificate | The offer is reserved (`venue_listing`) during disclosure and takes no new introductions; every venue period is tracked in WD; the platform cannot also act for a second buyer in the same listing; the deal completes only after the seller's evidenced receipt of the price and the certificate number are recorded ([07 §3.5](07-roles-workflows-and-money.md)) |
+| UAT-17 | R3 | Buyer and finance | Pay a milestone through the owner's testing platform; replay the notification twice and send an older one; refund part of it; run the daily reconciliation | Status changes only on verified events; the duplicates and the older event change nothing; the refund needs a second finance user and cannot exceed the paid amount; reconciliation reports no difference ([06 §6.11](06-implementation-design-v1.md)) |
 
 ---
 
@@ -537,18 +553,20 @@ A technology exchange fails if it opens empty. These operational requirements ar
 | OPS-06 | Response discipline: every inquiry answered within 2 WD; every demand acted on within 10 WD (FR-DEM-06) | Operations | ≥ 90% within SLA |
 | OPS-07 | Content: weekly policy and case articles; help centre complete for every R1 workflow | Content | 1 article per week |
 
-## 12. Open decisions and dependencies
+## 12. Decisions and dependencies
 
-| # | Decision or dependency | Why it matters | Needed before |
-| --- | --- | --- | --- |
-| D-01 | **Venue route**: become a STEX (or CTEX) practising agent, partner with an existing agent, or apply for a venue licence | Determines how FR-VEN, FR-UNI-04 and certificates work | R3 design |
-| D-02 | Payment partner and product (bank fund supervision, licensed payment institution) and written legal confirmation ([08 §10 B](08-china-operating-model.md)) | Platform-managed payments and payouts | R3 |
-| D-03 | Whether non-binding online indications of price (意向报价) on a non-venue platform are acceptable under trading-venue rules | Scope of the platform's own competitive features | R2 |
-| D-04 | Internet licensing: ICP filing, and whether an EDI licence is required for paid online transaction services | Public launch | R1 launch |
-| D-05 | MLPS (等保) grading level and assessor | Security investment and launch readiness | R1 launch |
-| D-06 | E-signature provider; SMS provider; e-invoice service | Introductions, contracts, invoices | R2 |
-| D-07 | Fee schedule (benchmarks in [09 §2.6](09-reference-platform-features.md)) and plan pricing | Revenue and client contracts | R2 |
-| D-08 | Node.js 12.4 → 12.22.12 upgrade (or accepted risk), with Mongoose 5.13 → 6.13 (Mongoose 5 is end-of-life), and MongoDB 4.4 vs 5.0 ([11 §1, §11](11-target-runtime-node12-mongodb.md)) | Security baseline | R0 |
+Status on 2026-10-19. Each decision has a decision record in [12](12-decision-record.md) with the options, the reasoning, what the decision changes and what still has to be confirmed. **Decided** means decided by the owner. **Proposed** means a designed recommendation that the owner still has to confirm, often with an outside confirmation (counsel, venue, assessor).
+
+| # | Decision or dependency | Status | Resolution (summary) | Needed before |
+| --- | --- | --- | --- | --- |
+| D-01 | **Venue route**: become a STEX (or CTEX) practising agent, partner with an existing agent, or apply for a venue licence | Proposed (counsel to confirm) | Register with CTEX now (no capital or age minimum in its 2022 rules; to be confirmed under its 2023 membership scheme); partner with a registered STEX agent for STEX listings; register as a STEX agent once eligible; act for one side and one buyer per listing; no venue licence. The venue gateway is manual first, with maker-checker. Counsel first confirms how 沪府规〔2025〕2号 Art. 11 applies to venue agents | R3 design |
+| D-02 | Payments | **Decided** | The owner's own payment testing platform behind one adapter; shallow design (FR-PAY-01 … 04, [06 §6.11](06-implementation-design-v1.md)). No conditional holding or split payouts. A licensed provider plugs into the same adapter for live money, after [08 §10 B](08-china-operating-model.md) | R3 |
+| D-03 | Non-binding online price indications (意向报价) on a non-venue platform | Proposed (counsel to confirm) | Allowed only as private, non-binding indications to the seller, with no ranking, rounds, deadlines or deposits. Competition between two or more buyers goes to the venue. Behind a feature flag until counsel confirms | R2 |
+| D-04 | Internet licensing: ICP filing, ICP licence, EDI licence | Proposed (counsel to confirm) | ICP filing before any public page (R0); ICP licence before charging for online services (R2); counsel's opinion on EDI before the R2 deal workspace, with the application in R2 if needed | R1 launch / R2 |
+| D-05 | MLPS (等保) grading level and assessor | Proposed | Level 2 at launch: grading in R0, filing and assessment by a listed assessor before R1 launch. Level 3 is not needed while the platform holds no funds; re-grade if that or the scale changes | R1 launch |
+| D-06 | E-signature, SMS and e-invoice providers | Proposed | Each behind an adapter. SMS: one of the two main cloud SMS services, with a second as fallback (R1). E-signature: a 2-week proof of concept with two licensed providers against fixed criteria (R2). E-invoices: the tax bureau's digital e-invoice service at R2 start; an API service when volume needs it | R1 (SMS) / R2 |
+| D-07 | Fee schedule and plan pricing | Proposed | Free listing and search. A success fee on platform-managed deals on the Jiangsu technology-manager commission bands. An agent fee on venue deals instead of the success fee, never both; venue fees passed through. Subscription prices set after the R1 pilot. All values in the configurable fee schedule (FR-ADM-04) | R2 |
+| D-08 | Runtime: Node.js 12.4 → 12.22.12, Mongoose 5.13 → 6.13, MongoDB 4.4 vs 5.0 | Proposed | Node 12.22.12 in R0 (drop-in); MongoDB 5.0 on AVX-capable servers; the Mongoose 6.13 port as a separate R0 step once the full suite passes on it | R0 |
 
 ## Traceability
 
@@ -566,3 +584,4 @@ The **Ref** column of each requirement in §3 is the authoritative link to its s
 | University rules ([09 §5](09-reference-platform-features.md)) | FR-UNI-01 … FR-UNI-09, FR-TEC-14, FR-TEC-07 |
 | Operating model and money ([07](07-roles-workflows-and-money.md), [08](08-china-operating-model.md)) | FR-ORG-04, FR-DEAL-01 … FR-DEAL-10, FR-CMP-04, FR-CMP-05 |
 | System design ([05](05-system-design-blueprint.md), [06](06-implementation-design-v1.md)) | FR-ACC, FR-SRC, FR-MAT-01, FR-ADM, FR-CMP-01 |
+| Owner decision on payments ([12 D-02](12-decision-record.md), [06 §6.11](06-implementation-design-v1.md)) | FR-PAY-01 … FR-PAY-04 |

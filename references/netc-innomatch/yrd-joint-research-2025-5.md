@@ -9,7 +9,7 @@ url: "https://stcsm.sh.gov.cn/cmsres/b7/b7e9463879d84fb5abbe6a1978676039/7ea23da
 archived: "none"
 retrieved: "2026-10-19T00:29Z (curl download; file mtime, UTC)"
 cited_by: "09 §3.5 (Yangtze River Delta \"揭榜挂帅\" thresholds); not listed in 09 Sources"
-raw: "raw/netc-innomatch/yrd-joint-research-2025-hukehe-5/doc.pdf; raw/netc-innomatch/yrd-joint-research-2025-hukehe-5/doc.txt"
+raw: "raw/netc-innomatch/yrd-joint-research-2025-hukehe-5/doc.txt"
 official_text: "official-texts/yrd-joint-research-2025-hukehe-5.txt"
 ---
 
@@ -39,3 +39,4 @@ Joint notice of the four provincial science departments collecting enterprise de
 ## Notes
 
 - **Unsupported detail:** 09 §3.5 adds "The published list hides the demander (V)". Neither this notice nor the 2024 notice says so. The only anonymisation rule found is in the challenge notice [沪科合〔2023〕16号](yrd-challenge-2023-16.md), where information may be hidden at the demander's wish.
+- **Privacy (2026-10-19):** the source PDF names contact persons with mobile numbers, so it is kept outside the public repository; the text copy in `raw/` has the mobile numbers (and nearby e-mail addresses) replaced by `[手机号已删除]` / `[邮箱已删除]`. Nothing the docs use was removed.

@@ -11,7 +11,7 @@
 
 ## Summary
 
-- The design **runs on Node.js 12.4.0 with MongoDB 4.4 and 5.0**, using **Mongoose 5.13** for data access. This was verified in a real run: 34 library smoke checks, the Mongoose models and their database validators, the Document API in multi-document transactions, tenant isolation, the permission policy and Chinese search (90 database checks per MongoDB version).
+- The design **runs on Node.js 12.4.0 with MongoDB 4.4 and 5.0**, using **Mongoose 5.13** for data access. This was verified in a real run: 34 library smoke checks, the Mongoose models and their database validators, the Document API in multi-document transactions, tenant isolation, the permission policy, the workflow infrastructure (leased jobs, outbox relay, review cases, publishing, working-day calendar) and Chinese search (166 database checks per MongoDB version).
 - **"MongoDB 4.5" is not a production release.** Before 5.0, odd minor versions were development builds. Use **4.4.x** (if the CPU lacks AVX or the OS is old) or **5.0.x**. All code targets the 4.4 feature set, so it works on both.
 - Four constraints shape the design:
   1. Data access uses **Mongoose 5.13.23**, which bundles driver **3.7.4**. Mongoose 6+ (driver 4+) needs Node ≥ 12.9.
@@ -69,13 +69,14 @@ All code in this repository uses only 4.4 features, so the team can move from 4.
 | Money stored as BSON Int64, round-trips exactly, serializes as a string | PASS | PASS |
 | Optimistic concurrency on `save()`; immutable frozen versions and append-only history | PASS | PASS |
 | Document API use cases in cross-database transactions (create, update, submit, revise, discard, list); no partial writes; concurrent edits give one 409 | PASS (25/25) | PASS (25/25) |
-| Permission policy (CASL 5) on plain objects and Mongoose documents, `accessibleBy` filters, tenant-scope plugin on every query type | PASS (25/25) | PASS (25/25) |
+| Permission policy (CASL 5) on plain objects and Mongoose documents, `accessibleBy` filters, tenant-scope plugin on every query type | PASS (27/27) | PASS (27/27) |
+| Workflow infrastructure ([06 §6.6–§6.10](06-implementation-design-v1.md)): working-day calendar, leased jobs (lease races, takeover, backoff, dead letters), outbox fan-out, review cases (SLA pause, maker-checker, escalation), publishing service (snapshot swap, suspension, search and page sync) | PASS (71/71) | PASS (71/71) |
 | Login sessions through the Mongoose connection (`connect-mongo` 3) | PASS | PASS |
 | Chinese full-text search with MongoDB text index | **Returns nothing** | Not run (same text-index engine) |
 | Chinese full-text search with Meilisearch v1.11.3 | PASS | — |
 | Chinese date formatting and pinyin sorting with `full-icu` | PASS (fails without it) | — |
 
-Per MongoDB version, the database checks are `tests/test-mongo.js` (40), `tests/test-documents.js` (25) and `tests/test-policy.js` (25): 90 in total, all passed on both versions. The smoke and ICU checks run once; the search comparison runs once, on MongoDB 4.4.
+Per MongoDB version, the database checks are `tests/test-mongo.js` (43), `tests/test-documents.js` (25), `tests/test-policy.js` (27) and `tests/test-workflow.js` (71): 166 in total, all passed on both versions (368 PASS/OK lines in a full run). The smoke and ICU checks run once; the search comparison runs once, on MongoDB 4.4.
 
 ---
 
@@ -219,6 +220,8 @@ Mongoose 5.13.23 is the newest Mongoose that runs on Node 12.4. It differs from 
 | Transactions | `session.withTransaction()` resolves to the **commit result**; the `inTransaction()` helper captures the callback's result. `connection.transaction()` is not used: in 5.13 it never ends its session | Driver 6 resolves to the callback's result; re-evaluate `connection.transaction()` |
 | Sessions on documents | A document loaded with `.session(s)` saves in that session; `Model.create()` takes a session only in the array form | Same |
 | Optimistic concurrency | `versionKey: 'rev'` + `optimisticConcurrency: true` (available since 5.10) | Same |
+| `save()` of an unmodified document | With `optimisticConcurrency`, `save()` on a document with no changes runs an existence query. On a tenant-scoped model that query has no tenant options, so the tenant-scope plugin refuses it (found in the publishing service). Save only when `isModified()`, or call `increment()` when the version must change | Re-check after the upgrade |
+| Bulk status changes | `updateMany()` does not touch the version key: add `$inc: { rev: 1 }` so clients holding an old `rev` get `409` | Same |
 | Index management | `Model.diffIndexes()` + `createIndexes()` at release; `autoIndex` off; **never** `syncIndexes()` in production | Same |
 | Callbacks, `remove()` | Use promises and `deleteOne()` / `deleteMany()` only | Callbacks and `remove()` removed in 7 |
 | Typings | Bundled, with gaps (narrow casts shown in the draft implementation) | Much better inference (`HydratedDocument`, `InferSchemaType`) |
@@ -491,7 +494,21 @@ flowchart LR
 
 - **Node:** 12.22.12 is a drop-in step. Node 16 is itself end-of-life (September 2023); it is only an option for servers whose glibc (2.17) cannot run Node 18+. If the server allows containers, run the API and worker in a container with a current Node LTS, still started by systemd behind Nginx (no Docker Compose or Kubernetes). The host's Node version then no longer matters.
 - **MongoDB:** upgrade one major version at a time, setting `featureCompatibilityVersion` after each step, and take a backup before each one.
-- **Mongoose:** Mongoose 6 is in limited maintenance (security patches) and its driver 4.17 declares Node ≥ 12.9, so it pairs with the Node 12.22.12 step. A basic test (connect, transaction, optimistic concurrency) passed with Mongoose 6.13.11 on Node 12.4.0 and 12.22.12; the draft implementation has not yet been ported. Expected changes: remove the four driver options from `mongoose-settings.ts`, set `strictQuery` explicitly (its default changed), `@casl/mongoose` 6+, and typing adjustments. Mongoose 7 removes callbacks and `remove()`, which the code already avoids. Because services use only models and the `inTransaction()` helper, never the driver, these changes stay inside `core/db` and the model typings.
+- **Mongoose:** Mongoose 6 is in limited maintenance (security patches; 6.13.11 was released in August 2026). Its driver 4.17 declares Node ≥ 12.9, so it pairs with the Node 12.22.12 step. **Port tested (2026-10-19):**
+  - **Node 12.22.12 with the unchanged code:** the full suite passed (216/216 on the code of that day), with no new warnings and the same lockfile.
+  - **Mongoose 6.13.11 port:** the full suite passed on node:12.22.12 and node:12.4.0 against MongoDB 4.4 and 5.0, with the same release steps and search results. Production must not run Mongoose 6 on 12.4.0, because that is outside the driver's declared range.
+  - **Effort:** about one working day.
+  - **What changed:**
+
+| Area | Change |
+| --- | --- |
+| Packages | `mongoose` 6.13.11; `@casl/mongoose` 6.0.1 (keeps `@casl/ability` 5.4.4); `connect-mongo` 4.6.0 with `mongodb` 4.17.2 as a direct dependency; `kruptein` pinned to 3.1.4 (newer releases use `??` or declare Node ≥ 18, and npm 6 has no `overrides`); `@types/mongodb` removed |
+| Settings | Remove the four driver options (Mongoose 6 throws on them); keep `strictQuery: 'throw'` explicit; `poolSize` → `maxPoolSize` |
+| **Silent changes** | Update results: `n` / `nModified` become `matchedCount` / `modifiedCount`. Code that reads the old names gets `undefined`, with no error, and casts hide it from the compiler. `increment()` is ignored when no field changed. BSON `Long` loses `toJSON`, so Int64 money must restore it to keep serializing as a string. Before porting, search for `.n`, `.nModified`, `increment(` and `as unknown as` |
+| Typings | Hook lists typed as `MongooseQueryMiddleware[]`; `allModels` typed by the methods it uses; one validator in object form rewritten |
+| Other | `session.endSession()` returns a promise; `withTransaction()` in driver 4 still resolves to the commit result, so `inTransaction()` stays; the connect-mongo 4 API is `MongoStore.create({ client, … })` |
+
+Already prepared in the draft code: the job queue reads update results through a helper that works on both versions, and the technology service modifies `updatedAt` instead of calling `increment()`. The tests still read `n` / `nModified` and change with the port. The spike also found that `findOneAndReplace` bypassed the tenant scope and the freeze rule, and that `estimatedDocumentCount` cannot be scoped. Both are fixed in the plugins and covered by tests. Mongoose 7 removes callbacks and `remove()`, which the code already avoids. Because services use only models and the `inTransaction()` helper, never the driver, the port stays inside `core/db`, the model typings and the tests.
 
 ---
 

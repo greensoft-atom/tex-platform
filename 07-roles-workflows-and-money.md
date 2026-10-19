@@ -128,8 +128,8 @@ These are the recommended product workflows, informed by the real processes abov
 
 | Workflow | Main actors | Release |
 | --- | --- | --- |
-| A. Technology provider (§3.1) | Supplier, TTO, listing reviewer | R1 listing and enquiries · R2 negotiation and contract · R3 payment partner and royalties |
-| B. Technology seeker / buyer (§3.2) | Buyer, technology manager | R1 demand, search and introduction · R2 evaluation, negotiation and contract · R3 payment partner |
+| A. Technology provider (§3.1) | Supplier, TTO, listing reviewer | R1 listing and enquiries · R2 negotiation and contract · R3 payments and royalties |
+| B. Technology seeker / buyer (§3.2) | Buyer, technology manager | R1 demand, search and introduction · R2 evaluation, negotiation and contract · R3 payments |
 | C. R&D collaborators and investors (§3.3) | Collaborators, investors, legal specialists | R2 (legal review or specialist closing, [08 §3.1](08-china-operating-model.md)) |
 | D. Platform case manager (§3.4) | Platform staff | R1 introductions · R2 deals |
 | E. Venue-routed transaction (§3.5) | Client, platform as agent, venue | R3 |
@@ -261,9 +261,9 @@ flowchart TD
     G -.->|"Extended"| C
     F -->|"1"| H["Agreement at ≥ floor price"]
     F -->|"≥ 2"| I["Pre-announced method on the venue:<br/>online bidding, auction, tender<br/>or competitive negotiation"]
-    H --> J["6. Contract within 5 WD<br/>(12 mandatory clauses)"]
+    H --> J["6. Contract in the period the listing sets<br/>(rule 83: 5 WD; 12 mandatory clauses)"]
     I --> J
-    J --> K["7. Deposit and price settled through the<br/>venue's third-party settlement account"]
+    J --> K["7. Deposit through the venue's settlement account;<br/>price through it (on-exchange) or straight<br/>to the seller (off-exchange)"]
     K --> L["8. Venue issues the<br/>transaction certificate;<br/>platform records its number<br/>(FR-VEN-09)"]
     L --> M["9. Deal dossier archived<br/>within 3 months<br/>(FR-DEAL-09)"]
 ```
@@ -276,13 +276,15 @@ flowchart TD
 | 4. Buyer registration | Buyer gives an intent form (price ≥ listing floor, consortium shares) and a risk statement | Verifies the materials and signs the verification opinion (joint liability) | Reviews the registration | Review ≤ 3 WD; corrections ≤ 3 WD |
 | 5. Qualification | Seller confirms the qualified buyers | Relays and records each decision | Sends the qualification notice with deposit amount and deadline | Seller ≤ 3 WD (silence = consent); objections ≤ 3 WD |
 | 6. Price discovery | Buyers bid or negotiate | Prepares the bidding plan with the seller (FR-VEN-06); never runs a binding bid itself | Runs online bidding (timed phase ≥ 10 min, then continuous cycles ≥ 60 s), tender (deposit ≤ 30%, ≥ 10 WD to prepare bids) or auction (with a licensed auction house) | As stated per method |
-| 7. Contract | Both parties sign | Generates the contract with the 12 mandatory clauses (FR-DEAL-03) | Reviews the contract | Within 5 WD of the result |
-| 8. Settlement | Buyer pays deposit and price into the venue's settlement account | Tracks deposit, price and refund status (FR-VEN-08); **never holds the funds** | Settles through a bank or licensed payment institution; refunds losing deposits | Refunds ≤ 5 WD |
+| 7. Contract | Both parties sign | Generates the contract with the 12 mandatory clauses (FR-DEAL-03) | Reviews the contract | The listing's period: 5 WD in rule 83, 60 WD in most 2026 STEX listings ([09 §2.3](09-reference-platform-features.md)) |
+| 8. Settlement | Buyer pays the deposit into the venue's settlement account. The price goes there too (on-exchange, 场内结算) or straight to the seller's bank account (off-exchange, 场外结算), as the listing states | Tracks deposit, price and refund status (FR-VEN-08). For off-exchange settlement, records the seller's confirmation of receipt with evidence. **Never holds the funds** | Settles through a bank or licensed payment institution; refunds losing deposits | Refunds ≤ 5 WD |
 | 9. Certificate and archive | Receives the certificate | Stores the certificate number and PDF, links it to the deal, notice and inventor reward (FR-VEN-09); assembles the deal dossier (FR-DEAL-09) | Issues the transaction certificate; archives the file | Dossier ≤ 3 months; kept permanently, 20, 10 or 5 years by class |
 
-Until the venue route is decided (D-01 in [10 §12](10-product-requirements.md): become a STEX or CTEX practising agent, partner with an existing agent, or apply for a venue licence), these functions stay behind a feature flag ([05 §2.2](05-system-design-blueprint.md)). STEX admits a practising agent only if it has been registered for at least 2 years, has registered capital of at least RMB 1 million and at least 2 recognised practitioners, and has a clean record for the last 24 months ([09 §2.1](09-reference-platform-features.md)).
+Until the venue route is confirmed (D-01: the proposal in [12](12-decision-record.md) is to register as a CTEX service institution, which has no capital or age minimum, to partner with a registered STEX agent for STEX listings, and to register with STEX once eligible), these functions stay behind a feature flag ([05 §2.2](05-system-design-blueprint.md)). STEX admits a practising agent only if it has been registered for at least 2 years, has registered capital of at least RMB 1 million and at least 2 recognised practitioners, and has a clean record for the last 24 months ([09 §2.1](09-reference-platform-features.md)).
 
-Throughout this workflow the deal record follows the rule in [05 §7.5](05-system-design-blueprint.md) and [06 §6.4](06-implementation-design-v1.md): `negotiation` until the venue fixes the buyer and price, then `contract_draft` → `approval` → `signed`, and `conditions_pending` until venue settlement and the certificate are recorded.
+Throughout this workflow the deal record follows the rule in [05 §7.5](05-system-design-blueprint.md) and [06 §6.4](06-implementation-design-v1.md): `negotiation` until the venue fixes the buyer and price, then `contract_draft` → `approval` → `signed`, and `conditions_pending` until settlement and the certificate are recorded. Settlement is the venue's confirmation (on-exchange) or the seller's evidenced receipt of the price (off-exchange).
+
+**One side, one buyer.** CTEX forbids a service institution from acting for both sides of a deal, or for two or more intended buyers of the same project (2022 measures, Art. 18; [09 §2.1](09-reference-platform-features.md)). The platform applies the same rule on both venues. In one venue listing it acts as agent for the seller or for one buyer, never for both, and never for two competing buyers. Other buyers' agents are their own (FR-VEN-04, FR-ORG-07).
 
 ### 3.6 Other client and administrator workflows
 
@@ -386,6 +388,8 @@ The platform can record that a party *claims* to have destroyed a file. It canno
 
 ## 6. The financial lifecycle: quote, fund, hold, release, withdraw
 
+> **Build scope (owner decision D-02, 2026-10-19).** The platform's payments are built shallow: one adapter, with the owner's own payment testing platform as the first provider, plus payment requests, verified events, refunds and daily reconciliation (FR-PAY-01 … FR-PAY-04, [06 §6.11](06-implementation-design-v1.md)). Conditional holding, release instructions, split payouts and the detailed records in §6.1–§6.6 and §8 are **not** in the build scope. They stay here as background for a later production provider.
+
 This is the most important architectural distinction in the operating model. A marketplace must not invent an "escrow balance" just because it has a database. **A recorded obligation, money received by a payment provider, money reserved for a transaction and money available to withdraw are four different things.**
 
 WIPO's licensing guidance lists upfront fees, milestone payments, royalties and other negotiated compensation. University licensing offices (for example the University of Washington's CoMotion and the University of Central Florida) list upfront fees, milestone payments, patent-cost reimbursement, running royalties and minimum royalties.
@@ -396,9 +400,9 @@ In this section, **payment provider** means the bank or licensed payment institu
 
 | Route | When | Who holds and moves the money | What the platform does | Release |
 | --- | --- | --- | --- | --- |
-| Direct payment between the parties | Platform-managed deals before a payment partner is integrated | The parties and their own banks | Records payment milestones and the payment evidence each party provides; such payments are never shown as provider-confirmed ([08 §11.2](08-china-operating-model.md)) | R2 |
+| Direct payment between the parties | Platform-managed deals before payments are integrated (R2) | The parties and their own banks | Records payment milestones and the payment evidence each party provides; such payments are never shown as provider-confirmed ([08 §11.2](08-china-operating-model.md)) | R2 |
 | Venue settlement | Venue-routed deals (§3.5) | The venue's third-party settlement account at a bank or licensed payment institution | Tracks deposit, price and refund status reported by the venue (FR-VEN-08) | R3 |
-| Payment partner | Platform-managed deals once a partner is contracted (decision D-02) | A bank (fund-supervision 资金监管 or custody 存管 account) or a licensed payment institution (split settlement 分账); conditional holding only where the partner and PRC counsel confirm it is permitted | Creates payment requests, sends authorized release instructions, records verified provider events and reconciles ([08 §1.2, §6](08-china-operating-model.md)) | R3 |
+| Payment provider | Platform-managed deals from R3 (decision D-02) | The owner's payment testing platform during build and test; for live money, a bank or licensed payment institution. Conditional holding is out of scope | Creates payment requests, records verified provider events, handles refunds and reconciles (FR-PAY, [06 §6.11](06-implementation-design-v1.md)) | R3 |
 | Platform fees | Subscriptions, service orders, agreed success fees | The platform, as its own revenue | Issues digital e-invoices (数电票) and tracks payment (FR-CLI-07); reports fees separately from deal value (FR-RPT-03) | R2 |
 
 ### 6.1 Recommended payment lifecycle
@@ -522,7 +526,7 @@ A withdrawal **request** is not a withdrawal, just as a transfer instruction is 
 
 > **Regulatory note:** holding or controlling customer funds is regulated almost everywhere. For example, in the European Economic Area the Central Bank of Ireland's guidance describes **safeguarding** obligations (including segregation of users' funds) for payment institutions. In China, payment business may be carried out only by institutions licensed by the People's Bank of China (State Council Decree No. 768, effective 1 May 2024), and Shanghai's venue rules require third-party settlement through a bank or licensed payment institution. Calling an internal database balance "escrow" does not avoid such rules. For the China launch, see [08 §1 and §6](08-china-operating-model.md).
 
-Payment-partner integration is planned for R3, after written confirmation from the partner and PRC counsel (D-02 in [10 §12](10-product-requirements.md), [08 §10 B](08-china-operating-model.md)). Until then, deal payments go directly between the parties (see the routes at the start of §6). Once a partner is integrated, keep the platform's own ledger as a **reconciled record of obligations and transactions**, not as a substitute for a regulated client-money arrangement.
+Payment integration is planned for R3, with the owner's payment testing platform as the first provider (D-02 in [12](12-decision-record.md)). Live money needs a bank or licensed payment institution and the written confirmations in [08 §10 B](08-china-operating-model.md). Until R3, deal payments go directly between the parties (see the routes at the start of §6). The platform's payment records are a **reconciled record of obligations and provider events**, never a substitute for a regulated client-money arrangement.
 
 ---
 
@@ -581,7 +585,7 @@ The architecture in [06](06-implementation-design-v1.md) already includes users,
 | `refunds` | Refunds, transfer reversals and their reasons | R3 |
 | `ledger_entries` | An auditable, balanced record of platform-recognized financial movements | R3 |
 
-The payment records are built only after the payment partner and the money-handling model are confirmed (D-02). They record what the bank or payment institution does. **They are not permission for the platform to hold client funds.**
+These records are background for a later production provider; the R3 build uses only `payment_requests` and `payment_events` ([06 §6.11](06-implementation-design-v1.md), D-02). They record what the bank or payment institution does. **They are not permission for the platform to hold client funds.**
 
 ### 8.1 State machines must be separate
 
@@ -667,10 +671,10 @@ For a small team, do not build a payment institution, a universal escrow service
 | 4 | Confidential evaluation | NDA status, controlled document sharing, due-diligence checklist | R2 |
 | 5 | Negotiation | Versioned term sheet, counter-offers, approvals, explicit agreement on the final version | R2 |
 | 6 | Contract and milestones | Signed agreement, deliverables, acceptance criteria, deadlines, evidence | R2 |
-| 7 | Financial integration | Platform invoices (R2); payment requests, provider-confirmed payments, fee calculation, payout status, refunds, reconciliation through the payment partner (R3) | R2 / R3 |
+| 7 | Financial integration | Platform invoices (R2); payment requests, verified provider events, refunds and reconciliation through the payment adapter (R3, FR-PAY) | R2 / R3 |
 | 8 | Dispute and audit | Audit trail and basic complaints (R1); mediation (R2); evidence preservation, permission-controlled review, disputes over funds (R2–R3) | R1–R3 |
 
-Before the payment partner is integrated (R3), the platform issues its own invoices and records that the buyer **paid the supplier directly**, with the evidence the parties provide. That is much simpler than receiving, safeguarding, reserving and distributing money itself. Provider-backed delayed transfers or a legally reviewed holding structure follow in R3, only after the confirmations in [08 §10 B](08-china-operating-model.md).
+Before payments are integrated (R3), the platform issues its own invoices and records that the buyer **paid the supplier directly**, with the evidence the parties provide. That is much simpler than receiving, safeguarding, reserving and distributing money itself. In R3, payment requests go through the payment adapter (D-02). A provider-backed holding structure is not planned; it would need the confirmations in [08 §10 B](08-china-operating-model.md) and a new owner decision.
 
 ---
 
@@ -682,8 +686,8 @@ Four decisions were needed to finalize user types, workflow rules and the money 
 | --- | --- | --- |
 | Launch region | Ireland / EEA · **China** · Southeast Asia · cross-border from day one | **China** |
 | Deal types at launch | Licensing + services + R&D · **all types** · discovery only | **All deal types**, in three implementation tiers |
-| Who handles transaction money | Provider handles, platform tracks · buyer pays supplier directly · **funds held and released conditionally through the platform, subject to legal and provider feasibility** | **Conditional holding and release through a licensed bank or payment institution**, with the platform coordinating conditions and recording verified events. The platform itself never holds client funds. The partner and product are open decision D-02 ([10 §12](10-product-requirements.md)); until R3, deal payments go directly between the parties |
-| How formal listing, bidding, settlement and certificates are performed | Apply for a venue licence · **become a practising agent of STEX or CTEX** · partner with an existing agent | **Agent route by default:** these steps run through STEX or CTEX, with the platform as registered practising agent (§3.5). The final choice is open decision D-01 ([10 §12](10-product-requirements.md)), needed before R3 design |
+| Who handles transaction money | Provider handles, platform tracks · buyer pays supplier directly · **funds held and released conditionally through the platform, subject to legal and provider feasibility** **The platform never holds client funds.** Until R3, deal payments go directly between the parties. From R3, payment requests go through one adapter, with the owner's payment testing platform as the first provider (decided, D-02 in [12](12-decision-record.md)). Conditional holding through a licensed bank or payment institution remains possible later, but it is not designed |
+| How formal listing, bidding, settlement and certificates are performed | Apply for a venue licence · **become a practising agent of STEX or CTEX** · partner with an existing agent | **Agent route by default:** these steps run through STEX or CTEX, with the platform as registered practising agent (§3.5). Proposed resolution of D-01 ([12](12-decision-record.md)): register as a CTEX service institution now; for STEX listings work through a registered STEX agent as partner; register with STEX once eligible |
 
 The next deliverable is a complete role-and-permission matrix plus a transition-by-transition specification: exactly who can submit, accept, approve, sign, fund, release, withdraw, cancel and dispute each item, and which evidence each transition requires. That specification is in [08 §2–§4](08-china-operating-model.md), with the permission matrix in [06 §8](06-implementation-design-v1.md) and the numbered requirements in [10 §3](10-product-requirements.md).
 

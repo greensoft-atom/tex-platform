@@ -6,7 +6,12 @@ import { entityOptions, enumOf, int, recordOptions, ref, refPattern } from '../.
 
 // ---------- review_cases ----------
 export const CASE_TYPES = ['organization_verification', 'technology_review', 'ip_verification', 'demand_review', 'introduction_review', 'dispute'] as const;
-export const CASE_STATUSES = ['open', 'assigned', 'in_review', 'waiting_for_submitter', 'approved', 'rejected', 'escalated', 'closed'] as const;
+export const CASE_STATUSES = [
+  'open', 'assigned', 'in_review', 'waiting_for_submitter', 'awaiting_check', 'approved', 'rejected', 'escalated', 'closed',
+] as const;
+export type CaseStatus = typeof CASE_STATUSES[number];
+// How a case ended (06 §6.7): approved and rejected are decisions on the resource; the others close the case.
+export const CASE_DECISIONS = ['approve', 'reject', 'request_changes', 'withdrawn', 'superseded'] as const;
 
 export interface ResourceRef { type: string; id: Types.ObjectId; version?: number }
 
@@ -15,12 +20,19 @@ export interface ReviewCaseDoc extends Document {
   ref: string;
   caseType: typeof CASE_TYPES[number];
   resource: ResourceRef;                           // the exact version under review
-  status: typeof CASE_STATUSES[number];
+  status: CaseStatus;
   priority: 'low' | 'normal' | 'high' | 'urgent';
   assignedTo?: Types.ObjectId;
-  decision?: string;
+  decision?: typeof CASE_DECISIONS[number];
   decisionReason?: string;
-  dueAt?: Date;
+  checkRequired: boolean;                          // maker-checker case type (FR-ADM-02)
+  proposedDecision?: 'approve' | 'reject';         // the maker's decision, waiting for the checker
+  proposedBy?: Types.ObjectId;
+  checkedBy?: Types.ObjectId;
+  previousCaseId?: Types.ObjectId;                 // the case of the previous submission round
+  dueAt?: Date | null;                             // null: the calendar year is not published yet (06 §6.10)
+  pausedAt?: Date | null;                          // waiting for the submitter: the SLA clock stops
+  pausedWorkingDays: number;
   closedAt?: Date;
   rev: number;
   createdAt: Date;
@@ -40,9 +52,16 @@ const ReviewCaseSchema = new Schema<ReviewCaseDoc>({
   status: enumOf(CASE_STATUSES, { required: true, default: 'open' }),
   priority: enumOf(['low', 'normal', 'high', 'urgent'] as const, { required: true, default: 'normal' }),
   assignedTo: ref('User'),
-  decision: String,
+  decision: enumOf(CASE_DECISIONS),
   decisionReason: String,
+  checkRequired: { type: Boolean, required: true, default: false },
+  proposedDecision: enumOf(['approve', 'reject'] as const),
+  proposedBy: ref('User'),
+  checkedBy: ref('User'),
+  previousCaseId: ref('ReviewCase'),
   dueAt: Date,
+  pausedAt: Date,
+  pausedWorkingDays: int({ required: true, default: 0, min: 0 }),
   closedAt: Date,
 }, entityOptions('review_cases'));
 
@@ -93,6 +112,7 @@ export interface OutboxEventDoc extends Document {
   lastError?: string;
   createdAt: Date;
   publishedAt?: Date;
+  expireAt?: Date;                                 // set when relayed; the TTL index removes the event later
 }
 
 const OutboxEventSchema = new Schema<OutboxEventDoc>({
@@ -104,9 +124,11 @@ const OutboxEventSchema = new Schema<OutboxEventDoc>({
   lockedUntil: Date,
   lastError: String,
   publishedAt: Date,
+  expireAt: Date,
 }, { ...recordOptions('outbox_events'), minimize: false });   // keep `payload: {}` (required by the validator)
 
 OutboxEventSchema.index({ createdAt: 1 }, { partialFilterExpression: { status: 'pending' } });
+OutboxEventSchema.index({ expireAt: 1 }, { expireAfterSeconds: 0 });
 
 export const OutboxEvent = model<OutboxEventDoc>('OutboxEvent', OutboxEventSchema);
 

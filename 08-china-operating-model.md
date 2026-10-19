@@ -21,7 +21,7 @@ Two legal boundaries shape the model:
    - The State Council's **Regulations on the Supervision and Administration of Non-bank Payment Institutions** (《非银行支付机构监督管理条例》, State Council Decree No. 768, published December 2023, effective **1 May 2024**) require payment business to be carried out only by institutions licensed by the People's Bank of China (PBOC). They regulate payment processing and customer reserve funds (备付金), and prohibit misappropriating reserve funds.
    - Shanghai's 2025 venue rules likewise require **third-party settlement** through a bank or licensed non-bank payment institution, with separate accounts per client (Art. 12; see [01 §1.3](01-shanghai-landscape.md)).
 
-**Recommendation:** make conditional payment and release part of the product, but **never assume the platform itself can receive, pool, safeguard or release customer money**. Money is held and released only by a licensed bank or payment institution (or, for venue-routed deals, through the venue's third-party settlement). The platform coordinates deal conditions and records verified payment events. Whether a provider supports the exact conditional-holding arrangement for each transaction type must be confirmed **before** implementation commits to it (decision D-02 in [10 §12](10-product-requirements.md)).
+**Recommendation:** **never assume the platform itself can receive, pool, safeguard or release customer money**. Money is held and released only by a licensed bank or payment institution (or, for venue-routed deals, through the venue's third-party settlement). The platform coordinates deal conditions and records verified payment events. **Owner decision (D-02, 2026-10-19):** the build keeps payments shallow. One adapter carries payment requests, verified events, refunds and reconciliation, with the owner's own payment testing platform as the first provider ([06 §6.11](06-implementation-design-v1.md), FR-PAY). Conditional holding is not designed. If it is ever wanted, a provider must confirm the exact arrangement for each transaction type before implementation commits to it.
 
 This document separates three kinds of statement:
 
@@ -62,8 +62,8 @@ The platform supports all requested deal types, but the transaction engine appli
 
 Money moves on one of three routes, and on none of them does the platform hold client funds (route table in [07 §6](07-roles-workflows-and-money.md)):
 
-- **Direct payment between the parties** (from R2, before a payment partner is integrated): the platform records obligations and the payment evidence the parties provide, and never shows such payments as provider-confirmed.
-- **Payment partner** (R3, after decision D-02): the model below, for deals the platform manages itself.
+- **Direct payment between the parties** (from R2, before payments are integrated): the platform records obligations and the payment evidence the parties provide, and never shows such payments as provider-confirmed.
+- **Payment provider** (R3, decision D-02): payment requests through one adapter, with the owner's payment testing platform first and a licensed bank or payment institution for live money ([06 §6.11](06-implementation-design-v1.md)). The diagram below shows the general model. Its holding and release part is background, not build scope.
 - **Venue settlement** (R3): venue-routed deals settle through the venue's third-party settlement account (§1.3).
 
 ```mermaid
@@ -107,7 +107,7 @@ Some steps are **venue functions** under the Shanghai rules (Arts. 11–13): for
 | Parties agreed a deal off-venue but need venue settlement, a transaction certificate or venue evidence | Private agreement (非公开协议成交) |
 | State-owned enterprise property rights are transferred | State-owned property-rights listing (FR-CMP-07) |
 
-Any deal type in §3 can use the venue route. Deals that need none of these products stay on the platform's own managed workflow (§4) and its payment partner (§1.2).
+Any deal type in §3 can use the venue route. Deals that need none of these products stay on the platform's own managed workflow (§4) and its payment route (§1.2).
 
 **Who does what**
 
@@ -117,13 +117,13 @@ Any deal type in §3 can use the venue route. Deals that need none of these prod
 | Disclosure | Builds the announcement; tracks the minimum period (≥ 5 WD on STEX, ≥ 10 WD on CTEX) on the official working-day calendar (FR-VEN-02, FR-VEN-03, FR-ADM-09) | Publishes; restarts the period after any change |
 | Buyer registration | Submits the buyer's intent form, risk statement and the agent's verification opinion; the agent bears **joint liability** for the buyer's materials (STEX rule 82; FR-VEN-04) | Reviews within 3 WD; asks the seller to confirm qualification (silence within 3 WD = consent) |
 | Competition | Prepares bidding plans and documents; supports the client (FR-VEN-05, FR-VEN-06) | Runs online bidding, auction (through a licensed auction house), tender or competitive negotiation |
-| Contract | Drafts the contract with the 12 mandatory clauses and tracks the 5 WD signing deadline (FR-DEAL-03, FR-DEAL-05) | Reviews and certifies the contract |
-| Money | Shows the venue-reported status of deposits and prices; **never receives the funds** (FR-VEN-08) | Settles deposits and prices through its third-party settlement account (Art. 12) |
+| Contract | Drafts the contract with the 12 mandatory clauses and tracks the signing deadline the listing sets (5 WD in rule 83; 60 WD in most 2026 STEX listings) (FR-DEAL-03, FR-DEAL-05) | Reviews and certifies the contract |
+| Money | Shows the venue-reported status of deposits and prices; for off-exchange settlement (场外结算, the price paid straight to the seller), records the seller's evidenced receipt. **Never receives the funds** (FR-VEN-08) | Settles deposits (and, on-exchange, prices) through its third-party settlement account (Art. 12) |
 | Certificates | Stores certificate numbers and PDFs and links them to deals, notices and reward records (FR-VEN-09) | Issues the certificates |
 
 Exact STEX rules and time limits: [09 §2.3–§2.4](09-reference-platform-features.md).
 
-**Becoming an agent** (STEX rule 105, [09 §2.1](09-reference-platform-features.md)): an independent legal entity registered for at least 2 years, registered capital of at least RMB 1 million, at least 2 practitioners recognised by STEX, and no major violations, dishonesty records or administrative penalties in the last 24 months. Agents face an annual review each July and report changes within 10 WD. A newly formed operating company cannot meet the 2-year rule, so the options (decision D-01) are: partner with an existing registered agent first, register as a STEX (or CTEX) agent once eligible, or apply for venue status (long and uncertain under total-quantity control).
+**Becoming an agent.** CTEX's latest available entry rules (2022) are much lighter than STEX's: no minimum capital, company age or staff number, a 10-WD review and a one-year certificate, and no acting for both sides or for two buyers in one deal. Since December 2023 CTEX has handled agents as members under rules that could not be retrieved, so this must be confirmed ([09 §2.1](09-reference-platform-features.md)). STEX (rule 105, [09 §2.1](09-reference-platform-features.md)): an independent legal entity registered for at least 2 years, registered capital of at least RMB 1 million, at least 2 practitioners recognised by STEX, and no major violations, dishonesty records or administrative penalties in the last 24 months. Agents face an annual review each July and report changes within 10 WD. A newly formed operating company cannot meet the 2-year rule, so the options (decision D-01) are: partner with an existing registered agent first, register as a STEX (or CTEX) agent once eligible, or apply for venue status (long and uncertain under total-quantity control). The proposed resolution is designed in [12 D-01](12-decision-record.md): register with CTEX now, partner with a STEX agent for STEX listings, and register with STEX once eligible. It starts with a legal check of 沪府规〔2025〕2号 Art. 11, which restricts venues from operating through agents without approval.
 
 *Legal validation required:* the scope of the agent's joint liability, the agency-contract terms with clients, insurance, and internal controls for verification opinions.
 
@@ -405,6 +405,8 @@ The platform supports public-notice periods with evidence (FR-UNI-03), dual publ
 
 ## 6. Funding, holding, release and payout rules
 
+> **Build scope (owner decision D-02, 2026-10-19).** The R3 build implements only payment requests, verified provider events, refunds and daily reconciliation, through one adapter whose first provider is the owner's payment testing platform ([06 §6.11](06-implementation-design-v1.md), FR-PAY-01 … FR-PAY-04). The funding, holding, release and payout model below is **background** for a later production provider. It is not designed for implementation.
+
 This is the most sensitive part of the design. **Model contractual money obligations separately from actual provider-held funds.**
 
 ### 6.1 Payment lifecycle
@@ -520,7 +522,7 @@ A deal can be closed for initial delivery while its royalty schedule stays activ
 
 ## 7. Fee model
 
-Fees are a **commercial decision**, not something set by technology-transfer law. Support a configurable fee schedule (FR-ADM-04). The schedule and plan pricing are decision D-07; benchmark fees of other venues are in [09 §2.6](09-reference-platform-features.md).
+Fees are a **commercial decision**, not something set by technology-transfer law. Support a configurable fee schedule (FR-ADM-04). The schedule and plan pricing are decision D-07, with a proposed starting schedule in [12 D-07](12-decision-record.md); benchmark fees of other venues are in [09 §2.6](09-reference-platform-features.md).
 
 ### 7.1 Recommended fee policy
 
@@ -662,7 +664,7 @@ These are **release gates**, not optional enhancements. Where relevant, an item 
 
 ### B. Payment and conditional holding
 
-- [ ] Written confirmation from the bank or payment institution **and** PRC counsel on: who receives and holds funds; who controls release; whether the arrangement is permitted for each deal type; how refunds, disputes and payouts work (D-02; before R3).
+- [ ] Before any **live** money flows (not needed for the owner's testing platform, D-02): written confirmation from the bank or payment institution **and** PRC counsel on: who receives and holds funds; who controls release; whether the arrangement is permitted for each deal type; how refunds, disputes and payouts work.
 - [ ] Confirmation of whether any additional licence or approval is required.
 
 ### C. Technology transfer and IP
@@ -691,7 +693,7 @@ These are **release gates**, not optional enhancements. Where relevant, an item 
 
 ### G. Venue route
 
-- [ ] Decision taken: register as a STEX (or CTEX) practising agent, partner with an existing agent, or apply for venue status (D-01; before R3 design).
+- [ ] Decision taken: register as a STEX (or CTEX) practising agent, partner with an existing agent, or apply for venue status (D-01; before R3 design; proposal in [12](12-decision-record.md)).
 - [ ] Agent obligations understood: verification opinion and joint liability for submissions, annual review, change reports within 10 working days (§1.3).
 - [ ] Data interface with the venue agreed (API or file exchange, FR-VEN-10).
 
@@ -738,7 +740,7 @@ flowchart LR
 | 3 — Introductions and confidentiality | Expressions of interest, consent, controlled disclosure, NDA tracking, communications | R1 (NDAs and data rooms in R2) |
 | 4 — Proposals and contracts | Immutable proposal versions, counter-offers, approval routing, contract versions, signature evidence, compliance gates, contract registration | R2 |
 | 5 — Delivery and disputes | Milestones, acceptance criteria, evidence, correction cycles, dispute cases, termination | R2 (basic complaints from R1) |
-| 6 — Payment-provider integration | Payment requests, verified provider events, funding allocation, eligible release instructions, payouts, fees, refunds, reconciliation | R3, after decision D-02 |
+| 6 — Payment integration | Payment requests, verified provider events, refunds and reconciliation through one adapter; the owner's payment testing platform first (D-02, FR-PAY) | R3 |
 | 7 — Complex deal types | Investment, joint ventures, royalties, cross-border contracts, specialized regulatory workflows | R3 and later (cross-border screening FR-CMP-05 from R2) |
 
 The venue route (§1.3, FR-VEN) is built in R3, after decision D-01, in parallel with phase 6.

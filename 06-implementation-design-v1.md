@@ -234,7 +234,7 @@ MongoDB is schemaless, but a technology exchange needs **auditable rights, versi
 - **Application layer: Mongoose 5.13.** One schema per collection defines types, enums, required fields, defaults, cross-field rules, indexes and plugins (tenant scope, immutability, optimistic concurrency). Services work with **models and documents**.
 - **Database layer.** `$jsonSchema` validators on every core collection, unique and TTL indexes, a least-privilege application role, and transactions for every multi-document business change. This layer still holds when a script, a shell session or a bug bypasses Mongoose.
 
-All schemas, plugins, migrations and services below are **verified** with Node 12.4.0 and Mongoose 5.13.23 on MongoDB 4.4.30 and 5.0.33: 90 database checks per MongoDB version (see [`draft-implementation/`](draft-implementation/README.md)). Its `src/` folder uses the same layout as the application (§11.4), so its files are the starting code.
+All schemas, plugins, migrations and services below are **verified** with Node 12.4.0 and Mongoose 5.13.23 on MongoDB 4.4.30 and 5.0.33: 166 database checks per MongoDB version (see [`draft-implementation/`](draft-implementation/README.md)). Its `src/` folder uses the same layout as the application (§11.4), so its files are the starting code.
 
 ### 4.1 Data model
 
@@ -296,7 +296,7 @@ Embedded (not separate collections): deal **parties** (inside `deals`), document
 | `technology_versions` (`TechnologyVersion`) | Immutable revisions (frozen on submission) | `technologyId`, `version`, `title`, `publicSummary`, `claimedTrl`, `assessedTrl`, `technicalAttributes`, `frozen` | unique (`technologyId`, `version`) |
 | `technology_publications` (`TechnologyPublication`) | **Approved public snapshot**: the only technology data sent to search and public pages | `technologyId`, `version`, `ref`, `status`, owner summary, title, summary, codes, TRL, offer types, badges | unique partial `technologyId` where `status: 'live'` |
 | `ip_assets` (`IpAsset`) | Patents, applications, software copyrights, know-how claims | `technologyId`, `ownerOrganizationId`, `assetType`, `jurisdictionCode`, `identifier`, `rightsStatus`, `legalStatusCheckedAt` | `technologyId`; (`jurisdictionCode`, `identifier`) |
-| `technology_offers` (`TechnologyOffer`) | Licence, assignment, partnership, pilot, equity-investment offers | `ref` (`OFR-`), `technologyId`, `technologyVersion`, `supplierOrganizationId`, `transactionType`, `offerStatus`, `exclusivity`, `price`, `validFrom/Until` | unique `ref`; (`technologyId`, `offerStatus`); (`supplierOrganizationId`, `offerStatus`) |
+| `technology_offers` (`TechnologyOffer`) | Licence, assignment, partnership, pilot, equity-investment offers (lifecycle §6.6) | `ref` (`OFR-`), `technologyId`, `technologyVersion`, `supplierOrganizationId`, `transactionType`, `offerStatus`, `exclusivity`, `price`, `validFrom/Until`, `reservation`, `closureReason` | unique `ref`; (`technologyId`, `offerStatus`); (`supplierOrganizationId`, `offerStatus`) |
 | `demands`, `demand_versions` (`Demand`, `DemandVersion`) | Buyer needs and their immutable revisions | Demand: `ref`, `buyerOrganizationId`, `status`, `visibility`, `currentVersion`. Version: `title`, `problemStatement`, `hardConstraints`, `preferredAttributes`, `budget`, `frozen` | unique `ref`; (`buyerOrganizationId`, `status`); unique (`demandId`, `version`) |
 | `matches` (`Match`) | Scored demand ↔ offer candidates, reproducible | `demandId`, `demandVersion`, `offerId`, `technologyVersion`, `rankingVersion`, `score`, `scoreComponents`, `explanation`, `eligibilityStatus`, `reviewStatus` | **unique** (`demandId`, `demandVersion`, `offerId`, `rankingVersion`) |
 | `introduction_requests` (`IntroductionRequest`) | Consent-based introductions | `ref` (`INT-`), `matchId`, `buyerOrganizationId`, `supplierOrganizationId`, `status`, `disclosureScope` | unique `ref`; (`supplierOrganizationId`, `status`); (`buyerOrganizationId`, `status`); validator: buyer ≠ supplier |
@@ -304,10 +304,12 @@ Embedded (not separate collections): deal **parties** (inside `deals`), document
 | `deal_milestones` (`DealMilestone`) | Deliverables, conditions and payment milestones | `dealId`, `kind`, `dueDate`, `amount`, `status`, `evidenceDocumentIds` | (`dealId`, `dueDate`); (`status`, `dueDate`) |
 | `documents` (`DocumentFile`) | File metadata (the bytes are in file storage), classification, scan status, links | `ownerOrganizationId`, `storageKey`, `sha256`, `classification`, `scanStatus`, `lifecycleStatus`, `links[]` | unique `storageKey`; (`links.resourceType`, `links.resourceId`); (`ownerOrganizationId`, `createdAt`) |
 | `document_access_grants` (`DocumentAccessGrant`) | Per-document access for another organization (view/download, watermark, expiry) | `documentId`, `dealId`, `granteeOrganizationId`, `permissions`, `watermark`, `expiresAt`, `revokedAt` | (`documentId`, `granteeOrganizationId`); `dealId` |
-| `review_cases` (`ReviewCase`) | Verification, listing, IP, demand and introduction reviews | `ref`, `caseType`, `resource.{type,id,version}`, `status`, `priority`, `assignedTo`, `dueAt` | unique `ref`; (`status`, `priority`, `dueAt`); (`assignedTo`, `status`); (`resource.type`, `resource.id`) |
+| `review_cases` (`ReviewCase`) | Verification, listing, IP, demand and introduction reviews (lifecycle §6.7) | `ref`, `caseType`, `resource.{type,id,version}`, `status`, `priority`, `assignedTo`, `dueAt`, `pausedAt`, `pausedWorkingDays`, `checkRequired`, `proposedDecision`, `proposedBy`, `checkedBy`, `previousCaseId`, `decision` | unique `ref`; (`status`, `priority`, `dueAt`); (`assignedTo`, `status`); (`resource.type`, `resource.id`) |
 | `workflow_transitions` (`WorkflowTransition`) | Every state change with actor and reason | `resource`, `fromStatus`, `toStatus`, `action`, `actorUserId`, `correlationId` | (`resource.type`, `resource.id`, `occurredAt`) |
 | `idempotency_keys` (`IdempotencyKey`) | Results of retriable commands | `actorUserId`, `key`, `requestHash`, `response*`, `expiresAt` | unique (`actorUserId`, `key`); **TTL** on `expiresAt` |
-| `outbox_events` (`OutboxEvent`) | Events written in the business transaction, relayed by the worker | `eventType`, `aggregate`, `payload`, `status`, `attempts`, `lockedUntil` | partial (`createdAt`) where `status: 'pending'` |
+| `outbox_events` (`OutboxEvent`) | Events written in the business transaction, relayed by the worker (§6.9) | `eventType`, `aggregate`, `payload`, `status`, `attempts`, `lockedUntil`, `expireAt` | partial (`createdAt`) where `status: 'pending'`; **TTL** on `expireAt` |
+| `jobs` (`Job`) | Leased background jobs: one per handler and event, scheduled run or command (§6.9) | `type`, `key`, `payload`, `status`, `priority`, `runAt`, `attempts`, `maxAttempts`, `leaseToken`, `lockedUntil`, `lastError`, `result`, `expireAt` | **unique** `key`; (`status`, `runAt`); (`status`, `lockedUntil`); (`type`, `status`); **TTL** on `expireAt` |
+| `calendar_years`, `calendar_days` (`CalendarYear`, `CalendarDay`) | Official working-day calendar: published years and their exceptions (§6.10, FR-ADM-09) | Year: `_id`, `status`, `source`, `preparedBy`, `checkedBy`. Day: `_id` (`YYYY-MM-DD`), `year`, `kind`, `name` | (`year`, `_id`); validator: checker ≠ preparer |
 | `counters` (`Counter`) | Atomic sequences for human-readable references | `_id` (prefix), `seq` | — |
 | `tex_audit.audit_events` (`AuditEvent`) | Append-only audit trail, **separate database**, insert-only for the app | `actor`, `organizationId`, `action`, `resource`, `correlationId`, `reason`, `details` | (`resource.type`, `resource.id`, `occurredAt`); (`actor.userId`, `occurredAt`) |
 
@@ -376,7 +378,7 @@ Illustrative values (shell notation):
 
 ### 4.5 Mongoose schemas, validators and indexes
 
-Each module owns its models in `*.model.ts`: an interface for the stored fields, a schema with its indexes and plugins, and the compiled model. Services work with models and documents; no code outside the model files touches a raw collection. Verified models for all 24 collections are in [`draft-implementation/src/modules/`](draft-implementation/src/modules/technology/technology.model.ts).
+Each module owns its models in `*.model.ts`: an interface for the stored fields, a schema with its indexes and plugins, and the compiled model. Services work with models and documents; no code outside the model files touches a raw collection. Verified models for all 27 collections are in [`draft-implementation/src/modules/`](draft-implementation/src/modules/technology/technology.model.ts).
 
 #### Global settings
 
@@ -640,7 +642,6 @@ The submit use case, verified with the Document API ([`technology.service.ts`](d
 const SUBMIT_TARGET: Partial<Record<TechnologyStatus, TechnologyStatus>> = {
   draft: 'submitted', changes_requested: 'submitted', published: 'update_pending',
 };
-const REVIEW_SLA_MS = 5 * 24 * 3600 * 1000;       // first review within 5 days (business days in production, FR-ADM-09)
 
 /** The tenant scope makes another organization's technology indistinguishable from a missing one. */
 async function loadForChange(actor: Actor, id: Types.ObjectId, expectedRev: number, session: ClientSession): Promise<TechnologyDoc> {
@@ -668,14 +669,11 @@ export function submitTechnologyForReview(actor: Actor, id: Types.ObjectId, expe
     tech.lifecycleStatus = target;
     await tech.save();                             // filters on rev and increments it: VersionError if changed meanwhile
 
-    const now = new Date();
-    const reviewCase = new ReviewCase({
-      ref: await Counter.nextRef('CASE', session),  // atomic findOneAndUpdate on `counters`
-      caseType: 'technology_review',
-      resource: { type: 'technology', id: tech._id, version: version.version },   // the exact version under review
-      dueAt: new Date(now.getTime() + REVIEW_SLA_MS),
+    // One case per submitted version (§6.7): reference from the atomic counter, the exact version under
+    // review, a link to the previous round's case, and a deadline of 5 working days (§6.10).
+    const reviewCase = await openReviewCase(session, {
+      caseType: 'technology_review', resource: { type: 'technology', id: tech._id, version: version.version },
     });
-    await reviewCase.save({ session });
     await record(session, actor, tech, 'submitted', fromStatus, tech.lifecycleStatus, { reviewCaseRef: reviewCase.ref });
     return { reviewCaseRef: reviewCase.ref, status: tech.lifecycleStatus, rev: tech.rev };   // new ETag value
   });
@@ -694,7 +692,7 @@ async function record(session: ClientSession, actor: Actor, tech: TechnologyDoc,
 }
 ```
 
-The draft implementation uses a fixed five-calendar-day due date. Production code must compute five **working days** from `calendar_days` (§4.9), which records official holidays and make-up working days (FR-ADM-09).
+`openReviewCase()` computes the deadline in working days with the published calendar (§6.10). If the year is not published, the deadline stays empty and the dashboard raises an alert; it is never guessed.
 
 How the errors in this excerpt reach the client (full list in §5.6): `NotFoundError` → `404`, `VersionConflictError` and Mongoose's `VersionError` → `409 VERSION_CONFLICT`, CASL's `ForbiddenError` → `403`, `InvalidTransitionError` → `409 INVALID_STATE_TRANSITION`, and a Mongoose `ValidationError` → `422`. Because the policy check comes first, a request that the policy's state rules forbid (for example submitting a listing that is already in review) gets `403`; `409 INVALID_STATE_TRANSITION` covers what the policy cannot see, such as a published listing with no unsubmitted changes.
 
@@ -727,8 +725,9 @@ MongoDB has no row-level security. Isolation is enforced in the model layer by a
 //   Technology.find(filter).setOptions({ tenant: ctx })                                  // organization users
 //   Technology.find(filter).setOptions({ crossTenant: { reason: 'CASE-000123' } })       // staff, audited by the caller
 //   Technology.aggregate(pipeline).option({ tenant: ctx })
-const QUERY_HOOKS = ['count', 'countDocuments', 'distinct', 'find', 'findOne', 'findOneAndDelete', 'findOneAndRemove',
-  'findOneAndUpdate', 'deleteOne', 'deleteMany', 'remove', 'replaceOne', 'update', 'updateOne', 'updateMany'];
+const QUERY_HOOKS = ['count', 'countDocuments', 'distinct', 'estimatedDocumentCount', 'find', 'findOne', 'findOneAndDelete',
+  'findOneAndRemove', 'findOneAndReplace', 'findOneAndUpdate', 'deleteOne', 'deleteMany', 'remove', 'replaceOne',
+  'update', 'updateOne', 'updateMany'];
 
 function scopeFilter(model: string, fields: string[], options: TenantScopeOptions) {
   if (options.crossTenant) {
@@ -748,6 +747,8 @@ export function tenantScopePlugin(schema: Schema<any>, opts: { fields: string[] 
   function applyScope(this: Query<unknown, unknown> & { [SCOPED]?: boolean }) {
     if (this[SCOPED]) return;                     // re-executed query: already scoped
     const options = this.getOptions() as TenantScopeOptions;
+    // estimatedDocumentCount() ignores filters, so it cannot be scoped: staff only (use countDocuments otherwise).
+    if (this.op === 'estimatedDocumentCount' && !options.crossTenant) throw new TenantScopeError('… use countDocuments');
     const filter = scopeFilter(this.model.modelName, opts.fields, options);
     if (filter) this.and([filter]);               // added with $and: a caller's filter cannot widen it
     delete options.tenant;                        // never forwarded to the driver
@@ -780,15 +781,15 @@ DealSchema.plugin(tenantScopePlugin, { fields: ['parties.organizationId'] });
 | `Deal` | `parties.organizationId` |
 | Child records (`technology_versions`, `demand_versions`, `deal_milestones`, `matches`, `document_access_grants`) | No plugin: loaded only through their scoped parent's `_id` (technology, demand or offer, deal, document) |
 | Identity records (`users`, `organizations`, `organization_memberships`, `organization_authorizations`, `platform_role_assignments`) | No plugin: loaded by the session's own user ID and organization IDs, or by staff modules |
-| Public data (`technology_publications`) and platform records (`review_cases`, `workflow_transitions`, `outbox_events`, `counters`) | No plugin: public by design, or used only by services and staff modules |
+| Public data (`technology_publications`) and platform records (`review_cases`, `workflow_transitions`, `outbox_events`, `jobs`, `calendar_*`, `counters`) | No plugin: public by design, or used only by services, the worker and staff modules |
 
 A tenant-scoped query on another organization's document returns nothing, so the service reports `404`, never `403`. The API therefore does not reveal that the document exists (§5.6).
 
 Controls around it:
 
-1. Document methods (`doc.save()`, `doc.deleteOne()`) are not queries and are not scoped by the plugin. They are safe because the document was loaded through a scoped query, and services only change documents they loaded. New documents take their owner from the actor's context, and the policy check on the unsaved document (`can('create', doc)`) rejects any other owner.
+1. Document methods (`doc.save()`, `doc.deleteOne()`) are not queries and are not scoped by the plugin. They are safe because the document was loaded through a scoped query, and services only change documents they loaded. One exception: `save()` of a document with **no changes** runs an existence query, which the plugin refuses because it carries no tenant options. Services therefore save only modified documents ([11 §5.2](11-target-runtime-node12-mongodb.md)). New documents take their owner from the actor's context, and the policy check on the unsaved document (`can('create', doc)`) rejects any other owner.
 2. Staff access uses `crossTenant: { reason }` with a case reference. The calling service writes an audit event with that reason; a lint rule allows `crossTenant` only in staff modules.
-3. Every list endpoint has an automated cross-tenant test (Organization A must never see Organization B's data). The draft implementation's tests check every query type, including `updateMany`, `deleteMany`, `distinct` and `aggregate`.
+3. Every list endpoint has an automated cross-tenant test (Organization A must never see Organization B's data). The draft implementation's tests check every query type, including `updateMany`, `deleteMany`, `distinct`, `aggregate` and `findOneAndReplace`. `findOneAndReplace` and `estimatedDocumentCount` were missing from the hook list until the Mongoose 6 spike found the gap (revision 6).
 4. Access by grant is not covered by owner fields. A buyer that holds a `document_access_grants` entry for a supplier's document cannot load it through its own tenant scope. The planned path: the service finds an active, unexpired grant for the caller's organization, then loads the document through the audited cross-tenant path with the grant as the reason, and the policy (`accessGrants` in §8.4) allows `read`. This path is not yet in the draft implementation.
 5. Highly sensitive fields (bank account numbers, ID-card numbers) are stored only with the payment or identity provider, or encrypted by the application before they are saved. Explicit client-side field-level encryption needs the native `mongodb-client-encryption` add-on, which has not been verified on Node 12.4; automatic encryption needs MongoDB Enterprise.
 
@@ -801,12 +802,12 @@ Controls around it:
 | Shortlists and feedback | `shortlists`, `match_feedback` |
 | Communication | `conversations`, `messages` (contact details masked until an introduction is approved) |
 | Negotiation and contracts | `proposal_versions`, `proposal_responses`, `approval_requests`, `contracts`, `contract_signatures`, `contract_registrations` (see [08 §9](08-china-operating-model.md)) |
-| Workflow | `workflow_tasks`, `jobs` (leased background jobs) |
+| Workflow | `workflow_tasks` |
 | Sessions and security | `sessions` (TTL), `login_attempts` (TTL), `sms_codes` (TTL, hashed codes) |
 | Notifications | `notifications`, `notification_deliveries`, `notification_templates` |
 | Content and events | `articles`, `events`, `event_registrations` (see [10](10-product-requirements.md)) |
-| Commercial | `subscriptions`, `service_orders`, `invoices` (finance tables from [08 §9](08-china-operating-model.md) when payments start) |
-| Calendar | `calendar_days` (official holidays and make-up working days per year; all working-day timers use it, FR-ADM-09) |
+| Commercial | `subscriptions`, `service_orders`, `invoices`; `payment_requests`, `payment_events` (R3, §6.11) |
+| Public demands | `demand_publications` (anonymized public snapshot of a demand, §6.8, FR-DEM-04) |
 | University tools | `public_notices`, `notice_objections`, `reward_notices` (FR-UNI-03, FR-UNI-06) |
 | Challenges | `challenges`, `challenge_tracks`, `solutions`, `evaluations` (FR-DEM-07, FR-DEM-08) |
 | Technology managers | `manager_profiles`, `manager_assignments`, `points_ledger` (FR-MAT-04 … FR-MAT-07) |
@@ -926,7 +927,7 @@ Detailed schemas live in OpenAPI and are validated in integration tests. Every `
 | `POST` | `/api/v1/offers/{id}/submissions` | Submit offer for review |
 | `POST` | `/api/v1/offers/{id}/withdrawals` | Withdraw offer |
 
-Use dedicated **action endpoints** for submission, withdrawal and every other state change. The frontend never sets `lifecycleStatus` or `offerStatus` directly; the zod schemas of the general update endpoints do not contain those fields. Review decisions on a technology (approve, request changes, reject, approve or reject a revision) go through `/api/v1/admin/review-cases/{id}/decisions`; suspension and reinstatement are staff actions (below).
+Use dedicated **action endpoints** for submission, withdrawal and every other state change. The frontend never sets `lifecycleStatus` or `offerStatus` directly; the zod schemas of the general update endpoints do not contain those fields. Review work on a technology (claim, questions, approve, request changes, reject, approve or reject a revision) goes through `/api/v1/admin/review-cases/{id}/actions` (§6.7); suspension and reinstatement are staff actions (below).
 
 **Demands and matching**
 
@@ -969,8 +970,13 @@ Use dedicated **action endpoints** for submission, withdrawal and every other st
 | `DELETE` | `/api/v1/document-access-grants/{id}` | Revoke a grant |
 | `GET` | `/api/v1/documents/{id}/download` | Obtain short-lived authorized file access |
 | `GET` | `/api/v1/admin/review-queues` | Retrieve review work |
-| `POST` | `/api/v1/admin/review-cases/{id}/assignments` | Assign a case |
-| `POST` | `/api/v1/admin/review-cases/{id}/decisions` | Record a review decision |
+| `POST` | `/api/v1/admin/review-cases/{id}/actions` | Apply a case action by name, e.g. `{ "action": "claim" }`, `{ "action": "ask", "reason": "…" }`, `{ "action": "propose", "decision": "approve" }`, `{ "action": "assign", "assigneeId": "…" }` (§6.7) |
+| `POST` | `/api/v1/review-cases/{id}/answers` | The submitter answers a reviewer's question; the case clock resumes (§6.7) |
+| `GET` | `/api/v1/admin/jobs?status=dead` | Dead letters and job backlog (§6.9) |
+| `POST` | `/api/v1/admin/jobs/{id}/retries` | Retry a dead job from attempt 0 (audited) |
+| `POST` | `/api/v1/admin/jobs/{id}/discards` | Discard a dead job with a reason (audited) |
+| `PUT` | `/api/v1/admin/calendar-years/{year}` | Prepare a year's holidays and make-up working days (§6.10) |
+| `POST` | `/api/v1/admin/calendar-years/{year}/publication` | Second administrator checks and publishes the year |
 | `POST` | `/api/v1/admin/technologies/{id}/suspensions` | Suspend a published listing (compliance) |
 | `POST` | `/api/v1/admin/technologies/{id}/reinstatements` | Reinstate a suspended listing |
 | `GET` | `/api/v1/admin/audit-events` | Search authorized audit records |
@@ -1160,7 +1166,7 @@ stateDiagram-v2
 | From | Action | To | Who (role code) | Preconditions / effects |
 | --- | --- | --- | --- | --- |
 | `draft` | submit | `submitted` | Organization technology role (`org_owner`, `org_admin`, `technology_manager`) | Required fields, holder declaration, evidence scanned clean; version frozen; review case opened |
-| `submitted` | assign | `in_review` | `operations_manager` or auto-assignment | Reviewer has no conflict of interest |
+| `submitted` | assign | `in_review` | A reviewer claims the review case, or `operations_manager` assigns it (§6.7) | Reviewer has no conflict of interest |
 | `in_review` | request_changes | `changes_requested` | Reviewer (`listing_reviewer`) | Reason per field |
 | `changes_requested` | submit | `submitted` | Organization technology role | The first edit after the request started a new version; that version is frozen and reviewed |
 | `in_review` | approve | `approved` | Reviewer | Checklist complete; approved field scope recorded |
@@ -1278,7 +1284,7 @@ stateDiagram-v2
 
 `ready_to_complete` means every completion condition of the deal type is satisfied with evidence (for example licence effective and initial payment confirmed by the payment provider). The deal owner then confirms completion as a separate, audited action. Completion is never automatic and has no "force complete" shortcut ([05 §9.5](05-system-design-blueprint.md)).
 
-**Deal status on the venue route (R3).** The deal stays `negotiation` while the venue lists and discloses the technology and runs buyer registration and price discovery. It moves to `contract_draft` when the venue confirms the buyer and price, then through `approval` to `signed` (contract within 5 WD), and stays `conditions_pending` until venue settlement is confirmed and the transaction certificate (交易凭证) is recorded: both are completion conditions of a venue-routed deal. The venue's own steps are tracked on `venue_submissions` (FR-VEN), not as extra deal statuses.
+**Deal status on the venue route (R3).** The deal stays `negotiation` while the venue lists and discloses the technology and runs buyer registration and price discovery. It moves to `contract_draft` when the venue confirms the buyer and price, then through `approval` to `signed` (contract within the period the listing sets), and stays `conditions_pending` until settlement is confirmed and the transaction certificate (交易凭证) is recorded: both are completion conditions of a venue-routed deal. Settlement means the venue's confirmation for on-exchange settlement, or the seller's evidenced receipt of the price for off-exchange settlement (场外结算, the usual case in 2026 STEX listings, [09 §2.3](09-reference-platform-features.md)). The venue's own steps are tracked on `venue_submissions` (FR-VEN), not as extra deal statuses.
 
 The stage is only **one dimension** of a deal. Store separate fields or records for:
 
@@ -1311,7 +1317,310 @@ An approval transition updates the resource status **and** appends its transitio
 
 Keep the allowed transitions as **data**, next to the service that applies them: `SUBMIT_TARGET` in the technology service (§4.7) is the first example, and [05 §13](05-system-design-blueprint.md) shows the same pattern for deals. State rules that decide who may act in which state belong in the CASL policy (§8.4); preconditions that need other records (evidence, signatures, conditions) belong in the transition's check.
 
-The worker relays outbox events: it leases pending events (`status: 'pending'`, `lockedUntil`), performs the side effect (search index, page rendering, notification), then marks them `published`, or increments `attempts` and records `lastError`. Side effects can therefore run more than once, so every consumer must be idempotent (an index upsert, a notification keyed by event ID).
+The worker relays outbox events: it leases pending events (`status: 'pending'`, `lockedUntil`), performs the side effect (search index, page rendering, notification), then marks them `published`, or increments `attempts` and records `lastError`. Side effects can therefore run more than once, so every consumer must be idempotent (an index upsert, a notification keyed by event ID). §6.9 gives the full design of the relay, the leased jobs, retries and dead letters.
+
+### 6.6 Offer lifecycle
+
+Stored in `technology_offers.offerStatus` (`OFFER_STATUSES` in `offer.model.ts`): `draft`, `submitted`, `active`, `paused`, `under_negotiation`, `closed`, `expired`, `rejected`. An offer is one commercial opportunity for a technology, such as a non-exclusive licence for mainland China, an assignment or a pilot. A technology can have several offers.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Draft
+    Draft --> Submitted : Submit with the listing version
+    Submitted --> Active : Listing version published
+    Submitted --> Draft : Changes requested
+    Submitted --> Rejected : Offer rejected in review
+    Active --> Paused : Owner pauses
+    Paused --> Active : Owner resumes
+    Active --> UnderNegotiation : Reserve (exclusive talks or venue listing)
+    UnderNegotiation --> Active : Reservation ends
+    UnderNegotiation --> Closed : Deal completed
+    Active --> Closed : Deal completed, withdrawn or replaced
+    Paused --> Closed : Withdrawn
+    Active --> Expired : Validity date passed
+    Expired --> Active : Owner renews
+    Rejected --> [*]
+    Closed --> [*]
+```
+
+**Offers are part of the listing.** The owner writes offers in step 4 of the listing wizard (§7.2). An offer is submitted with a technology version (`technologyVersion`) and reviewed in the same review case (§6.7). The publishing service makes it `active` when that version goes live (§6.8). Adding an offer to a published technology is a material change, so the owner submits a revision (`update_pending`), and the new offer goes live with it. Active offers are never edited in place. To change the terms (price structure, exclusivity, territory or field of use), the owner adds a new offer through a revision and closes the old one (`replaced`) once the new one is active. Introductions and deals keep a reference to the offer they started from.
+
+| From | Action | To | Who | Rules and effects |
+| --- | --- | --- | --- | --- |
+| `draft` | submit | `submitted` | Organization technology role | Submitted with the listing version; required fields per transaction type; valid price structure (FR-TEC-07) |
+| `submitted` | publish | `active` | System (publishing service) | The listing version it was submitted with (or a later one) goes live |
+| `submitted` | request_changes | `draft` | Reviewer, through the review case | Reason per field |
+| `submitted` | reject | `rejected` | Reviewer | A rejected offer does not block the rest of the listing |
+| `active` | pause / resume | `paused` / `active` | Owner | A paused offer is hidden from matching and from search facets; open introductions and deals continue |
+| `active` | reserve | `under_negotiation` | Owner or deal manager; system for venue listings | `reservation.reason` is `exclusive_talks` (exclusivity of negotiation granted to one buyer, with `until` and `dealId`) or `venue_listing` (formally listed on STEX or CTEX, so it must not be sold elsewhere during disclosure; FR-VEN-01) |
+| `under_negotiation` | release | `active` | Owner, deal manager or system | `until` passed (daily job), the talks ended, or the venue listing ended without a buyer |
+| `active`, `under_negotiation` | close | `closed` | System when a deal completes; owner otherwise | `closureReason`: `deal_completed` (assignment, or exclusive or sole licence for the same territory and field), `withdrawn`, `replaced`, or `technology_archived` |
+| `active` | expire | `expired` | System (daily job) | `validUntil` passed; the owner is reminded 30 and 7 days before |
+| `expired` | renew | `active` | Owner | New `validUntil`. Dates are not material, so there is no review |
+
+Rules:
+
+- Matching (§10) and new introduction requests use only `active` offers of technologies with a live snapshot. In every other status, existing introductions and deals continue.
+- A non-exclusive licence offer stays `active` after a deal, because the same technology can be licensed again.
+- When a technology is suspended, its offers keep their status but are not discoverable (the snapshot is withdrawn) and accept no new introductions (§6.1). Archiving a technology closes all its open offers (`technology_archived`).
+- The public snapshot shows only offer types, territories and the price type. Amounts are never shown in search results (FR-SRC-04).
+
+*Implementation status:* the statuses, `reservation` and `closureReason` are in the model and the database validator (migration 003); the publishing service activates offers (verified in `tests/test-workflow.js`). The owner actions are a specification.
+
+### 6.7 Review-case lifecycle
+
+A review case is the unit of staff work: **one case per submitted version** of an organization verification, technology listing, IP verification, demand, introduction or dispute. Stored in `review_cases.status` (`CASE_STATUSES`): `open`, `assigned`, `in_review`, `waiting_for_submitter`, `awaiting_check`, `approved`, `rejected`, `escalated`, `closed`.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Open : Resource submitted
+    Open --> Assigned : Claim or assign
+    Assigned --> Open : Release
+    Assigned --> InReview : Start
+    InReview --> WaitingForSubmitter : Ask a question (clock stops)
+    WaitingForSubmitter --> InReview : Submitter answers (clock resumes)
+    InReview --> AwaitingCheck : Propose decision (maker-checker types)
+    AwaitingCheck --> InReview : Checker returns it
+    InReview --> Approved : Approve
+    InReview --> Rejected : Reject
+    AwaitingCheck --> Approved : Checker confirms approval
+    AwaitingCheck --> Rejected : Checker confirms rejection
+    InReview --> Closed : Request changes
+    Open --> Escalated : Deadline passed
+    Assigned --> Escalated : Deadline passed
+    InReview --> Escalated : Deadline passed or reviewer escalates
+    WaitingForSubmitter --> Escalated : Reviewer escalates
+    Escalated --> Assigned : Lead reassigns
+    Approved --> [*]
+    Rejected --> [*]
+    Closed --> [*]
+```
+
+The allowed transitions are data (`CASE_TRANSITIONS` in `review-case.service.ts`). One service method (`actOnCase`) applies an action, its effect on the reviewed resource, and the transition, outbox and audit records, all in one transaction.
+
+| Action | From | To | Who | Rules and effects |
+| --- | --- | --- | --- | --- |
+| claim | `open` | `assigned` | Reviewer with the case type's role | Sets `assignedTo`; conflict-of-interest check |
+| assign | `open`, `assigned`, `escalated` | `assigned` | `operations_manager` | Names the assignee |
+| release | `assigned` | `open` | Assigned reviewer | Back to the queue |
+| start | `assigned` | `in_review` | Assigned reviewer | — |
+| ask | `in_review` | `waiting_for_submitter` | Assigned reviewer | The question is required; the SLA clock stops (`pausedAt`) |
+| answer | `waiting_for_submitter` | `in_review` | Submitter (a member with the `respond` permission) | The deadline moves by the working days waited |
+| propose | `in_review` | `awaiting_check` | Assigned reviewer (maker) | Only for maker-checker case types; records `proposedDecision` and `proposedBy` |
+| return | `awaiting_check` | `in_review` | Checker | Reason required; clears the proposal |
+| approve / reject | `in_review` (single-person types) or `awaiting_check` | `approved` / `rejected` | Assigned reviewer, or the checker | The checker must be a different person and can only confirm the proposed decision; reject needs a reason |
+| request_changes | `in_review` | `closed` (`decision: request_changes`) | Assigned reviewer | Reason required; the resubmission opens a new case linked by `previousCaseId` |
+| escalate | `open`, `assigned`, `in_review`, `waiting_for_submitter` | `escalated` | System when the deadline passes; assigned reviewer with a reason | The lead is notified and reassigns |
+
+Rules:
+
+1. **Exact version.** A case names the version under review (`resource.version`), so a decision always applies to the content the reviewer saw. A decision on a case whose version is no longer current is refused.
+2. **Roles per case type** (CASL `review` on `ReviewCase`, §8.4): `listing_reviewer` for technology, IP and demand reviews; `verification_reviewer` for organization verification; `operations_manager` assigns. Only the assigned reviewer acts on an assigned case.
+3. **Conflict of interest.** A reviewer who is a member of the organization that owns the resource cannot act on the case.
+4. **Service level.** The deadline (`dueAt`) is N working days after the case opens, computed with the working-day calendar (§6.10). The initial targets come from §14: organization verification 3 WD, technology 5 WD, IP 5 WD, demand 3 WD, introduction 2 WD and dispute first response 5 WD. Targets are configurable. Time spent waiting for the submitter does not count: when the submitter answers, the deadline moves by the working days waited, not counting the day the question was asked. `pausedWorkingDays` keeps the total, so reports can separate staff time from waiting time (§14).
+5. **Escalation.** A job escalates `open`, `assigned` and `in_review` cases every 15 minutes once their deadline has passed. Cases waiting for the submitter are not escalated. The transition is recorded with the system actor, and the lead is notified. The operations dashboard also flags cases unclaimed for more than 4 business hours ([10 §5.2](10-product-requirements.md)).
+6. **Maker-checker** (FR-ADM-02) for the case types in `CHECK_REQUIRED`: organization verification now, and venue submissions and certificate records in R3. The maker proposes approve or reject; a different person confirms it or returns it with a reason. The checker cannot reverse the decision silently. Both people are recorded (`proposedBy`, `checkedBy`).
+7. **No calendar, no deadline.** If the calendar year is not published, the case gets `dueAt: null` and the dashboard raises an alert. The deadline is filled in when the year is published (§6.10). It is never guessed.
+
+Effect of a case decision on the resource (same transaction):
+
+| Case type | Action | Resource status change |
+| --- | --- | --- |
+| Technology | claim, assign | `submitted` → `in_review` (a revision stays `update_pending`) |
+| Technology | approve | `in_review` → `approved`, then the publishing service publishes (§6.8); a revision goes `update_pending` → `published` (`approve_revision`) |
+| Technology | reject | `in_review` → `rejected`; a revision goes `update_pending` → `published` (`reject_revision`, the old snapshot stays live) |
+| Technology | request_changes | `in_review` → `changes_requested`; for a revision, `reject_revision` with the reason |
+| Organization verification | claim, assign / approve / reject / request_changes | `pending` → `in_review` / `verified` (level 3) / `rejected` / `pending` |
+
+*Implementation status:* verified in [`draft-implementation/`](draft-implementation/README.md) (`review-case.service.ts`, `tests/test-workflow.js`) for technology and organization cases. Other case types record their decisions on the case; their resource effects are added with their modules.
+
+### 6.8 Publishing service: snapshots, search and public pages
+
+The publishing service turns an approved listing version into the **publication snapshot** (`technology_publications`). Search, public pages and matching read only this snapshot (§4.3). The service runs in the worker.
+
+```mermaid
+sequenceDiagram
+    actor Reviewer
+    participant API as API (review-case service)
+    participant DB as MongoDB
+    participant W as Worker
+    participant MS as Meilisearch
+    participant FS as Public page files
+    Reviewer->>API: approve (If-Match: rev)
+    API->>DB: case approved, technology approved,<br/>transition + outbox + audit (one transaction)
+    W->>DB: relay outbox: job technology.publish
+    W->>DB: build snapshot, old live → superseded, new live,<br/>offers active, technology published (one transaction)
+    W->>DB: relay outbox: search and page jobs
+    W->>DB: read the current live snapshot
+    W->>MS: upsert document (or delete)
+    W->>FS: write the pre-rendered page (or a withdrawn page)
+```
+
+Rules:
+
+- **Preconditions.** Before the publish job publishes a version, it checks four things:
+  - an approved review case exists for exactly that version;
+  - the version is frozen;
+  - it has a public summary;
+  - the owner organization is verified.
+
+  Production adds three more: public attachments are scanned clean (§9.1), the public text has passed content moderation (FR-ADM-08), and no export-control block applies (FR-CMP-05). If a precondition fails, the job ends as a dead letter (§6.9). The technology stays `approved` and appears on the operations dashboard. Nothing is half-published.
+- **Idempotent.** The job does nothing if this version or a newer one is already live, or if the technology was suspended or archived in the meantime.
+- **One transaction for the swap.** The old live snapshot becomes `superseded` before the new one is inserted. So the unique partial index (one `live` snapshot per technology) holds at every moment, and readers see either the old or the new snapshot.
+- **Consumers read the current state.** The search and page jobs ignore what the event says. They load the current live snapshot, and delete the entry or page if there is none. So jobs that arrive late, twice or out of order still converge on the right result. The search document is built only from snapshot fields.
+- **Visibility** (the owner's disclosure setting):
+  - `public`: indexed, with a public page;
+  - `restricted`: indexed with `visibility: restricted`, which the API filters out for anonymous visitors; no page and no sitemap entry;
+  - `private`: the snapshot exists only for broker-led matching.
+- **Suspension** withdraws the snapshot in the suspension transaction. Search results are re-checked against the current status (FR-SRC-08), so the listing disappears from results at once. Jobs then delete the index entry and replace the page with a "withdrawn" page (HTTP 410). **Reinstatement** publishes the latest approved version again.
+- **Timing** (FR-TEC-12, ≤ 5 minutes): the worker polls the outbox and the job queue every second. `publication_lag_seconds` (from approval to the index update) is a metric, and an alert fires at 5 minutes (§11.6).
+- **Reconciliation.** A daily job compares live snapshots, search-index IDs and page files. Any drift gets sync jobs and a log entry.
+- **Public demands** (`anonymous_public`) use the same pattern with a `demand_publications` collection built from the anonymized public version (FR-DEM-04). This collection is added with the demand module.
+- **Sitemap and Baidu push.** The sitemap is rebuilt hourly. New or changed public pages are pushed in batches within the daily push quota ([11 §7](11-target-runtime-node12-mongodb.md)).
+
+*Implementation status:* verified in `publishing.service.ts` and `tests/test-workflow.js`: snapshot swap, offer activation, idempotent re-run, suspension, reinstatement, a dead letter for an unapproved version, and search and page sync with in-memory stand-ins for Meilisearch and the page files.
+
+### 6.9 Background work: outbox, leased jobs, retries and dead letters
+
+All asynchronous work runs in the worker process (`tex-worker`) on two MongoDB collections, with no Redis ([05 §3.2](05-system-design-blueprint.md)):
+
+| Collection | Holds | Written by |
+| --- | --- | --- |
+| `outbox_events` | Facts that happened, such as `technology.published` | Services, in the same transaction as the change |
+| `jobs` | Work to do, such as `search.sync_technology` for event X, with lease, attempts and result | The outbox relay, the scheduler, and services for commands (bulk import, re-index) |
+
+```mermaid
+stateDiagram-v2
+    [*] --> Queued : Enqueued (unique key)
+    Queued --> Running : Leased
+    Running --> Succeeded : Done while the lease is held
+    Running --> Queued : Retryable failure (backoff)
+    Running --> Running : Lease expired, taken over
+    Running --> Dead : Permanent failure or attempts used up
+    Dead --> Queued : Operator retries
+    Succeeded --> [*] : Removed after 30 days
+```
+
+1. **Outbox relay.** The relay leases the oldest pending event (60 s lease). It creates one job per subscribed handler, with the key `<eventId>:<handler>`, then marks the event `published`. No transaction is needed: unique job keys make a second relay after a crash harmless. Relayed events are kept for 30 days (TTL index on `expireAt`). An event that fails to relay 10 times is marked `failed` and raises an alert.
+2. **Fan-out.** Each handler gets its own job, so retries are independent: a failing SMS does not re-run search indexing.
+3. **Leasing.** One atomic `findOneAndUpdate` takes the job and marks it `running`. Eligible jobs are queued jobs whose `runAt` has passed, and running jobs whose lease has expired. The highest priority goes first, then the earliest `runAt`. The update sets a new random lease token and `lockedUntil`, and increments `attempts`. Two workers can never hold the same lease.
+4. **Long jobs** renew their lease every third of its length (default lease 5 minutes). A worker whose renewal or completion is refused has lost the lease: it stops and discards its result.
+5. **Completion and failure** are accepted only from the holder of the current lease token.
+   - **Retryable failures** go back to `queued` with exponential backoff: 30 s × 2^(attempt − 1), capped at 1 hour, plus up to 10% jitter. The default is 8 attempts, about one hour in total.
+   - **Permanent failures** (`PermanentJobError`: invalid payload, missing record, failed precondition) go to `dead` at once.
+   - **Crash loops:** a job whose lease expired more often than its attempt limit is treated as a crash loop and dies.
+6. **Dead letters.** A dead job keeps `lastError` and appears on the operations dashboard (FR-ADM-01). Operators can retry it from attempt 0 or discard it with a reason; both actions are audited. An alert fires whenever a job dies.
+7. **Idempotent handlers.** Every handler must give the right result when it runs twice:
+   - upsert rather than insert;
+   - send the job key as the request ID to providers that support one;
+   - read the current state instead of trusting the payload.
+8. **Jobs in transactions.** `enqueueJob(spec, session)` can join a business transaction, so scheduling commits or rolls back with the change.
+9. **Scheduling.** `node-cron` in the worker enqueues scheduled jobs with keys derived from the time slot (for example `review.escalate:2026-10-19T09:15`). A restart or a second worker therefore never schedules the same run twice.
+10. **Scaling.** One worker at launch. A second worker can run without code changes. Production runs a small pool (for example 4 concurrent jobs) with a limit of one at a time for heavy types (imports, re-index).
+11. **Retention and content.** Succeeded jobs are kept for 30 days (TTL index on `expireAt`); dead jobs are kept until handled. Payloads hold references, never secrets or confidential document content.
+
+Scheduled jobs:
+
+| Job | When | Purpose |
+| --- | --- | --- |
+| `review.escalate_overdue` | Every 15 minutes | Escalate overdue cases (§6.7) |
+| `review.fill_due_dates` | After a calendar year is published | Fill deadlines that could not be computed (§6.10) |
+| `demand.expire` | Daily 01:00 | Expire demands past their target date (§6.2) |
+| `offer.expire`, `offer.release_reservations` | Daily 01:10 | Offer validity and reservations (§6.6) |
+| `technology.stale_check` | Daily 02:00 | Re-confirmation reminders, hiding and archiving (FR-TEC-13) |
+| `ip.legal_status_due` | Daily 02:30 | IP assets due for their 6-monthly legal-status check (FR-TEC-05) |
+| `publication.reconcile` | Daily 03:00 | Snapshot, index and page consistency (§6.8) |
+| `sitemap.rebuild` | Hourly | Sitemap and Baidu push (§6.8) |
+| `calendar.next_year_check` | Daily from 1 November | Alert while next year's calendar is not published (§6.10) |
+| `payment.reconcile` (R3) | Daily 06:00 | Compare the provider statement with payment records (§6.11) |
+
+*Implementation status:* the job queue (`core/jobs/`), the outbox relay and the publishing handlers are verified in `tests/test-workflow.js`, on MongoDB 4.4 and 5.0. The checks cover: idempotent enqueue; five workers racing for one lease; expired-lease takeover; refused completion after a lost lease; backoff; dead letters and operator retry; rollback with the business transaction; and relaying again after a crash. The scheduler and the worker's polling loop are a specification.
+
+### 6.10 Working-day calendar
+
+Venue rules, university notices and the platform's own service levels count time in working days (WD) on the official China calendar (FR-ADM-09). China moves working days around public holidays (调休): some Saturdays and Sundays become working days. A plain Monday-to-Friday rule is therefore wrong several times a year.
+
+**Data.** Only the exceptions to the Monday-to-Friday week are stored:
+
+| Collection | Fields |
+| --- | --- |
+| `calendar_years` | `_id` (the year), `status` (`draft` or `published`), `source` (the notice number), `preparedBy`, `checkedBy`, `publishedAt` |
+| `calendar_days` | `_id` (`YYYY-MM-DD`), `year`, `kind` (`holiday` or `makeup_workday`), `name` |
+
+**Maintenance.** Each year's arrangement comes from the State Council General Office notice (国务院办公厅关于××年部分节假日安排的通知), published towards the end of the previous year. The 2026 notice is 国办发明电〔2025〕7号 ([official text](references/official-texts/gov-holidays-2026-guobanfamingdian-2025-7.txt)).
+1. An administrator enters the holidays and make-up working days, with the notice number.
+2. A second administrator checks them against the notice and publishes the year. The code and a database validator both enforce that the checker is a different person.
+3. From 1 November, a daily check raises an alert until next year's calendar is published.
+
+Corrections to a published year follow the same two-person step. A recompute job then updates open deadlines and records each change in the audit trail.
+
+**Algorithm** (`core/calendar/working-days.ts`):
+
+1. A day is a working day if it is a make-up working day. Otherwise it is not a working day if it is a holiday. Otherwise it is a working day from Monday to Friday.
+2. A period starts on the day after the event (Civil Code Art. 201). An event at 09:00 and one at 23:30 on the same day give the same deadline.
+3. "N working days after an event" ends at 24:00 Asia/Shanghai on the N-th working day after the event's local date. Where a rule uses business hours, it ends at a configured cut-off time instead (Civil Code Art. 203).
+4. Calendar-day periods (for example the ≥ 15-day public notice) count every day. If the last day is not a working day, the period ends on the next working day (Art. 203).
+5. A pause moves a deadline by the working days waited (§6.7).
+6. If a computation needs a day in a year that is not published, it fails (`CalendarMissingError`). The caller stores no deadline and raises an alert; it never guesses. Instants are stored in UTC; local dates use Asia/Shanghai (UTC+8, no daylight saving).
+
+| Kind of rule | Examples | Computation |
+| --- | --- | --- |
+| At most N WD | Review ≤ 3 WD, contract within 5 WD, corrections ≤ 3 WD | `addWorkingDays`: the act is due by the deadline |
+| At least N WD | Disclosure ≥ 5 WD, tender preparation ≥ 10 WD, procurement listing ≥ 20 WD | `addWorkingDays` gives the earliest end; the platform never ends the period sooner |
+| At least N calendar days | Public notice ≥ 15 days, ownership-grant notice ≥ 15 days | `addCalendarDays`, extended to a working day |
+| Business hours | Review unclaimed ≤ 4 business hours | Working days, 09:00–18:00 by default (configurable) |
+
+Worked example (2025 National Day under 国办发明电〔2024〕12号: 1–8 October off; Sunday 28 September and Saturday 11 October worked):
+
+| Event | Rule | Deadline |
+| --- | --- | --- |
+| Review case opened Tue 30 Sep 2025, 10:00 | 5 WD | End of Tue 14 Oct (9, 10, 11 make-up, 13, 14 Oct) |
+| Public notice published Sat 20 Sep 2025 | ≥ 15 days | Day 15 is Sun 5 Oct, a holiday, so the notice runs to the end of Thu 9 Oct |
+| Clock paused 30 Sep 10:00, answered 10 Oct 09:00 | Pause | Deadline + 2 WD (9 and 10 Oct) |
+
+For venue periods, the venue is the authority. STEX closes on exactly the State Council holiday days and reopens on the next working day ([09 §2.7](09-reference-platform-features.md)), so the same calendar applies. The platform's computation drives tracking and reminders, and the venue's announced dates are stored when they differ.
+
+*Implementation status:* verified (`working-days.ts`, `calendar.model.ts`). The tests use the 2025 National Day arrangement and check the maker-checker publication of a year, including the database validator.
+
+### 6.11 Payments: one adapter, kept simple
+
+**Owner decision (2026-10-19, D-02 in [12](12-decision-record.md)):** payments go through the owner's own payment testing platform, behind one adapter, and the payment design stays shallow. The platform still never holds client money ([08 §1.2](08-china-operating-model.md)). For live money, a bank or licensed payment institution plugs into the same adapter, after the confirmation in [08 §10 B](08-china-operating-model.md).
+
+| Piece | Design |
+| --- | --- |
+| `PaymentGateway` adapter | `createPayment(request)` returns the provider payment ID plus a pay URL or QR code. Other operations: `queryPayment(id)`; `refund(id, amount, reason)`; `verifyNotification(headers, rawBody)`, which returns a verified event or throws; `fetchStatement(date)`. One implementation, `owner_test`, for the owner's testing platform; its endpoint and keys come from environment variables. Mapping these five operations to that platform's API is the whole integration |
+| `payment_requests` | `ref` (`PAY-000123`); purpose (`deal_milestone` or `platform_fee`); payer and payee organizations; amount `{ currency, amountMinor }`; deal and milestone references; status; provider payment ID; idempotency key; `expiresAt` |
+| `payment_events` | Append-only verified provider events, unique per provider event ID, with a hash of the raw body and the time received |
+
+```mermaid
+stateDiagram-v2
+    [*] --> Created
+    Created --> Pending : Sent to provider, payer redirected
+    Pending --> Succeeded : Verified event or status query
+    Pending --> Failed : Verified failure
+    Pending --> Expired : Not paid in time
+    Created --> Cancelled : Cancelled before sending
+    Pending --> Cancelled : Cancelled at the provider
+    Succeeded --> RefundPending : Refund approved
+    RefundPending --> Refunded : Verified refund event
+    Failed --> [*]
+    Expired --> [*]
+    Cancelled --> [*]
+    Refunded --> [*]
+```
+
+Rules:
+
+1. Only a verified provider event, or a status query from the server, changes a payment's status. The payer's browser redirect never does.
+2. Duplicate notifications are ignored (unique provider event ID). Out-of-order notifications cannot move a payment backwards.
+3. Create and refund calls carry the payment request's idempotency key. They run as jobs, never inside a database transaction, and retry with the job backoff (§6.9).
+4. A succeeded payment linked to a milestone satisfies that milestone's payment condition. The deal still reaches `ready_to_complete` only through its normal completion check (§6.4).
+5. Finance requests a refund with a reason, and a second finance user approves it (maker-checker). A refund never exceeds the amount paid.
+6. A daily job reconciles the provider statement with `payment_requests`. Any difference (missing payment, amount or status) opens a finance case and raises an alert.
+7. Out of scope by the owner's decision: conditional holding, split payouts, wallets and provider-side commission splits. The provider models in [07 §6](07-roles-workflows-and-money.md) and [08 §6](08-china-operating-model.md) remain background for a later production provider.
+8. Venue-routed deals settle through the venue (FR-VEN-08), not through this adapter.
+
+*Implementation status:* specification (R3); requirements FR-PAY-01 … FR-PAY-04 in [10 §3.18](10-product-requirements.md).
 
 ---
 
@@ -1547,13 +1856,17 @@ import type { DealDoc } from '../deals/deal.model';
 import type { DemandDoc } from '../demands/demand.model';
 import type { DocumentFileDoc } from '../documents/document.model';
 import type { TechnologyDoc } from '../technology/technology.model';
+import type { ReviewCaseDoc } from '../workflow/workflow.model';
 
-export type Action = 'create' | 'read' | 'update' | 'submit' | 'review' | 'suspend' | 'delete';
-export type SubjectName = 'Technology' | 'Demand' | 'Deal' | 'DocumentFile';
+export type Action =
+  | 'create' | 'read' | 'update' | 'submit' | 'review' | 'suspend' | 'reinstate' | 'delete'
+  | 'respond'                                        // answer a reviewer's question (§6.7)
+  | 'assign';                                        // assign or reassign a review case
+export type SubjectName = 'Technology' | 'Demand' | 'Deal' | 'DocumentFile' | 'ReviewCase';
 
 // Plain objects (e.g. API payloads, tests) can be checked with subject('Technology', obj).
 type PlainSubject = ForcedSubject<SubjectName> & Record<string, unknown>;
-export type AppSubject = SubjectName | TechnologyDoc | DemandDoc | DealDoc | DocumentFileDoc | PlainSubject;
+export type AppSubject = SubjectName | TechnologyDoc | DemandDoc | DealDoc | DocumentFileDoc | ReviewCaseDoc | PlainSubject;
 export type AppAbility = Ability<[Action, AppSubject]>;
 const AppAbility = Ability as AbilityClass<AppAbility>;
 
@@ -1580,6 +1893,7 @@ export function defineAbilityFor(user: SessionUser | null): AppAbility {
       can('read', 'Technology', { ownerOrganizationId: m.organizationId });
       if (m.roleCodes.some((r) => MANAGES_TECHNOLOGY.includes(r))) {
         can(['create', 'update', 'submit'], 'Technology', { ownerOrganizationId: m.organizationId });
+        can('respond', 'Technology', { ownerOrganizationId: m.organizationId, lifecycleStatus: { $in: ['in_review', 'update_pending'] } });
         can('delete', 'Technology', { ownerOrganizationId: m.organizationId, lifecycleStatus: 'draft', currentVersion: 1 });
       }
     }
@@ -1587,7 +1901,15 @@ export function defineAbilityFor(user: SessionUser | null): AppAbility {
       can('read', g.resourceType, { _id: g.resourceId });
     }
     if (user.platformRoles.includes('listing_reviewer')) {
-      can('review', 'Technology', { lifecycleStatus: { $in: ['submitted', 'in_review'] } });
+      can('review', 'Technology', { lifecycleStatus: { $in: ['submitted', 'in_review', 'update_pending'] } });
+      can('review', 'ReviewCase', { caseType: { $in: ['technology_review', 'ip_verification', 'demand_review'] } });
+      can('reinstate', 'Technology', { lifecycleStatus: 'suspended' });
+    }
+    if (user.platformRoles.includes('verification_reviewer')) {
+      can('review', 'ReviewCase', { caseType: 'organization_verification' });
+    }
+    if (user.platformRoles.includes('operations_manager')) {
+      can('assign', 'ReviewCase');
     }
     if (user.platformRoles.includes('compliance_officer')) {
       can('suspend', 'Technology', { lifecycleStatus: 'published' });
@@ -1618,7 +1940,7 @@ const reviewQueue = await Technology.accessibleBy(reviewerAbility, 'review')
 
 The verification run checks this policy on plain objects and on Mongoose documents. A technology manager can submit their own draft and a revision of a published listing, but not a listing already in review, and cannot edit another organization's technology or a listing with a pending update. A viewer can read but not submit. Anonymous visitors see only published public listings. A reviewer can review submitted listings but not drafts, and the reviewer queue spans organizations. A role without a matching rule gets a `ForbiddenError` from `accessibleBy`, not an empty list; the error middleware turns it into `403 PERMISSION_DENIED`, like every other `ForbiddenError` (§5.6).
 
-The draft policy covers technologies only. Demands, deals and documents follow the same pattern: their subject types are already declared, and their rules are added with their services. Public pages and public search do not use this policy at all: they read only the approved snapshots in `technology_publications` (§10).
+The draft policy covers technologies and review cases (who may act on which case type, §6.7). Demands, deals and documents follow the same pattern: their subject types are already declared, and their rules are added with their services. Public pages and public search do not use this policy at all: they read only the approved snapshots in `technology_publications` (§10).
 
 The policy decides **what** an actor may do. The tenant-scope plugin (§4.8) decides **which documents can be loaded at all**. Both are required. Field-level visibility (public, registered-user, NDA-covered fields) is applied by the response serializer of each endpoint. Test authorization at the **service layer and the API boundary**; never rely on the frontend.
 
@@ -1667,6 +1989,18 @@ Required controls:
 - Encrypted, access-restricted backups.
 
 If the scanner is unavailable, files **stay quarantined**. Never make documents available just because a timeout elapsed.
+
+**Malware scanning design.** The scanner is ClamAV's `clamd` daemon on the application server, listening only on `127.0.0.1:3310`. The worker streams each file to it with the `INSTREAM` command: a short client on Node's `net` module, so no extra dependency. The flow uses the states already in the `documents` model (`scanStatus`, `lifecycleStatus`):
+
+| Step | What happens | `scanStatus` / `lifecycleStatus` |
+| --- | --- | --- |
+| Upload finalized | File in the quarantine directory; a `document.scan` job is enqueued (§6.9) | `pending` / `quarantined` |
+| Type check | Magic bytes are checked against the allow-list and the declared extension (NFR-04: PDF, Office, images, ZIP) | A mismatch is rejected: `failed` |
+| Scan clean | The SHA-256 hash is recorded, the file moves to private storage, and the document becomes available to the grants that apply | `clean` / `available` |
+| Malware found | The file stays in quarantine for 30 days for incident review, then is deleted. The uploader is told; a security alert is raised; an audit event is written | `infected` / `quarantined` |
+| Scanner error or timeout | The job retries with backoff (§6.9). After the last attempt it becomes a dead letter and raises an alert. The file stays quarantined | `pending`, then `failed` / `quarantined` |
+
+`clamd.conf` must allow the NFR-04 size limit: `StreamMaxLength`, `MaxFileSize` and `MaxScanSize` of at least 210 MB (the defaults are much lower and would reject large files), and `MaxRecursion` and `MaxFiles` limits for archives. Password-protected archives and documents cannot be scanned, so they are rejected (`AlertEncrypted yes`). `freshclam` updates the signatures several times a day. Check that the server can reach the update mirrors from mainland China; if it cannot, run a private mirror on a host that can. A signature database older than 3 days raises an alert (§11.6). Release tests upload the EICAR test file and expect `infected` (NFR-04).
 
 ### 9.2 Authentication and sessions
 
@@ -1800,6 +2134,7 @@ technology-exchange/
 │   │   │   ├── main.ts            # HTTP server bootstrap, graceful shutdown
 │   │   │   ├── worker.ts          # outbox relay, search indexer, page renderer, notifications, cron jobs
 │   │   │   ├── core/              # config, db/ (Mongoose settings, connection, Int64, plugins, transactions),
+│   │   │   │                      # jobs/ (leased jobs, outbox relay), calendar/ (working days),
 │   │   │   │                      # errors, auth middleware, logging
 │   │   │   ├── scripts/           # sync-indexes (release step), search rebuild
 │   │   │   └── modules/
@@ -1828,6 +2163,41 @@ Each module folder contains `*.routes.ts` (HTTP and zod validation), `*.service.
 ### 11.5 Release and recovery process
 
 Follow the release procedure in [11 §9.4](11-target-runtime-node12-mongodb.md): build and test on CI (unit tests on `node:12.4.0`) → back up the database → run migrations, then index sync (`npm run db:migrate`, `npm run db:indexes`, as `tex_migrator`) → switch the release symlink → restart API instances one at a time with health checks → restart the worker → smoke tests. Migrations are **expand-and-contract**, so rollback is a symlink switch. A database restore is the last resort and is rehearsed monthly.
+
+### 11.6 Monitoring and alerting
+
+NFR-15 requires alerts on the on-call channel within 5 minutes. All components are self-hosted, next to the application, and none of them depends on Node.js. They are standard open-source tools, but they have not yet been installed on the target servers.
+
+| Component | Role |
+| --- | --- |
+| `prom-client` in each API instance and in the worker | Application metrics on a localhost-only `/metrics` endpoint (Nginx does not expose it) |
+| Prometheus (systemd service) | Scrapes the application, `node_exporter` (host), a MongoDB exporter and the probes every 15 s; evaluates the alert rules |
+| Alertmanager | Groups and routes alerts: WeCom (企业微信) through its built-in WeChat receiver or a group-robot webhook, and e-mail as the second channel; SMS through the SMS provider for critical alerts |
+| `blackbox_exporter` on a second host, plus an external dial-test service | Uptime checks every 60 s from two locations (NFR-01) |
+| Grafana (optional) | Dashboards for operations and capacity. The business queues (reviews, deals) are on the operations dashboard in the admin console (FR-ADM-01), which reads MongoDB |
+| `pino` logs | JSON to the systemd journal with request IDs; rotated; searched with `journalctl` at launch |
+
+Alert rules (initial values; tune after the pilot):
+
+| Alert | Condition | Severity |
+| --- | --- | --- |
+| API errors | 5xx responses > 2% for 5 min | Critical |
+| API latency | p95 > 1 s for 10 min (NFR-02) | Warning |
+| Site down | Uptime probe fails from both locations for 2 min | Critical |
+| Outbox stuck | Oldest pending event > 2 min, or any `failed` event | Critical |
+| Job backlog | Oldest due job > 10 min, by type | Warning |
+| Dead letters | Any job became `dead` | Warning (critical for `technology.publish`, `payment.*`) |
+| Publication lag | Approval to index update > 5 min (FR-TEC-12) | Warning |
+| Search out of sync | Daily reconciliation found drift, or Meilisearch health check fails | Warning / Critical |
+| MongoDB | No primary; replication lag > 30 s; connections > 80% of the limit | Critical / Warning |
+| Disk | > 80% used on database, file-storage or backup volumes | Warning (critical at 90%) |
+| Backups | Newest backup older than 26 h, or a restore drill failed | Critical |
+| TLS | Certificate expires in < 14 days | Warning |
+| Malware scanning | `clamd` down, or signatures older than 3 days | Critical / Warning |
+| Calendar | Next year's working-day calendar not published by 1 December (§6.10) | Warning |
+| Security | Failed logins > 10× the normal rate; staff login from a new country | Warning |
+
+Each alert links to a runbook entry: what it means, how to check, how to fix and when to escalate. Alerts are tested in each release (NFR-15).
 
 ---
 

@@ -9,7 +9,7 @@ url: "https://pdf.dfcfw.com/pdf/H2_AN202512151801143261_1.pdf"
 archived: "none"
 retrieved: "2026-10-18T23:25Z (WebFetch download; file mtime, UTC)"
 cited_by: "01 Summary and §1.1–§1.2 (history, four functions, boards, 技术授信, network, Lingang arm), 01 §1.4 (2021–2023 values), 01 §3 (group structure, leadership), 02 §2.1 and §4 (financials), 03 §1–§2 (revenue ratio, financials, explanations), README \"Factual corrections\", 01/02/03 Sources"
-raw: "raw/finance/cmf-reit-prospectus-2025-no2/dfcfw.pdf; raw/finance/cmf-reit-prospectus-2025-no2/dfcfw.txt"
+raw: "raw/finance/cmf-reit-prospectus-2025-no2/dfcfw.txt"
 ---
 
 # Fund prospectus with STEX and NETC financials (2025 update)
@@ -69,3 +69,4 @@ The updated prospectus (513 pages) of a public infrastructure REIT holding incub
 - **Entity name (corrected during the parallel revision):** when this work started, 01 called the group "上海杨浦科技创新（集团）有限公司 (Yangpu Science & Technology Innovation Group, '杨科创')". In the prospectus **杨科创 is 上海杨浦科技创业中心有限公司**; 上海杨浦科技创新（集团）有限公司 is only one of its shareholders, nominating 1 of 5 directors ("上海杨浦科技创新（集团）有限公司提名 1 名董事"), while 上海市科技创业中心 nominates 3. The current 01 and README use 上海杨浦科技创业中心有限公司.
 - **Ratio:** 02 Summary and 03 §1 use revenue / value = 28.43 / 18,922 ≈ 0.15 %; both inputs are in this prospectus.
 - The operating-company financial tables are 表 14-1-24 (STEX) and 表 14-1-25 (上海东转), matching 03's "§14".
+- **Privacy (2026-10-19):** the source PDF names contact persons with mobile numbers, so it is kept outside the public repository; the text copy in `raw/` has the mobile numbers (and nearby e-mail addresses) replaced by `[手机号已删除]` / `[邮箱已删除]`. Nothing the docs use was removed.

@@ -7,6 +7,9 @@ export const TRANSACTION_TYPES = ['license', 'assignment', 'partnership', 'joint
 export const OFFER_STATUSES = ['draft', 'submitted', 'active', 'paused', 'under_negotiation', 'closed', 'expired', 'rejected'] as const;
 export const EXCLUSIVITIES = ['exclusive', 'sole', 'non_exclusive', 'unspecified'] as const;   // 独占 / 排他 / 普通
 export const PRICE_TYPES = ['fixed', 'indicative', 'negotiable', 'royalty_based', 'milestone_based', 'undisclosed'] as const;
+// 06 §6.6: why an offer is reserved (under_negotiation) and why it was closed.
+export const RESERVATION_REASONS = ['exclusive_talks', 'venue_listing'] as const;
+export const CLOSURE_REASONS = ['deal_completed', 'withdrawn', 'technology_archived', 'replaced'] as const;
 
 export interface TechnologyOfferDoc extends Document {
   _id: Types.ObjectId;
@@ -23,6 +26,8 @@ export interface TechnologyOfferDoc extends Document {
   price: { type: typeof PRICE_TYPES[number]; indicative?: Money };
   validFrom?: Date;
   validUntil?: Date;
+  reservation?: { reason: typeof RESERVATION_REASONS[number]; until?: Date; dealId?: Types.ObjectId };
+  closureReason?: typeof CLOSURE_REASONS[number];
   createdBy: Types.ObjectId;
   rev: number;
   createdAt: Date;
@@ -52,6 +57,15 @@ const TechnologyOfferSchema = new Schema<TechnologyOfferDoc>({
       'validUntil must be after validFrom',
     ),
   },
+  reservation: {
+    type: new Schema({
+      reason: enumOf(RESERVATION_REASONS, { required: true }),
+      until: Date,                                 // exclusivity of negotiation ends; a daily job lifts it
+      dealId: ref('Deal'),
+    }, { _id: false, strict: 'throw' }),
+    default: undefined,
+  },
+  closureReason: enumOf(CLOSURE_REASONS),
   createdBy: ref('User', { required: true }),
 }, entityOptions('technology_offers'));
 

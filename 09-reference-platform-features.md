@@ -86,7 +86,27 @@ STEX rules used in this section. Most are provisional (暂行) rules; the texts 
 | Process | STEX review within **7 WD** → cooperation agreement within **15 WD** → fee → certificate |
 | Ongoing | Annual review (July); missing two consecutive reviews means exit; changes (legal representative, capital, owners, key staff, litigation) reported within **10 WD**; sanctions: public notice (通报), suspension of services or termination |
 
-Professional providers (专业类) must meet the same age, capital and practitioner thresholds (rule 105). A newly formed company therefore cannot become an agent for its first two years ([08 §1.3](08-china-operating-model.md)).
+Professional providers (专业类) must meet the same age, capital and practitioner thresholds (rule 105). A newly formed company therefore cannot become an agent for its first two years ([08 §1.3](08-china-operating-model.md)). Agents also pay STEX a service-institution fee (交易服务机构费) and other fees (rule 105), whose amounts are not published.
+
+What else is known about STEX admission (V unless marked):
+- **Annual intake.** STEX admits agents in an annual intake, with a public notice and an objection period (for example 14–23 May 2024).
+- **Rules not found.** The 2024 notice applied three more rules besides rule 105: 交易暂行规则, 交易服务机构管理补充规则 and 科商管理暂行规则. None of them could be found. The requirements above may therefore be incomplete.
+- **Recognised practitioners.** What makes a practitioner "recognised by STEX" is not defined in any source found. STEX's own 2021 research note proposed a recognition system based on the national junior, intermediate and senior technology-transfer certificates (Torch Center training). That these certificates count is an inference (I).
+- **Agent fees to clients** are not regulated: agents set them in their agency contracts.
+
+**CTEX for comparison** (服务机构管理办法, in force 20 December 2022, V). Since December 2023 CTEX has run agents and service firms as **members**: trading members (交易会员) and professional members (专业会员), under a 会员管理办法 whose text could not be retrieved. Its forms follow the same pattern of agreements and annual inspection, but the conditions below are the latest available text, not confirmed as current:
+
+| Requirement | Value |
+| --- | --- |
+| Classes | Transaction, IP, consulting and international-cooperation service institutions |
+| Conditions | Legally established organization with the relevant business scope and licences; good reputation and **no violations in the last 3 years**; fixed premises; internal management and risk controls. **No minimum registered capital, company age, staff number or broker certificate** |
+| Process | Application file (including premises proof for at least one year); CTEX review within **10 WD**; cooperation and integrity agreements; certificate **valid one year**; annual inspection (notice by 15 October, inspections 1 November – 20 December); changes reported within 10 WD |
+| Conflicts | In one deal an institution may not act for both sides, or for two or more intended buyers or investors; it may not take part in acquiring a project it is transferring, licensing or financing |
+| Fees | The institution owes CTEX fees (amount not published); nothing is said about commissions or fee sharing |
+
+Under these rules, a new operating company could qualify with CTEX long before it can meet STEX's 2-year rule ([12 D-01](12-decision-record.md)); whether the 2023 membership scheme keeps that must be confirmed with CTEX.
+
+**A legal question for both venues.** Shanghai's general rules for trading venues (《上海市交易场所管理暂行办法》, 沪府规〔2025〕2号, in force 1 March 2025) regulate a venue's members, agents and authorised service institutions like branches. Art. 11 says a venue may in principle not operate through them unless the provincial and Shanghai governments approve. The same rules require the list of members and agents to be published (Art. 25), require the fee standard to be in the trading rules (Art. 22), and forbid inducing unnecessary trades to earn commissions (Art. 26). No source found says how this applies to STEX's practising agents; it is a legal-validation item for D-01 (V).
 
 ### 2.2 Products
 
@@ -143,6 +163,15 @@ flowchart TD
 - An applicant that uses STEX as its **exclusive channel** may not trade off-exchange, or it is liable for breach (rule 184).
 - If a contract needs government approval (for example anti-monopoly or technology import/export review), the parties apply and STEX issues the supporting transaction evidence (rule 83).
 
+**What 2026 formal listings show** (a sample of 10 formal listings on bid.stte.com, October 2026, V). Listings set their own terms within the rules, so the platform must store each listing's terms rather than assume the rule minimums:
+
+- **Disclosure** was 10 WD in 7 of the 10 (15, 20 and 261 WD in the others). When no buyer appears, the disclosure is extended in **5-WD cycles** until one does (9 of 10), so the published end date keeps moving.
+- **Two or more qualified buyers** lead to competitive negotiation in 8 listings and online bidding in 2.
+- **Contract:** STEX organises signing within **60 WD** after the buyer is determined. That is longer than the 5 WD in rule 83, Art. 6.
+- **Settlement:** 9 of the 10 use **off-exchange settlement (场外结算)**: only the deposit passes through STEX's account, and the price is paid straight to the transferor's bank account. One uses on-exchange settlement (场内结算).
+- **Fees:** the transferee pays STEX's transaction service fee "per the STEX fee standard", and the transferor commits to pay per STEX's fee measures. No listing states a rate.
+- **Agent:** each listing names the filing agent (技术服务机构) with a case handler.
+
 **Twelve mandatory contract clauses** (rule 83, V; the rule says "including but not limited to"): project name · scope and requirements · parties · trading mode · price, payment method and terms · conditions for effect · handover · confidentiality · dispute resolution · liability for breach · amendment and termination · other matters. Patent contracts must also state the patent name, applicant/patentee, filing date, application number, patent number and validity.
 
 ### 2.4 Competitive methods
@@ -163,13 +192,20 @@ One dossier per deal, filed within 3 months of completion. Retention: **permanen
 
 ### 2.6 Fees (benchmarks)
 
-STEX's general fee schedule could not be found. Its rules only say that fees follow "STEX's charging standard". Published data points:
+STEX publishes a **fee standard** (技术交易及服务收费标准（试行）, dated 1 January 2021, still linked in October 2024). The rates are in an image that no archive holds and the live site would not serve, so they are **unknown**. The page itself says only that the standard is a trial and that STEX's actual practice prevails. STEX's rules and 2026 listings say that the transferee pays a service fee per this standard, and that the transferor and buyers in procurement, equity and state-asset deals pay within 5 WD of signing (V).
 
-| Venue | Fee | Source |
+Published schedules and data points:
+
+| Source | Fee | Confidence |
 | --- | --- | --- |
-| STEX (one bidding listing: a 2026 disposal of scrapped equipment, not a technology deal) | Buyer pays a service fee of 5% of the deal price within 3 WD of contract signing | V (bid.stte.com) |
+| **CTEX fee measures** (in force 1 June 2021; replaced by fee measures of 26 June 2024 that could not be retrieved, so current amounts may differ) | Listing ¥2,000 per item (waived for exclusive listings and partner-market listings; can be set off against the transaction fee). **Agreement deal**, charged to **each side**, marginal: **1.5%** up to ¥1 M · **0.5%** ¥1–10 M · **0.25%** ¥10–100 M · **0.15%** above ¥100 M; minimum ¥3,000 per side. **Competitive deal**: the holder pays the agreement tiers on the floor price plus **5%** of the premium above it, the buyer pays the agreement tiers; minimum ¥5,000 per side. Results notice ¥3,000. **Settlement** through CTEX: 1% / 0.4% / 0.2% / 0.1% on the same bands, minimum ¥3,000 per side | V |
+| CTEX trial schedule (earlier) | Agreement deals 3% / 1% / 0.5% / 0.3%, minimum ¥3,000; competitive deals ≥ 5%, minimum ¥5,000 per side | V |
+| CTEX (one bidding notice) | Buyer bidding service fee 10%, due within 3 WD of signing: a listing-specific term above both schedules | E |
+| STEX (one 2026 bidding listing: a disposal of scrapped equipment, not a technology deal) | Buyer pays a service fee of 5% of the deal price within 3 WD of signing | V |
 | Tianjin technology trading platform (2021) | Seller, tiered cumulative: **2%** up to ¥1 M · **1%** ¥1–10 M · **0.5%** ¥10–100 M · **0.3%** above ¥100 M; minimum ¥2,000. Buyer ≤ 5%. Bidding service fee ≥ 5%, minimum ¥5,000 per side. Notice and value-added fees separate | V |
-| CTEX (one auction listing) | Buyer bidding service fee 10%; fees due within 3 WD of contract signing | E |
+| **Jiangsu technology property-rights exchange: technology managers' commission standard** (2018). This is what a **broker** earns, not a venue fee | Technology transfer: under ¥50 k ¥3,000; ¥50 k–0.5 M 6% · 0.5–1 M 5% · 1–3 M 4% · 3–5 M 3%; above ¥5 M negotiated. Development: under ¥100 k ¥3,000; 4% / 3% / 2% / 1% up to ¥5 M. Consulting and services: under ¥20 k ¥1,000; 6% / 5% / 4% / 3% up to ¥1 M. The broker firm may keep **12%** of the commission; two brokers of one firm split **60% (demand side) / 40% (supply side)**. The basis is the registered contract value; a three-party service agreement names who pays and how (one-off, instalments or royalty share) | V |
+
+How STEX agents are paid is not published. On the evidence above, an agent earns a commission from its own client under the agency or service contract, and pays the venue's fees separately. No fee sharing by a venue was found ([12 D-01, D-07](12-decision-record.md)).
 
 ### 2.7 Technology hints
 
@@ -179,6 +215,7 @@ STEX's general fee schedule could not be found. Its rules only say that fees fol
 | Bidding system `bid.stte.com` | Enterprise login with **CA-certificate USB key + SMS code**; jQuery/Vue 2 front end; back office with 20 named processes and maker-checker roles (§2.3) | V |
 | Data and BI | FineReport/FineBI market dashboards; a "trading index" | V |
 | Product to regions | White-label "技术交易信息化综合服务平台" (cockpit, data middle platform, core trading system, SaaS) sold to regional governments | V |
+| Agent access | Listings and applications are submitted by logging in to the STEX website or the **TECHDEAL** app and uploading documents (2022 notice); operational notices, such as market closures on the State Council holiday days, are posted on the portal. No programmatic interface or machine-readable feed was found, so the platform's venue gateway starts as manual entry ([12 D-01](12-decision-record.md)) | V |
 
 STEX is therefore both a **potential partner** (venue functions) and a **potential competitor** (regional platforms).
 
@@ -267,7 +304,7 @@ Vue 3 + Vite + Tailwind single-page apps; REST API plus WebSocket (`/cable`); **
 
 | Platform | What is worth copying | Source |
 | --- | --- | --- |
-| **CTEX 中国技术交易所** (Beijing) | "5 categories, 19 services" (registration, trading, finance, consulting, regional services). Open-licence platform (> 2,500 patents). Roadshow livestreams. Disposal of pledged IP. Rules (2023): disclosure **≥ 10 WD**, total ≤ 12 months, deposit ≤ 30% of floor price. The 2020 technology-transfer rules allowed instalments with **≥ 30% down**, rest within 1 year; certificate within 3 WD of funds and fees arriving; payout within 5 WD of the seller's request. Blockchain evidence service "链证中国" with national (SM) cryptography and National Time Service Center timestamps (2025) | E (rules) / V (链证中国) |
+| **CTEX 中国技术交易所** (Beijing) | "5 categories, 19 services" (registration, trading, finance, consulting, regional services). Open-licence platform (> 2,500 patents). Roadshow livestreams. Disposal of pledged IP. Rules (2023, V): disclosure **≥ 10 WD** from the day after publication, each extension ≥ 10 WD, total ≤ 12 months, deposit ≤ 30% of floor price; parties may act through a CTEX service institution under an agency contract. Service institutions (2022) and fees (2021): §2.1 and §2.6. The 2020 technology-transfer rules allowed instalments with **≥ 30% down**, rest within 1 year; certificate within 3 WD of funds and fees arriving; payout within 5 WD of the seller's request. Blockchain evidence service "链证中国" with national (SM) cryptography and National Time Service Center timestamps (2025) | E (rules) / V (链证中国) |
 | **Zhejiang online technology market** (浙江科技大市场, "浙江拍") | Province–city–county federation (11 cities, 90 counties); 316 service institutions; 350 brokers (a contribution-point system was announced in 2022 as a planned measure); negotiated, listed and auction trades recorded on-chain; livestream auctions with Taobao; insurance for pilot tests and "use first, transfer later"; a county model: collect local demand → result pool → auction, with a 20% buyer subsidy. Auction premiums typically 16–48% | V |
 | **China Innovation Challenge** (中国创新挑战赛, MOST Torch) | Demand mining with a survey form → **demand analysis report** → publish (demander may be hidden) → targeted push to likely solvers → expert first and final selection → cooperation agreement → **live final only when competition is strong**; prizes paid in principle by the demander; NDA and disclaimer mandatory | V |
 | **Ningbo / Jiangsu challenges** | Live final needs ≥ 3 teams; contract with the winner within 2 months; staged subsidy (40% / 80% / rest). Jiangsu: find → publish → respond → compete → track results; weekly online auction days, real-name verification before bidding | V |
@@ -298,7 +335,7 @@ Vue 3 + Vite + Tailwind single-page apps; REST API plus WebSocket (`/cable`); **
 | Capability | Reference practice | Our design before this research | Change | Requirements in [10](10-product-requirements.md) |
 | --- | --- | --- | --- | --- |
 | Market position | Venue functions licensed; agents verify buyers with joint liability | "Exchange later, via licence or partner" | **Agent route** with STEX/CTEX defined as the standard path for formal listing, bidding, settlement and certificates ([08 §1.3](08-china-operating-model.md)) | FR-ORG-06, FR-VEN-01 … FR-VEN-10; D-01 |
-| Time limits | Working-day rules everywhere (3/5/10/15/20 WD) | Business-day SLAs only | **Working-day calendar** with official holidays and make-up days; configurable minimum periods per process | FR-ADM-09, FR-VEN-03 |
+| Time limits | Working-day rules everywhere (3/5/10/15/20 WD) | Business-day SLAs only | **Working-day calendar** with official holidays and make-up days; configurable minimum periods per process (algorithm in [06 §6.10](06-implementation-design-v1.md)) | FR-ADM-09, FR-VEN-03 |
 | Listing types | Formal, intent, private agreement, notice, procurement, licence with entry fee + royalty + milestones | Technology + offers | Add listing types and licence price structure to offers; procurement listings as a demand type | FR-TEC-06, FR-TEC-07, FR-DEM-10, FR-VEN-01 |
 | Buyer qualification | Intent form, floor price, risk statement, agent verification, seller confirmation, silence = consent | Introduction requests | Add **buyer registration and qualification** for listing-based deals (via venue) | FR-VEN-04, FR-CMP-03 |
 | Competitive methods | Online bidding (timed + continuous), auction, tender, competitive negotiation | Not designed | Model the methods; run binding ones through the venue; competitive negotiation with expert panels can be prepared on the platform as a non-binding step (D-03) | FR-VEN-05 … FR-VEN-07 |
@@ -327,9 +364,11 @@ Notes, excerpts and saved copies of these sources (with retrieval dates and arch
 - STCSM 2024 report (STEX and NETC figures): <https://stcsm.sh.gov.cn/newspecial/2024jb/pdf/4.pdf>; STCSM replies on STEX evaluation products and InnoMatch: <https://stcsm.sh.gov.cn/cmsres/cd/cdb79143bcd740c492cd553dc3e1068f/beae17a516c40ac89bfa969742331cb1.pdf>, <https://stcsm.sh.gov.cn/cmsres/1d/1d53be21ff5f458c8edddaa63645470f/507c46bece268afb611978ef1082ae12.pdf>
 - STEX finance and boards: <https://www.shanghai.gov.cn/nw4411/20240114/9980ba9d32d24f1ebb1fef6fa89ebb9e.html>; <https://news.10jqka.com.cn/20250728/c669930204.shtml>; <https://www.21jingji.com/article/20240104/herald/edbf2e7d6a7dd9bcb883c94fcef44a3f.html>; cross-border centre <https://www.gcs.gov.mo/news/detail/en/N26GAs9Ol2>
 - NETC / InnoMatch: MOST <https://www.most.gov.cn/dfkj/sh/tpxw/201505/t20150520_119593.html>; 沪科提复〔2023〕49号 <https://www.shanghai.gov.cn/cmsres/7c/7c113929b0554fe6ab4970f086323048/d73ed26f8aacdc5495cca6611958b8db.pdf>; challenge notices <https://stcsm.sh.gov.cn/cmsres/d0/d062ffde2d544b79aa1f7dae84754591/20d896ae7d332071cffb5b7bd05cfd38.pdf>; 2025 EXPO notice <https://stcsm.sh.gov.cn/cmsres/8f/8fe2403a36d1440daae93500594e5873/44a23419cfc8c3d6de3ee822ac73dd82.pdf>; voucher rules <https://stcsm.sh.gov.cn/cmsres/35/3540a40b98dd4f5bb99e980f3b5d89a2/5e163d54dc89c40c7bea1b267e392b1a.pdf>, <https://stcsm.sh.gov.cn/cmsres/d5/d5dcdec159b0461393d7277f01478d11/eb51a9cce1d4ac1c48d1656cb9dfb80b.pdf>; proof-of-concept vouchers (Aug 2026) <https://stcsm.sh.gov.cn/cmsres/d8/d823d33b395247069042af26c062edbd/99516d8392b607b5dbcc44a65d8ae4c4.pdf>; InnoMatch <https://www.innomatch.net/home>; challenge money rules (沪科合〔2019〕23号) <https://kyc.sues.edu.cn/_upload/article/files/4b/14/4cb347644e3ab9a0a3842377d654/32aba211-60e8-417a-9cca-fd3936c3b402.pdf>
-- CTEX: <https://us.ctex.cn/article/aboutus/introduction/>; rules <https://us.ctex.cn/article/rules/202311/20231100140553.shtml>; 链证中国 <https://xian.ctex.cn/article/zyzx/zxdt/202503/20250300151707.shtml>; NCSTI guide <https://www.ncsti.gov.cn/kjdt/ztbd/xzhn_czhh_2021/zhwkjchgzhhshx_2021/202111/t20211123_51800.html>
+- STEX fee standard (trial, 2021): <http://web.archive.org/web/20241014020815/https://www.stte.com/articles/35>; 2026 formal listings: <https://bid.stte.com/prjs/real_right/detail/10031.html>, <https://bid.stte.com/prjs/real_right/detail/10026.html>, list <https://bid.stte.com/page/s/prjs/real_right/index?type=1>
+- 《上海市交易场所管理暂行办法》 (沪府规〔2025〕2号): <https://www.shanghai.gov.cn/nw12344/20250218/f707bcc7c9f14983bf3d8f5cc7a0ac16.html>
+- CTEX: <https://us.ctex.cn/article/aboutus/introduction/>; rules <https://us.ctex.cn/article/rules/202311/20231100140553.shtml>; fee measures (2021) <http://web.archive.org/web/20230607071939/https://us.ctex.cn/article/rules/202106/20210600106431.shtml>; service-institution measures (2022) <http://web.archive.org/web/20231207091034/https://us.ctex.cn/article/rules/202104/20210400103753.shtml>; 链证中国 <https://xian.ctex.cn/article/zyzx/zxdt/202503/20250300151707.shtml>; NCSTI guide <https://www.ncsti.gov.cn/kjdt/ztbd/xzhn_czhh_2021/zhwkjchgzhhshx_2021/202111/t20211123_51800.html>
 - Zhejiang: <https://kjt.zj.gov.cn/art/2022/7/19/art_1229514947_43497.html>; <http://www.chinanews.com.cn/cj/2023/12-11/10126595.shtml>; <https://www.most.gov.cn/dfkj/zj/zxdt/202206/t20220621_181204.html>
-- Tianjin fee schedule: <https://www.tpre.cn/rule/sfbf/12850.html>
+- Tianjin fee schedule: <https://www.tpre.cn/rule/sfbf/12850.html>; Jiangsu technology managers' commission standard (2018): <https://jszy.ujs.edu.cn/__local/B/B0/48/3BF60588F177FC90541BD848228_017AEC54_7B34E.pdf?e=.pdf>
 - Technology-contract registration (2000): <https://www.gov.cn/gongbao/content/2000/content_60268.htm>
 - 国发〔2016〕16号: <https://www.gov.cn/zhengce/content/2016-03/02/content_5048192.htm>; Shanghai diligence-exemption guideline: <https://www.shanghai.gov.cn/cmsres/55/55e069468cae46ffbb6bf687433e3b30/a4eb2a56b97c478bc7939d63be196a26.pdf>; Fudan notice example: <https://ist.fudan.edu.cn/Data/View/3033>
 - 上海市促进科技成果转化条例 (2017), copy hosted by the Shanghai Jiao Tong University School of Medicine TTO: <https://www.shsmu.edu.cn/tto/fj/cjkj.docx>

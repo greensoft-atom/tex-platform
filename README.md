@@ -4,7 +4,7 @@ Design documentation for a technology exchange and technology-transfer platform 
 
 ## The system at a glance
 
-**What it is.** A demand-driven **matching and service platform** with managed transfer workflows. Organizations list technologies, publish technology needs, find each other and manage the path from first contact to a signed, completed transfer. Formal listing (挂牌), competitive bidding, settlement and transaction certificates are **venue functions**: the platform performs them through a licensed venue (STEX or CTEX) as a **registered practising agent** (执业类交易服务机构). Money is held and released only by a licensed bank or payment institution; the platform coordinates the conditions and records verified events.
+**What it is.** A demand-driven **matching and service platform** with managed transfer workflows. Organizations list technologies, publish technology needs, find each other and manage the path from first contact to a signed, completed transfer. Formal listing (挂牌), competitive bidding, settlement and transaction certificates are **venue functions**: the platform performs them through a licensed venue (STEX or CTEX) as a **registered practising agent** (执业类交易服务机构). The platform never holds client money. Payments go through one adapter: first the owner's payment testing platform, and a licensed bank or payment institution for live money. The platform records only verified events.
 
 | Who | What the platform does for them |
 | --- | --- |
@@ -13,23 +13,23 @@ Design documentation for a technology exchange and technology-transfer platform 
 | **Clients**: enterprises, universities, parks and governments with a contract | Scouting projects, TTO and programme workspaces (vouchers, KPIs), dashboards and reports (mainly from R2) |
 | **Administrators**: platform staff | Review queues with SLA timers and maker-checker, the technology-manager (技术经理人) network, working-day calendar, support tools, configuration, audit and compliance cases |
 
-**Main modules** ([10 §3](10-product-requirements.md)): accounts, organizations, technologies, university tools, demands and challenges, search, matching, introductions and data rooms, deals, venue-routed transactions, services and experts, events, clients, notifications, administration, reporting, compliance. That is 17 modules with 138 numbered requirements.
+**Main modules** ([10 §3](10-product-requirements.md)): accounts, organizations, technologies, university tools, demands and challenges, search, matching, introductions and data rooms, deals, venue-routed transactions, services and experts, events, clients, notifications, administration, reporting, compliance, payments. That is 18 modules with 142 numbered requirements.
 
 **From listing to transfer.**
 
-1. A verified organization submits a technology; staff review it; the approved **publication snapshot** feeds search and a pre-rendered public page ([06 §6.1](06-implementation-design-v1.md)).
+1. A verified organization submits a technology. Staff review it in a review case, with service levels counted in working days. The publishing service turns the approved version into a **publication snapshot**, which feeds search and a pre-rendered public page ([06 §6.1, §6.7, §6.8](06-implementation-design-v1.md)).
 2. A buyer publishes a demand; matching ranks candidate offers, and a technology manager reviews high-value or uncertain candidates ([06 §6.2, §10](06-implementation-design-v1.md)).
 3. The buyer requests an introduction; the supplier consents; contacts are exchanged; an NDA opens a controlled data room ([06 §6.3](06-implementation-design-v1.md)).
 4. The deal moves through due diligence, versioned proposals, contract, approval and signing, then conditions and milestones, to completion ([06 §6.4](06-implementation-design-v1.md), [08 §4](08-china-operating-model.md)).
-5. Listing-based sales and bidding run through the venue, and payments through the licensed payment partner. Each deal keeps a dossier and a full audit trail.
+5. Listing-based sales and bidding run through the venue. Other payments go through one payment adapter: first the owner's payment testing platform, and a licensed bank or payment institution for live money ([06 §6.11](06-implementation-design-v1.md)). Each deal keeps a dossier and a full audit trail.
 
 **Architecture.** A TypeScript **Express 4 modular monolith**, compiled to ES2019, runs on **Node.js 12.4**: two API instances and one worker under systemd, behind Nginx, self-hosted in mainland China. Data lives in a **MongoDB 4.4 / 5.0 replica set**, accessed through **Mongoose 5.13** models with tenant-scope and immutability plugins; database validators are a safety net. A transactional outbox drives **Meilisearch** (Chinese search), notifications and the pre-rendered public pages. The frontend is React 18 + Ant Design 5, built on CI ([06 §3](06-implementation-design-v1.md), [11](11-target-runtime-node12-mongodb.md)).
 
-**Release plan** ([10 §9](10-product-requirements.md)): R0 foundation (≈ 6 weeks) → R1 marketplace MVP (≈ 12 weeks; 67 requirements) → R2 managed transfer and clients (≈ 12 weeks; 53) → R3 venue-routed transactions and payments (≈ 12–16 weeks; 18).
+**Release plan** ([10 §9](10-product-requirements.md)): R0 foundation (≈ 6 weeks) → R1 marketplace MVP (≈ 12 weeks; 67 requirements) → R2 managed transfer and clients (≈ 12 weeks; 53) → R3 venue-routed transactions and payments (≈ 12–16 weeks; 22).
 
 ## Reading order
 
-New readers: read the section above, then [10 §1–§4](10-product-requirements.md) (what is built), then [06 §1–§3](06-implementation-design-v1.md) and [11](11-target-runtime-node12-mongodb.md) (how it is built). Docs 01–04 explain why; 07–09 give the operating and regulatory detail behind the requirements.
+New readers: read the section above, then [10 §1–§4](10-product-requirements.md) (what is built), then [06 §1–§3](06-implementation-design-v1.md) and [11](11-target-runtime-node12-mongodb.md) (how it is built). Docs 01–04 explain why; 07–09 give the operating and regulatory detail behind the requirements; [12](12-decision-record.md) lists the business decisions still open and their proposed resolutions.
 
 | # | Document | What it covers | Main audience |
 | --- | --- | --- | --- |
@@ -43,7 +43,8 @@ New readers: read the section above, then [10 §1–§4](10-product-requirements
 | 08 | [China operating model](08-china-operating-model.md) | Legal map, authority model, deal-type catalogue, transitions, cross-border and university rules, funds handling, disputes, launch checklist | Founders, compliance, finance, counsel |
 | 09 | [Reference platform features](09-reference-platform-features.md) | What STEX, NETC/InnoMatch, CTEX and other Chinese platforms actually provide: modules, rules, flows, architecture hints, gap analysis | Product, business analysts |
 | 10 | [Product requirements specification](10-product-requirements.md) | Numbered functional requirements for users, clients and administrators; non-functional requirements; integrations; release plan; UAT scenarios | Product, engineering, QA, operations |
-| 11 | [Target runtime: Node.js 12.4 + MongoDB 4.4/5.0](11-target-runtime-node12-mongodb.md) | Verified library versions, coding rules, MongoDB rules, Chinese search, SEO, deployment configs, risks and upgrade path | Tech lead, engineers, DevOps |
+| 11 | [Target runtime: Node.js 12.4 + MongoDB 4.4/5.0](11-target-runtime-node12-mongodb.md) | Verified library versions, coding rules, MongoDB rules, Chinese search, SEO, deployment configs, risks and the tested upgrade path | Tech lead, engineers, DevOps |
+| 12 | [Decision record](12-decision-record.md) | Decisions D-01 … D-08 (venue route, payments, price indications, licensing, MLPS, providers, fees, runtime): options, proposed or decided resolution, design impact, what remains to confirm | Owner, founders, product, tech lead, counsel |
 
 ```mermaid
 flowchart LR
@@ -63,11 +64,16 @@ flowchart LR
     subgraph Engineering
         D11["11 Target runtime<br/>Node 12.4 + MongoDB 4.4/5.0"]
     end
+    subgraph Decisions
+        D12["12 Decision record"]
+    end
     D03 --> D04 --> D05
     D06 --> D07
     D08 --> D09
     D10 --> D06
     D11 --> D06
+    D10 --> D12
+    D12 --> D06
 ```
 
 ## Key decisions at a glance
@@ -75,11 +81,12 @@ flowchart LR
 | Topic | Decision | Reference |
 | --- | --- | --- |
 | Positioning | Demand-driven **matching and service platform** with managed transfer workflows, acting as a **registered practising agent** of a licensed venue (STEX / CTEX) for formal listing, bidding, settlement and certificates | [09 §1–§2](09-reference-platform-features.md), [10 §1](10-product-requirements.md) |
-| Requirements | 138 numbered functional requirements in 17 modules (67 start in R1, 53 in R2, 18 in R3) and 17 measurable non-functional requirements; releases R0–R3 | [10 §3–§4, §7, §9](10-product-requirements.md) |
+| Requirements | 142 numbered functional requirements in 18 modules (67 start in R1, 53 in R2, 22 in R3), 17 measurable non-functional requirements and 17 acceptance scenarios; releases R0–R3 | [10 §3–§4, §7, §9–§10](10-product-requirements.md) |
 | Launch market | China, starting in Shanghai, with STEX (or CTEX) as the venue partner | [08](08-china-operating-model.md), [09 §1–§2](09-reference-platform-features.md) |
 | Users at launch | R1: technology suppliers (including university TTOs) and buyers, supported by platform staff; enterprise and institutional clients from R2 | [10 §2, §9](10-product-requirements.md), [06 §1](06-implementation-design-v1.md) |
 | Deal types | All types in the data model; three implementation tiers (standardized, legal review, specialist-only) | [08 §3](08-china-operating-model.md) |
-| Money | Funds held and released only by a licensed bank or payment institution; the platform coordinates conditions and records verified events | [08 §1, §6](08-china-operating-model.md) |
+| Money | The platform never holds client funds. Payments go through one adapter, with the owner's payment testing platform first and a licensed provider for live money. The design is kept shallow by the owner's decision (D-02) | [06 §6.11](06-implementation-design-v1.md), [12 D-02](12-decision-record.md), [08 §1](08-china-operating-model.md) |
+| Open decisions | D-01, D-03 … D-08 have proposed resolutions waiting for the owner's confirmation (some also for counsel) | [12](12-decision-record.md), [10 §12](10-product-requirements.md) |
 | Target runtime | **Node.js 12.4 + MongoDB 4.4 / 5.0** replica set ("4.5" is a development series); verified with real binaries | [11](11-target-runtime-node12-mongodb.md), [`draft-implementation/`](draft-implementation/README.md) |
 | Architecture | Express 4 modular monolith (TypeScript → ES2019), MongoDB through **Mongoose 5.13** models (with database validators, transactions and least-privilege roles), Meilisearch for Chinese search, transactional outbox, pre-rendered public pages | [06 §3–§6, §10](06-implementation-design-v1.md) |
 | Data access | **Mongoose 5.13** schemas, models and Document API; tenant-scope plugin on every tenant-owned model; database validators as a safety net; indexes from the schemas | [06 §4](06-implementation-design-v1.md), [11 §5.2](11-target-runtime-node12-mongodb.md) |
@@ -110,6 +117,9 @@ flowchart LR
 | **Technology-contract registration** (技术合同认定登记) | Registration of technology contracts that unlocks tax incentives in China (MIIT measures, effective 2026-03-01) |
 | **Payment obligation / transaction / payout** | What is owed / money actually moved and confirmed by the provider / money paid out to a recipient. Never the same thing |
 | **Transactional outbox** | A collection written in the same database transaction as a business change, used to publish events reliably (search indexing, notifications, page rendering) |
+| **Leased job / dead letter** | A unit of background work that one worker holds at a time (the lease expires if the worker dies) / a job that failed permanently and waits for an operator ([06 §6.9](06-implementation-design-v1.md)) |
+| **Review case** | One staff review of one submitted version (organization, listing, IP, demand, introduction, dispute), with a deadline in working days ([06 §6.7](06-implementation-design-v1.md)) |
+| **Maker-checker** | Two-person rule: one person prepares or proposes a decision, a different person checks and confirms it (FR-ADM-02) |
 | **Publication snapshot** | The approved, public part of a technology version; the only technology data sent to search and public pages |
 | **揭榜挂帅 / challenge** | A demand published as an open challenge: solvers submit proposals, an expert panel selects the winner |
 
@@ -118,6 +128,57 @@ flowchart LR
 All diagrams are standard [Mermaid](https://mermaid.js.org/) code blocks (`flowchart`, `stateDiagram-v2`, `sequenceDiagram`, `erDiagram`). They render on GitHub, GitLab, Gitea, Obsidian, Typora and in VS Code with a Mermaid preview extension. Every diagram was validated with the Mermaid CLI.
 
 ## Revision notes
+
+### Revision 6 — decisions, missing designs and payments kept simple
+
+- **Payments (owner decision D-02):** payments use the owner's own payment testing platform behind one adapter, and the design stays shallow.
+  - Four requirements in a new module PAY (FR-PAY-01 … FR-PAY-04, R3): payment requests, verified provider events, refunds and daily reconciliation.
+  - The baseline is now **142 requirements in 18 modules** (R3: 22).
+  - The deeper provider models in 07 §6 and 08 §6 are marked as background, not build scope.
+  - The platform still never holds client money.
+- **Decision record:** new doc [12](12-decision-record.md). It gives a designed, proposed resolution for every other open decision: venue route (D-01), price indications (D-03), internet licences (D-04), MLPS level (D-05), providers (D-06), fees (D-07) and runtime (D-08). Each comes with options, design impact and what still has to be confirmed. 10 §12 now shows each decision's status.
+- **Missing designs completed in doc 06:**
+  - offer lifecycle (§6.6);
+  - review-case lifecycle with SLA pause, maker-checker and escalation (§6.7);
+  - publishing service (§6.8);
+  - leased jobs with retries and dead letters (§6.9);
+  - working-day calendar algorithm (§6.10);
+  - payments adapter (§6.11);
+  - malware scanning (§9.1);
+  - monitoring and alerting (§11.6).
+- **Acceptance scenarios:** UAT-14 … UAT-17, covering the calendar, review cases, the venue route (R3) and payments (R3). There are now 17.
+- **Verified in code** ([`draft-implementation/`](draft-implementation/README.md)):
+  - What was added: review cases, the publishing service, the job queue with outbox relay, the working-day calendar, and migration 003.
+  - The full suite passes on Node 12.4.0 with MongoDB 4.4.30 and 5.0.33: **166 database checks per version** and 368 PASS/OK in a full run.
+  - What the run found and fixed: unmodified `save()` on a tenant-scoped document is refused by the tenant plugin; an earlier test re-ran old migrations over newer validators.
+- **Runtime upgrade tested (D-08):**
+  - The draft code runs unchanged on Node 12.22.12.
+  - A port to Mongoose 6.13.11 passes the full suite. Its three silent changes are documented in [11 §11.2](11-target-runtime-node12-mongodb.md).
+  - The port test also found that `findOneAndReplace` bypassed the tenant scope and the freeze rule, and that `estimatedDocumentCount` cannot be scoped. Both are fixed and tested.
+- **Research on the missing market facts** (14 new notes, 2 official texts; [`references/`](references/README.md)):
+  - **STEX's fee standard** (2021) exists, but its rates could not be retrieved.
+  - **CTEX's 2021 fee schedule** and a **Jiangsu broker-commission standard** give real fee benchmarks.
+  - **CTEX's 2022 agent rules** have no capital or age minimum and forbid acting for both sides or for two buyers.
+  - **2026 STEX listings** mostly settle the price **off-exchange** and give 60 WD to sign. FR-VEN-03/04/08, FR-DEAL-05, 06 §6.4 and 07 §3.5 were updated for this.
+  - **No agent data interface** exists, so the venue gateway starts manual.
+  - **Shanghai's 2025 trading-venue measures** (沪府规〔2025〕2号, Art. 11) raise a legal question about venue agents.
+  - **2026 holidays:** the official notice for the 2026 calendar is saved.
+- **Privacy in the public repository:**
+  - 24 more raw files contained named people's mobile numbers.
+  - In the text and HTML copies, the numbers and nearby personal e-mail addresses are now replaced by markers.
+  - The 5 PDFs concerned are kept outside the repository, as the 2 STEX pages were in revision 5.
+  - Earlier commits still contain the unredacted copies.
+
+**Known gaps, for the next revision:**
+
+- Owner confirmations for D-01 and D-03 … D-08 ([12](12-decision-record.md)); counsel's opinions for D-03 and D-04.
+- Still a specification, not yet in the draft code:
+  - the HTTP routes;
+  - the worker's polling loop and scheduler;
+  - the payment and venue adapters;
+  - offer owner actions;
+  - review-case effects for demand, IP and introduction cases.
+- Market facts still unknown (STEX fee rates and agent rules, CTEX's current member and fee rules, a venue data interface): listed with who can answer in [12, "Facts still unknown"](12-decision-record.md#facts-still-unknown).
 
 ### Revision 5 — full review, consistency and references
 
@@ -140,12 +201,12 @@ Every document was re-read line by line against one set of canonical facts (posi
 - **Draft code:** submitting returns the new `rev`; listings are locked while `approved`. The full suite still passes (216 checks).
 - **New [`references/`](references/README.md) folder:** one note per source used, with URLs, archived copies, retrieval dates, the facts the docs take from it and short excerpts; full official texts where they are public-domain government documents.
 
-**Known gaps, for the next revision:**
+**Gaps known at revision 5** (all designed in revision 6, except the market facts that could not be found):
 
-- No numbered requirements yet for platform-coordinated payments (payment requests, provider events, payouts, reconciliation, refunds); adding a module changes the 138-requirement baseline, so it is the owner's decision.
-- No acceptance scenario for R3 (venue route).
-- Not yet designed in detail: the offer lifecycle; the review-case lifecycle; the publishing service that creates and supersedes snapshots; worker leases, retries and dead letters; the working-day calendar algorithm; malware scanning and alerting components.
-- Missing facts: STEX's fee schedule, how agents are paid, CTEX's agent requirements, and whether STEX offers any data interface for agents. The archived STEX rules are 2020–2022 versions and must be re-checked before R3.
+- No numbered requirements for platform-coordinated payments → FR-PAY-01 … FR-PAY-04 (owner decision D-02).
+- No acceptance scenario for R3 → UAT-16, UAT-17.
+- Not designed in detail: offer lifecycle, review-case lifecycle, publishing service, worker leases, retries and dead letters, working-day calendar algorithm, malware scanning and alerting → 06 §6.6–§6.10, §9.1, §11.6.
+- Missing facts: STEX's fee schedule, how agents are paid, CTEX's agent requirements, a STEX data interface for agents, the currency of the archived STEX rules → see revision 6 and [12](12-decision-record.md).
 
 ### Revision 4 — Mongoose data layer
 

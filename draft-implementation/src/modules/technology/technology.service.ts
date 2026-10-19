@@ -3,22 +3,16 @@
 // Every write runs in a transaction together with its workflow transition, outbox event and audit event.
 import { ClientSession, Types } from 'mongoose';
 import { ForbiddenError } from '@casl/ability';
+import { Actor } from '../../core/actor';
 import { inTransaction } from '../../core/db/transaction';
-import { TenantContext } from '../../core/db/tenant-scope.plugin';
+import { InvalidTransitionError, NotFoundError, VersionConflictError } from '../../core/service-errors';
 import { AuditEvent } from '../audit/audit-event.model';
-import { AppAbility } from '../identity/abilities';
-import { Counter, OutboxEvent, ReviewCase, WorkflowTransition } from '../workflow/workflow.model';
+import { openReviewCase } from '../workflow/review-case.service';
+import { Counter, OutboxEvent, WorkflowTransition } from '../workflow/workflow.model';
 import { Technology, TechnologyDoc, TechnologyStatus, TechnologyVersion, TechnologyVersionDoc } from './technology.model';
 
-export class NotFoundError extends Error { constructor(m: string) { super(m); this.name = 'NotFoundError'; } }               // 404
-export class VersionConflictError extends Error { constructor(m: string) { super(m); this.name = 'VersionConflictError'; } } // 409
-export class InvalidTransitionError extends Error { constructor(m: string) { super(m); this.name = 'InvalidTransitionError'; } } // 409
-
-export interface Actor extends TenantContext {
-  userId: Types.ObjectId;
-  ability: AppAbility;
-  correlationId: string;                           // request ID, propagated to transitions and audit events
-}
+export { InvalidTransitionError, NotFoundError, VersionConflictError };
+export type { Actor };
 
 export interface TechnologyContent {
   title?: { zh: string; en?: string };
@@ -38,7 +32,6 @@ const CONTENT_FIELDS: (keyof TechnologyContent)[] = [
 const SUBMIT_TARGET: Partial<Record<TechnologyStatus, TechnologyStatus>> = {
   draft: 'submitted', changes_requested: 'submitted', published: 'update_pending',
 };
-const REVIEW_SLA_MS = 5 * 24 * 3600 * 1000;       // first review within 5 days (business days in production, FR-ADM-09)
 
 /**
  * Loads a technology for a state change. The tenant scope makes another organization's technology
@@ -116,7 +109,9 @@ export function updateTechnologyContent(
     if (!draft.isNew && !draft.isModified()) return { rev: tech.rev, version: draft.version };   // nothing changed
 
     await draft.save({ session });
-    tech.increment();                              // content changed: bump rev even if no technology field changed
+    // Content changed: modify the technology so save() bumps rev. increment() alone is ignored by Mongoose 6
+    // when no field changed, and an unmodified save() runs an existence query that the tenant scope refuses.
+    tech.updatedAt = new Date();
     await tech.save();                             // the document remembers its session; save() checks rev again
     return { rev: tech.rev, version: tech.currentVersion };
   });
@@ -143,14 +138,10 @@ export function submitTechnologyForReview(
     tech.lifecycleStatus = target;
     await tech.save();                             // optimistic concurrency: VersionError if rev changed meanwhile
 
-    const now = new Date();
-    const reviewCase = new ReviewCase({
-      ref: await Counter.nextRef('CASE', session),
-      caseType: 'technology_review',
-      resource: { type: 'technology', id: tech._id, version: version.version },
-      dueAt: new Date(now.getTime() + REVIEW_SLA_MS),
+    // One case per submitted version, linked to the previous round's case; first review ≤ 5 WD (FR-TEC-11).
+    const reviewCase = await openReviewCase(session, {
+      caseType: 'technology_review', resource: { type: 'technology', id: tech._id, version: version.version },
     });
-    await reviewCase.save({ session });
     await record(session, actor, tech, 'submitted', fromStatus, tech.lifecycleStatus, { reviewCaseRef: reviewCase.ref });
     return { reviewCaseRef: reviewCase.ref, status: tech.lifecycleStatus, rev: tech.rev };   // new ETag value
   });

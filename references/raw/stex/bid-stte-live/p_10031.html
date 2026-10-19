@@ -1,0 +1,1017 @@
+
+
+
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>正式披露</title>
+    
+
+
+
+
+
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+
+
+
+
+
+<title></title>
+
+
+
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+
+<link rel="icon" href="/res/prj/images/favicon.ico" type="image/x-icon"/>
+<link rel="shortcut icon" href="/res/prj/images/favicon.ico" type="image/x-icon"/>
+<link rel="stylesheet" type="text/css" href="/res/prj/layui/css/layui.css"/>
+
+
+
+
+
+    
+        
+            
+            <link rel="stylesheet" type="text/css" href="/res/prj/css/all.min.c05424ab.css?uris=%2Fres%2Fprj%2Fcss%2Fall.csss&alias=%2Fres%2Fprj%2Fcss%2Fall.csss&isCompress=true&token=58bf026ce10cb8d7f9a7759543718a00" />
+        
+        
+    
+
+<script type="text/javascript" src="/res/prj/js/jquery-3.4.1.min.js?t=1792379570983"></script>
+<script type="text/javascript" src="/res/prj/js/jquery-migrate.min.js?t=1792379570983"></script>
+<script type="text/javascript" src="/res/prj/js/vue.js?t=1792379570983"></script>
+
+<script type="text/javascript">
+    window["P_basePath"] = "";
+    window["DesKey"] = "04F52223578C2F64F91F5C6DB139E934";
+    window["enableWebSocket"] = "true" == "true";
+    window["P_connectWSSyncTime"] = parseInt("10");
+    window["P_connectWSLimit"] = parseInt("-1");
+    window["P_connectWSTimeout"] = parseInt("0");
+    // 设置token
+    window["Token"] = '9vowj4vqilO5YgupSf2B7hfTw6K7mk2lJKDl71VO5TUTpHaqij2XdRR2WFWuZGpoDNJDUXSb58WwLmucWZocpA==';
+</script>
+
+<link rel="stylesheet" href="/res/plugin/jbox/css/jbox.css?t=1792379570983" type="text/css"/>
+<script type="text/javascript" src="/res/plugin/jbox/js/jquery.jBox.js?t=1792379570983"></script>
+
+
+<link rel="stylesheet" href="/res/plugin/layer/skin/layer.css?t=1792379570983" type="text/css"/>
+<script type="text/javascript" src="/res/plugin/layer/layer.min.js?t=1792379570983"></script>
+<script type="text/javascript" src="/res/prj/layui/layui.js"></script>
+
+
+
+<script type="text/javascript" src="/res/js/des.js?t=1792379570983"></script>
+<script type="text/javascript" src="/res/js/utils-base-all.js?t=1792379570983"></script>
+<script type="text/javascript" src="/res/js/dialog.js?t=1792379570983"></script>
+<script type="text/javascript" src="/res/plugin/autocomplete/jquery.autocomplete.js?t=1792379570983"></script>
+<link rel="stylesheet" href="/res/plugin/autocomplete/jquery.autocomplete.css?t=1792379570983" type="text/css"/>
+
+<script type="text/javascript">
+    window["P_basePath"] = "";
+    window["DesKey"] = "04F52223578C2F64F91F5C6DB139E934";
+    window["enableWebSocket"] = "true" == "true";
+    window["P_connectWSSyncTime"] = parseInt("10");
+    window["P_connectWSLimit"] = parseInt("-1");
+    window["P_connectWSTimeout"] = parseInt("0");
+
+    function P_checkIsLogin() {
+        if("false" != "true"){
+            Base.Tip.confirm("温馨提示","您还未登录，是否现在登录？",
+                function () {
+                    var reqUri = location.pathname + location.search;
+                    reqUri = reqUri.substr("".length);
+                    location.href="/page/login?reqUri=" + encodeURIComponent(reqUri);
+                }, function () {
+
+                }
+            );
+            return false;
+        }
+        return true;
+    }
+
+    $(function(){
+        if("false" == "true"){
+            isLogin();
+        }
+        //设置图片访问失败的错误图片
+        $('img').error(function(){
+            if($(this).attr('src').indexOf("/editorUpload/image") != -1){
+                $(this).attr('src',"/res/prj/images/bd_default.jpg");
+            }
+        });
+    });
+    function isLogin() {
+        Base.Ajax.post("/service/psncenter/account/session_sx",
+            true,
+            {
+            },
+            "json",
+            function (json, status) {
+                if (json.success) {
+                    setTimeout(function () {
+                        isLogin();
+                    }, 10000);
+                }else{
+                    window.location='/page/login';
+                }
+            }
+        );
+
+    }
+</script>
+
+
+
+
+
+    
+    <script type="text/javascript">
+        $(function () {
+            //设置标杆
+            var _line = parseInt($(window).height() / 10);
+            $(window).scroll(function () {
+                //滚动，导航固定定位
+                if ($(window).scrollTop() > $(".default_detail_box").offset().top) {
+                    $('.monitor_tab').css({'margin': '0 auto', 'border-bottom:': 'none'});
+                    $('.monitor_detail_top').css({
+                        'position': 'fixed',
+                        'top': '0',
+                        'width': '100%',
+                        'border-bottom': 'solid 1px #e5e5e5'
+                    })
+                } else {
+                    $('.monitor_tab').css({'border-bottom': 'solid 1px #e5e5e5'});
+                    $('.monitor_detail_top').css({'position': '', 'width': '', 'border-bottom': 'none',})
+                }
+                ;
+                $('.monitor_tab li').eq(0).addClass('current');
+                //滚动到标杆位置,导航加current
+                $('.monitor_tab_cont li').each(function () {
+                    var _target = parseInt($(this).offset().top - $(window).scrollTop() - _line);
+                    var _i = $(this).index();
+                    if (_target <= 0) {
+                        $('.monitor_tab li').removeClass('current');
+                        $('.monitor_tab li').eq(_i).addClass('current');
+                    }
+                    //如果到达页面底部，给左侧导航最后一个加active
+                    else if ($(document).height() == $(window).scrollTop() + $(window).height()) {
+                        $('.monitor_tab li').removeClass('current');
+                        $('.monitor_tab li').eq($('.monitor_tab_cont li').length - 1).addClass('current');
+                    }
+                });
+            });
+            $('.monitor_tab li').click(function () {
+                $(this).addClass('current').siblings().removeClass('current');
+                var _i = $(this).index();
+                $('body, html').animate({scrollTop: $('.monitor_tab_cont li').eq(_i).offset().top - _line}, 500);
+            });
+        });
+    </script>
+</head>
+
+<body>
+
+
+
+<div class="main">
+    <div class="project_detail_head">
+
+        <div class="detail_head_box">
+            <div class="project_detail_top">
+                <p class="title">抗眩晕特殊营养制剂</p>
+                <div class="num">
+                    项目编号：Z20260098
+                </div>
+                <div class="clear"></div>
+            </div>
+            <div class="project_detail_cont">
+                <div class="project_price_box">
+                    <span class="project_price_name">挂牌价格</span>
+                    <span class="project_price_num">
+                        
+                            
+                            
+                                <span class="fs30">30.00</span> 万元
+                            
+                        
+                    </span>
+                </div>
+                <div class="xmjs_infor_box">
+
+                    <div class="xmjs_detail_label">
+                        <i class="xmjs_detail_category_icon"></i>
+                        <div class="xmjs_detail_label_infor">
+                            <span class="xmjs_detail_label_name">标的类型</span>
+                            <span class="xmjs_detail_label_cont">技术许可</span>
+                        </div>
+                    </div>
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    <div class="xmjs_detail_label">
+                        <i class="xmjs_detail_click_icon"></i>
+                        <div class="xmjs_detail_label_infor">
+                            <span class="xmjs_detail_label_name">点击数</span>
+                            <span class="xmjs_detail_label_cont" id="wgcs">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="detail_info">
+                    <table class="table_info">
+                        <col width="10">
+                        <col width="10">
+                        <tbody>
+                        <tr>
+                            <th>信息披露起始日期</th>
+                            <td>
+                                
+                                    
+                                        
+                                        2026-04-27
+                                    
+                                    
+                                
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>信息披露截止日期</th>
+                            <td>
+                                
+                                    
+                                        
+                                        2026-10-21
+                                    
+                                    
+                                
+                            </td>
+                        </tr>
+                        </tbody>
+
+                    </table>
+                </div>
+                <div class="clear"></div>
+            </div>
+            
+                <table class="swzc_table_sm">
+                    <tbody>
+                    <tr>
+                        <th width="16%" rowspan="2">
+                            技术服务机构
+                        </th>
+                        <td width="30%" colspan="2" class="ptpb10 lh26">
+                            机构名称：中国融通科技服务集团有限公司
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="30%" class="ptpb10 lh26">
+                            项目经办人：[姓名已删除]
+                        </td>
+                        <td width="30%" class="ptpb10 lh26">
+                            联系方式：[电话已删除]
+                        </td>
+                    </tr>
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                    </tbody>
+                </table>
+            
+            
+                <table class="swzc_table_sm">
+                    <tbody>
+                    <tr>
+                        <th width="16%" rowspan="2">
+                            交易机构
+                        </th>
+                        <td width="30%" colspan="2" class="ptpb10 lh26">
+                            交易机构部门：交易管理部
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="30%" class="ptpb10 lh26">
+                            交易机构业务负责人：[姓名已删除]
+                        </td>
+                        <td width="30%" class="ptpb10 lh26">
+                            交易机构联系方式：[电话已删除]
+                        </td>
+                    </tr>
+
+                    </tbody>
+                </table>
+            
+            <div class="clear"></div>
+        </div>
+        
+        
+        
+    </div>
+    <div class="default_detail_box">
+        <div class="monitor_detail_top">
+            <ul class="monitor_tab">
+
+                <li class="current">
+                    <a>标的基本情况</a>
+                </li>
+                <li>
+                    <a>转让方简况</a>
+                </li>
+                <li>
+                    <a>交易条件与受让方资格条件</a>
+                </li>
+                <li>
+                    <a>挂牌信息</a>
+                </li>
+                <li>
+                    <a>转让方承诺</a>
+                </li>
+                <li>
+                    <a>公示附件</a>
+                </li>
+
+            </ul>
+        </div>
+
+        <ul class="monitor_tab_cont">
+
+            <li>
+                <div class="tab_title">
+                    <div class="fl">标的基本情况</div>
+                    <div class="clear"></div>
+                </div>
+                <table class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    <tr>
+                        <td class="xmtd1" width="25%">项目名称</td>
+                        <td class="xmtd2" width="25%">抗眩晕特殊营养制剂</td>
+                        <td class="xmtd1" width="25%">项目编号</td>
+                        <td class="xmtd2" width="25%">Z20260098</td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1">项目类型</td>
+                        <td class="xmtd2">技术许可
+                            
+                        </td>
+                        <td class="xmtd1">交易专板</td>
+                        <td class="xmtd2">生物医药专板</td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1">挂牌起始日</td>
+                        <td class="xmtd2">
+                            2026-04-27
+                        </td>
+                        <td class="xmtd1">挂牌截止日</td>
+                        <td class="xmtd2">
+                            2026-10-21
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1">是否为技术成果组合</td>
+                        <td class="xmtd2">
+                            否
+                        </td>
+                        <td class="xmtd1">技术成果数量</td>
+                        <td class="xmtd2">1</td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1">标的名称</td>
+                        <td class="xmtd2" colspan="3">抗眩晕特殊营养制剂</td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1">技术领域</td>
+                        <td class="xmtd2" colspan="3">生物、医药和医疗器械
+                            </td>
+                    </tr>
+
+                    <tr>
+                        <td class="xmtd1">标的权证类型</td>
+                        <td class="xmtd2" colspan="3">
+                            专利
+                            
+                        </td>
+                    </tr>
+                    
+                    
+                    </tbody>
+                </table>
+                <table class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+
+                    <tr>
+                        <td class="xmtd1" width="25%" rowspan="2">权证编号</td>
+                        <td class="xmtd1" width="7%">序号</td>
+                        <td class="xmtd1" width="18%">名称</td>
+                        <td class="xmtd1" width="17%">权证编号</td>
+                        <td class="xmtd1" width="11%">申请日</td>
+                        <td class="xmtd1" width="11%">授权日</td>
+                        <td class="xmtd1" width="11%">失效日</td>
+                    </tr>
+
+                    
+                        <tr>
+                            <td class="xmtd2">1</td>
+                            <td class="xmtd2">一种辅助改善记忆功能的中药组合物及制备方法</td>
+                            <td class="xmtd2">ZL202210890204.1</td>
+                            <td class="xmtd2">
+                                
+                                2022-12-09
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2024-07-09
+                            </td>
+                            <td class="xmtd2">
+                                
+                                2042-12-09</td>
+                        </tr>
+                    
+                    
+
+                    </tbody>
+                </table>
+                <table class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    
+
+                    
+
+                    
+                        <tr>
+                            <td class="xmtd1">获得资助情况<br>（国家计划课题等）</td>
+                            <td class="xmtd2" colspan="3">后勤科研项目子课题“抗眩晕药物筛选与特殊营养制剂研制”</td>
+                        </tr>
+                    
+                    <tr>
+                        <td class="xmtd1" width="25%">项目阶段</td>
+                        <td class="xmtd2" colspan="3" width="75%">小批量生产
+                            
+                        </td>
+                    </tr>
+                    
+                        <tr>
+                            <td class="xmtd1">技术成熟度（TRL）</td>
+                            <td class="xmtd2" width="25%">TRL7</td>
+                            <td class="xmtd2" colspan="2">完成在高逼真运行环境下的系统原型演示验证。</td>
+                        </tr>
+                    
+                    <tr>
+                        <td class="xmtd1">样品/样机</td>
+                        <td class="xmtd2" colspan="3">
+                            
+                                无
+                                
+                                
+                            
+                        </td>
+                    </tr>
+                    
+                    
+                    
+                        <tr>
+                            <td class="xmtd1">是否有试用报告</td>
+                            <td class="xmtd2" colspan="3">
+                                否
+                            </td>
+                        </tr>
+                    
+                    
+                    <tr>
+                        <td class="xmtd1">项目简介</td>
+                        <td class="xmtd2" colspan="3">
+                            <pre><p><span style=";font-family:宋体;font-size:16px"><span style="font-family:宋体">本产品为靶向抗眩晕的自制特殊营养制剂，分便携饮料、即食果冻两种食用形式，筛选并组合多种具有明确抗眩晕活性且副作用小的天然提取物（生姜、姜黄等）和营养成分（支链氨基酸、牡蛎肽），避免了传统抗眩晕药物导致嗜睡、口干等中枢神经副作用，通过精准组方，实现了</span><span style="font-family:宋体">“抗眩晕”与“抗疲劳”（体力及脑力）双重功效的整合。通过系统的动物实验，进行多轮剂量配比优化，打破传统经验组方的局限，实现配方的精准设计与功能最大化。</span></span></p></pre>
+                        </td>
+                    </tr>
+                    
+                        <tr>
+                            <td class="xmtd1">技术效果与指标</td>
+                            <td class="xmtd2" colspan="3">通过旋转加速度刺激构建晕动症动物模型，与晕动组相比，给予口服本制剂组可缓解眩晕症状约65%，疲劳缓解率高达90%以上。该特殊营养制剂不仅能有效预防和缓解眩晕、恶心、呕吐等症状，还能显著对抗由此引发的生理性疲劳，促进身体机能的全面恢复，满足多方面的健康需求。</td>
+                        </tr>
+                    
+                    
+                        <tr>
+                            <td class="xmtd1">技术推广及应用前景效益（风险和效益）</td>
+                            <td class="xmtd2" colspan="3">该抗眩晕特殊营养制剂获批1项发明专利，目前正在申请1项发明专利、1项外观专利。积极组织推广应用，获得真实场景下的反馈数据，为后续产品改良优化、市场推广落地提供了核心支撑，保障推广成效与产品竞争力。参与测试人员认为本产品使用方便，满意率达90%以上。测试人员反映使用该产品能够缓解航行过程中产生的恶心、呕吐及疲劳感等问题，且口感较好。产品核心优势为无中枢抑制副作用，可快速改善前庭功能、缓解眩晕症状，便携易储，适配航空航海、长途出行等多场景，可为晕动症人群提供安全干预方案。</td>
+                        </tr>
+                    
+                    
+                    
+                    
+                        
+                    
+                    
+                        
+                    
+                    
+                        
+                    
+                    
+                        
+                    
+                    
+                    
+                        
+                    
+                    
+                        
+
+                        <tr>
+                            <td class="xmtd1" rowspan="6" width="25%">技术团队结构</td>
+                        </tr>
+                        
+                            <tr>
+                                <td class="xmtd1" width="25%">技术团队名称</td>
+                                <td class="xmtd2" colspan="2" width="50%">抗眩晕特殊营养制剂技术团队</td>
+                            </tr>
+                        
+                        
+                            <tr>
+                                <td class="xmtd1" width="25%">技术团队人数</td>
+                                <td class="xmtd2" colspan="2" width="50%">10人以下</td>
+                            </tr>
+                        
+                        
+                            <tr>
+                                <td class="xmtd1" width="25%">技术团队简介</td>
+                                <td class="xmtd2" colspan="2" width="50%">团队所在科室为国家重点学科，“双一流”学科、免疫与炎症全国重点实验室组成单位，长期从事认知损伤的营养防治研究。科室先后承担科技部重点研发、国家自然基金、军队重大重点及各类省部级以上150余项，获得国家科技进步奖、军队及省部级以上奖励20余项。</td>
+                            </tr>
+                        
+                        
+                            <tr>
+                                <td class="xmtd1" width="25%">技术负责人姓名</td>
+                                <td class="xmtd2" colspan="2" width="50%">[姓名已删除]</td>
+                            </tr>
+                        
+                        
+                        
+                            <tr>
+                                <td class="xmtd1" width="25%">技术团队负责人(附简历)</td>
+                                <td class="xmtd2" colspan="2" width="50%">[姓名已删除]，近5年来在J Affect Disord、J Nutr Biochem、Curr Res Food Sci、Food Chem、Talanta、《第二军医大学学报》等国内外神经和营养代谢领域学术刊物上以第一或通讯作者发表论文 12 篇，获批国家发明专利 3 项。研究内容受到国际同行学者关注和引用，被国际杂志Nat Commun、Mol Cancer、NPJ Biofilms Microbiomes、J Neuroinflammation等杂志引用，相应成果获得2024年军事科技进步奖二等奖（排名第四）。</td>
+                            </tr>
+                        
+                    
+
+
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                        
+                        
+                            <tr>
+                                <td class="xmtd1">法律意见</td>
+                                <td class="xmtd2" colspan="3">
+                                    无
+                                </td>
+                            </tr>
+                        
+                        
+                    
+
+                    <tr>
+                        <td class="xmtd1" rowspan="4">重要信息披露</td>
+                        
+                    </tr>
+                    <tr>
+                        <td class="xmtd1" width="25%">是否为职务发明创造</td>
+                        <td class="xmtd2" colspan="2" width="50%">
+                            是
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1">是否存在共有情况</td>
+                        <td class="xmtd2" colspan="2">
+                            否
+
+                        </td>
+                        
+
+                    </tr>
+                    
+                        <tr>
+                            <td class="xmtd1">其他披露内容</td>
+                            <td class="xmtd2" colspan="2">1.本项目涉及的技术的所有权人为     中国人民解放军海军军医大学，已授权委托中国融通科技服务集团有限公司代为处置本项目专利技术，参与交易洽谈，并签订技术交易合同等事项。</td>
+                        </tr>
+                    
+
+                    </tbody>
+                </table>
+            </li>
+            <li>
+                <div class="tab_title">
+                    <div class="fl">转让方简况</div>
+                    <div class="clear"></div>
+                </div>
+
+
+                
+                    
+                        
+                            <table class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                                <tbody>
+                                <tr>
+                                    <td class="xmtd1" width="25%">转让方类型</td>
+                                    <td class="xmtd2" colspan="3" width="75%">法人</td>
+                                </tr>
+                                <tr>
+                                    <td class="xmtd1" rowspan="4">基本情况</td>
+                                    <td class="xmtd1" width="25%">法人名称</td>
+                                    <td class="xmtd2" colspan="2" width="50%">中国融通科技服务集团有限公司</td>
+                                </tr>
+                                <tr>
+                                    <td class="xmtd1">注册地(地址)</td>
+                                    <td class="xmtd2" colspan="2">北京市海淀区复兴路乙63号1号楼3层</td>
+                                </tr>
+                                <tr>
+                                    <td class="xmtd1">注册资本(万元)</td>
+                                    <td class="xmtd2" colspan="2">300000.000000</td>
+                                </tr>
+                                <tr>
+                                    <td class="xmtd1">企业类型</td>
+                                    <td class="xmtd2" colspan="2">全民所有制企业</td>
+                                </tr>
+
+                                
+                                </tbody>
+                            </table>
+                        
+                        
+                    
+                
+            </li>
+            <li>
+                <div class="tab_title">
+                    <div class="fl">交易条件与受让方资格条件</div>
+                    <div class="clear"></div>
+                </div>
+                <table class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    
+                    <tr>
+                        <td class="xmtd1" width="25%">交易类型</td>
+                        <td class="xmtd2" colspan="3" width="75%">许可</td>
+                    </tr>
+                    
+                        
+                        
+                            
+                            <tr>
+                                <td class="xmtd1" rowspan="10" width="25%">
+                                    许可交易条件
+                                </td>
+                                
+                                    
+                                    
+                                        <td class="xmtd1" width="25%" rowspan="2">交易金额</td>
+                                    
+                                
+                                <td class="xmtd1" width="25%">交易入门费/交易底价（万元）</td>
+                                <td class="xmtd2" width="50%">
+                                    30.00
+                                </td>
+                            </tr>
+                            <tr >
+                                <td class="xmtd1">产品销售分成说明</td>
+                                <td class="xmtd2">
+                                        
+                                        
+                                        
+                                    <pre>产品销售额提成费：
+1、计取金额：受让方年度审计报告相关产品销售额的 10 %；
+2、计取时间：不少于专利有效期内。</pre>
+                                        
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="xmtd1">结算方式</td>
+                                <td class="xmtd2" colspan="2">场外结算</td>
+                            </tr>
+                            <tr>
+                                <td class="xmtd1" rowspan="2">价款支付方式</td>
+                                <td class="xmtd2" colspan="2">
+                                    
+                                        
+                                        
+                                            分期付款
+                                        
+                                    
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="xmtd1">付款要求</td>
+                                <td class="xmtd2">
+                                    <pre>本项目专利许可费用，包括入门费和提成费两个部分。
+一、入门费
+1.入门费为人民币 30 万元，采用分期付款方式，首付款不少于  15万元，被许可方应在技术交易合同生效之日起15    个工作日内支付至许可方指定银行账户，后续交易价款被许可方应依据合同约定按期支付交易价款至许可方指定银行账户；
+二、提成费
+1.计取金额：受让方年度审计报告相关产品销售额的 10 %；
+2.计取时间：不少于专利有效期内，支付方式为每年支付。
+具体付款时间及条件以技术交易合同约定为准。</pre>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="xmtd1">许可类型</td>
+                                <td class="xmtd2" colspan="2">
+                                        普通许可
+                                    
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="xmtd1">许可期限</td>
+                                <td class="xmtd2" colspan="2">
+                                    <pre>不少于专利有效期内</pre>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="xmtd1">许可地域范围</td>
+                                <td class="xmtd2" colspan="2">
+                                    <pre>中国大陆</pre>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="xmtd1">许可技术领域</td>
+                                <td class="xmtd2" colspan="2">
+                                    <pre>食品</pre>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="xmtd1">与交易相关的其他条件</td>
+                                <td class="xmtd2" colspan="2">
+                                    <pre>1、许可方拟采用普通许可的方式在规定的时间、地域和技术领域内，授权被许可方实施本项目涉及的专利技术，被许可方数量为30。
+2、本项目公告期即为尽职调查期，意向被许可方在挂牌公告期间，有权利和义务自行对标的进行全面了解，一经递交受让申请即表明已完全了解与认可标的状况及相关约定，自愿接受许可标的全部现状及瑕疵，并愿意承担一切责任与风险，成为被许可方后，不得以不了解标的状况及资产质量瑕疵等为由，拒付价款，否则视为违约。
+3、意向被许可方在充分了解标的情况下，在项目挂牌公告期内向上海技术交易所递交受让申请并缴纳保证金，经交易所和许可方审核后，即获得竞买人资格，交易所向意向被许可方出具《受让资格确认通知书》。意向受让申请材料包括但不限于：主体资格证明材料、《意向受让申请书》、内部决策文件等材料。
+4、意向被许可方缴纳保证金后即为意向被许可方对许可方做出接受交易条件并以不低于挂牌价格受让标的承诺的确认，成为标的竞买人。意向被许可方逾期未交纳保证金的，视为放弃受让资格。
+5、信息发布期满，如只征集到30个符合条件的意向被许可方，采用协议方式许可，意向被许可方应当以不低于挂牌底价的价格受让标的；如征集到31个及以上符合条件的意向被许可方的，则以竞争性谈判方式组织交易，按照交易规则确定被许可方和受让价格。上技所在被许可方确定后60个工作日内组织交易双方签订《技术交易合同》。
+6、被许可方若发生以下行为即视为违约，该被许可方须承担相关的全部经济责任与风险，上海技术交易所有权向被许可方追偿作为对相关方的补偿：（1）以不了解技术交易标的现状、瑕疵或相关风险为由发生逾期，拒付交易价款，放弃受让，向许可方追责等情形的；（2）以许可方未尽实披露等为由发生逾期，拒付交易价款，放弃受让，向许可方追责等情形的；（3）其他扣除交易保证金的情形。
+7、《技术交易合同》签订后，被许可方应依据合同约定按期支付交易价款至许可方指定银行账户，上海技术交易所出具技术交易凭证，通知交易双方领取，并发布成交公告。
+8、被许可方应按照上海技术交易所收费标准支付交易服务费。</pre>
+                                </td>
+                            </tr>
+                        
+                        
+                        
+                    
+
+                    <tr>
+                        <td class="xmtd1">受让方资格条件</td>
+                        <td class="xmtd2" colspan="3">
+                            <pre><p>1、意向受让方应为依法设立并有效存续的境内企业法人、其他经济组织或具有完全民事行为能力的自然人。 </p><p>2、意向受让方须财务状况良好、有信誉、有足够的支付能力。 </p><p><span style="font-size: 10.5pt;">3、接受联合方式举牌受让，不接受委托（含隐名委托）、信托举牌受让。 </span></p><p>4、意向受让方应符合国家法律、法规规定的其他条件。</p></pre>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1" rowspan="4">保证金事项</td>
+                        <td class="xmtd1" width="25%">是否交纳保证金</td>
+                        <td class="xmtd2" colspan="2" width="50%">
+                            是
+                        </td>
+                    </tr>
+                    
+                        <tr>
+                            <td class="xmtd1">交纳金额（万元）</td>
+                            <td class="xmtd2" colspan="2">3.000000</td>
+                        </tr>
+                        <tr>
+                            <td class="xmtd1">交纳时间</td>
+                            <td class="xmtd2" colspan="2">信息披露期满前交纳</td>
+                        </tr>
+                        <tr>
+                            <td class="xmtd1">处置方式</td>
+                            <td class="xmtd2" colspan="2">
+                                <pre>1、本项目信息发布公告期内（挂牌到期之日17时前），意向被许可方将竞价保证金支付至上海技术交易所保证金结算账户（户名：上海技术交易所有限公司，帐号：98300078801000003988），开户行：上海浦东发展银行徐汇支行，逾期无效。
+2、未成交的意向被许可方的交易保证金，将在被许可方确定后5个工作日无息退还。被许可方的交易保证金，在支付首期交易价款后5个工作日内原额原途径退还。
+3、为保护交易各方合法利益，许可方在此做出特别提示，意向被许可方一旦通过资格确认且交纳保证金，即成为竞买人，并对如下内容作出承诺：如竞买人存在以下任何一种情形，将承担缔约过失责任，许可方和上海技术交易所可扣除该竞买人的保证金，作为对相关方的补偿；该保证金不足以补偿的，相关方可按实际损失继续追偿。许可方同时承诺，如因许可方原因，导致项目无法正常推进或者发生其他违规违约行为时，以对竞买人设定的承诺条件承担同等损害赔偿责任。
+1）只征集到30个符合条件的竞买人，在被确定为被许可方后，未在60个工作日内签订《技术交易合同》的。
+2）征集到31个及以上符合条件的竞买人①在组织交易过程中竞买人未提交竞买文件的；②在组织交易过程中各竞买人均未有效报价的；③竞买人被确定为被许可方后，未在60个工作日内签订《技术交易合同》的。
+3）违反交易保证金的有关规定或其他违规违约情形的。</pre>
+                            </td>
+                        </tr>
+                    
+                    </tbody>
+                </table>
+            </li>
+            <li>
+                <div class="tab_title">
+                    <div class="fl">挂牌信息</div>
+                    <div class="clear"></div>
+                </div>
+                <table class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    <tr>
+                        <td class="xmtd1" width="25%">信息发布公告期（工作日）</td>
+                        <td class="xmtd2" width="75%">
+                            10
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="xmtd1">信息披露期满后，如未征集到意向受让方</td>
+                        <td class="xmtd2">
+                            
+                                
+                                
+                                
+                                    延长信息披露：不变更信息披露内容，按照5个工作日为一个周期延长，直至征集到意向受让方。
+                                
+                                
+                            
+                        </td>
+                    </tr>
+                    <tr>
+                        
+                            
+                            
+                                <td class="xmtd1">信息发布期满，如征集到两个及以上符合条件的意向受让方组织交易方式</td>
+                            
+                        
+                        <!-- <td class="xmtd1">信息发布期满，如征集到两个及以上符合条件的意向受让方组织交易方式</td> -->
+                        <td class="xmtd2" colspan="2">竞争性谈判</td>
+                    </tr>
+                    
+                    
+                    
+                    
+                    <tr>
+                        <td class="xmtd1">会同转让方审查意向方资格</td>
+                        <td class="xmtd2" colspan="2">
+                            是
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </li>
+            <li>
+                <div class="tab_title">
+                    <div class="fl">转让方承诺</div>
+                    <div class="clear"></div>
+                </div>
+                <table class="xm_tab" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    <tr>
+                        <td class="xmtd2 pd20 lh22" width="100%">
+                            <div style="height: 70px;overflow: hidden" id="cnhnr">
+                                <pre><p style="margin-top:5px;margin-right:0;margin-bottom:5px;margin-left: 0;text-indent:32px;line-height:21px"><span style="color:black">我方拟转让所持标的项目，通过上海技术交易所（以下简称“技交所”）公开披露项目信息和组织交易活动，依照公开、公平、公正和诚信的原则作如下承诺：</span></p><p style="margin-top:5px;margin-right:0;margin-bottom:5px;margin-left: 0;text-indent:19px;line-height:21px;font-variant-ligatures: normal;font-variant-caps: normal;orphans: 2;text-align:start;widows: 2;-webkit-text-stroke-width: 0px;word-spacing: 0px"><span style="color:black">（1）本次项目交易是我方真实意思表示，项目标的权属清晰，除已披露的事项外，我方对该项目拥有完全的处置权且不存在法律法规禁止或限制交易的情形；</span></p><p style="margin-top:5px;margin-right:0;margin-bottom:5px;margin-left: 0;text-indent:13px;line-height:21px;font-variant-ligatures: normal;font-variant-caps: normal;orphans: 2;text-align:start;widows: 2;-webkit-text-stroke-width: 0px;word-spacing: 0px"><span style="color:black">（2）本项目标的中所涉及的处置行为已履行了相应程序，经过有效的内部决策，并获得相应批准；交易标的涉及共有或交易标的上设置有他项权利，已获得相关权利人同意的有效文件。</span></p><p style="margin-top:5px;margin-right:0;margin-bottom:5px;margin-left: 0;text-indent:13px;line-height:21px;font-variant-ligatures: normal;font-variant-caps: normal;orphans: 2;text-align:start;widows: 2;-webkit-text-stroke-width: 0px;word-spacing: 0px"><span style="color:black">（3）我方所提交的信息发布申请及相关材料真实、完整、准确、合法、有效，不存在虚假记载、误导性陈述或重大遗漏；我方同意技交所按上述材料内容发布披露信息，并对披露内容和上述材料的真实性、完整性、准确性、合法性、有效性承担法律责任；</span></p><p style="margin-top:5px;margin-right:0;margin-bottom:5px;margin-left: 0;text-indent:13px;line-height:21px;font-variant-ligatures: normal;font-variant-caps: normal;orphans: 2;text-align:start;widows: 2;-webkit-text-stroke-width: 0px;word-spacing: 0px"><span style="color:black">（4）我方在交易过程中自愿遵守有关法律法规和技交所相关交易规则及规定，恪守信息发布公告约定，按照相关要求履行我方义务；</span></p><p style="margin-top:5px;margin-right:0;margin-bottom:5px;margin-left: 0;text-indent:13px;line-height:21px;font-variant-ligatures: normal;font-variant-caps: normal;orphans: 2;text-align:start;widows: 2;-webkit-text-stroke-width: 0px;word-spacing: 0px"><span style="color:black">（5）我方已认真考虑本次项目交易行为可能导致的企业经营、行业、市场、政策以及其他不可预计的各项风险因素，愿意自行承担可能存在的一切交易风险；</span></p><p style="margin-top:5px;margin-right:0;margin-bottom:5px;margin-left: 0;text-indent:13px;line-height:21px;font-variant-ligatures: normal;font-variant-caps: normal;orphans: 2;text-align:start;widows: 2;-webkit-text-stroke-width: 0px;word-spacing: 0px"><span style="color:black">（6）我方在技交所组织交易期间将不通过其他渠道对标的项目进行交易；</span></p><p style="margin-top:5px;margin-right:0;margin-bottom:5px;margin-left: 0;text-indent:13px;line-height:21px;font-variant-ligatures: normal;font-variant-caps: normal;orphans: 2;text-align:start;widows: 2;-webkit-text-stroke-width: 0px;word-spacing: 0px"><span style="color:black">（7）我方将按照技交所收费办法及相关交易文件的约定及时、足额支付相关费用，不因与受让方争议或合同解除、终止等原因拒绝、拖延、减少交纳或主张退还相关费用。</span></p><p style="margin-top:5px;margin-right:0;margin-bottom:5px;margin-left: 0;font-variant-ligatures: normal;font-variant-caps: normal;orphans: 2;text-align:start;widows: 2;-webkit-text-stroke-width: 0px;word-spacing:0px"><span style="color:black">我方保证遵守以上承诺，并同意技交所将相关承诺在本项目公告中披露。如违反上述承诺或有违规行为，给交易相关方及技交所造成损失的，我方愿意承担相应的赔偿责任及其他法律责任。</span><span style="font-size:14px;color:black">&nbsp;</span></p><p>&nbsp;</p><p><br/></p></pre>
+                            </div>
+                            <a onclick="lookCNH()" id="lookCnh">点击查看承诺全文</a>
+                            <a onclick="closeCNH()" id="closeCnh" style="display: none">点击收起承诺全文</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </li>
+            <li>
+                <div class="tab_title">
+                    <div class="fl">公示附件</div>
+                    <div class="clear"></div>
+                </div>
+                <table class="xm_tab mb10" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody>
+                    
+                    </tbody>
+                </table>
+                
+            </li>
+        </ul>
+    </div>
+    <div class="clear"></div>
+</div>
+
+</body>
+<script>
+    layui.use(['form', 'element', 'carousel'], function() {
+        var $ = layui.jquery,
+            element = layui.element; //Tab的切换功能，切换事件监听等，需要依赖element模块
+
+        var form = layui.form,
+            layer = layui.layer;
+
+        var carousel = layui.carousel;
+
+        //图片轮播gsfj_img
+        carousel.render({
+            elem: '#gsfj_img',
+            anim: 'fade',
+            full: false,
+            interval: 4000,
+            width: '100%',
+            height: '500px'
+        });
+
+    });
+</script>
+<script>
+    function lookCNH() {
+        $("#cnhnr").show();
+        $("#cnhnr").css("height", "auto");
+        $("#closeCnh").show();
+        $("#lookCnh").hide();
+    }
+
+    function closeCNH() {
+        $("#cnhnr").css("height", "20px");
+        $("#closeCnh").hide();
+        $("#lookCnh").show();
+    }
+
+    $(function () {
+
+        Base.Ajax.post('/service/s/prjs/real_right/getWGCS', true,
+            {
+                id: '10031'
+            },
+            'json',
+            function (json) {
+                if (json.success) {
+                    $('#wgcs').html(json.object.data.WGCS);
+                } else {
+                    $('#wgcs').html('0');
+                }
+            }
+        )
+
+    });
+
+    function checkStatus() {
+        Base.Tip.showLoading($(document.body), true);
+        var status = false;
+        Base.Ajax.post('/service/signup/real_right/checkStatus'
+            , false
+            ,
+            {
+                id: '7776'
+            }
+            , 'json'
+            , function (json) {
+                Base.Tip.showLoading($(document.body), false);
+                if (json.success) {
+                    var num = json.object.NUM;
+                    if (num > 0) {
+                        //审核中
+                        Base.Tip.error('您已提交意向申请,请到<a href="/page/psncenter/signup/index?jypl=SWZC">我的报名</a>查看');
+                    } else {
+                        status = true;
+                    }
+
+                } else {
+                    Base.Tip.error(json.msg);
+                }
+            }
+        )
+        return status;
+    }
+
+    function signup() {
+        
+        
+        Base.Tip.alert('您尚未登录, 请登录后操作');
+        
+        
+        
+    }
+</script>
+<script>
+    
+
+    function lookCNH() {
+        $("#cnhnr").show();
+        $("#cnhnr").css("height", "auto");
+        $("#closeCnh").show();
+        $("#lookCnh").hide();
+    }
+
+    function closeCNH() {
+        $("#cnhnr").css("height", "70px");
+        $("#closeCnh").hide();
+        $("#lookCnh").show();
+    }
+</script>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge,Chrome=1">
+<meta name="keywords" content="技术经纪转移机构_技术经纪人_技E网">
+<title>服务机构_技术经纪转移机构_技术经纪人_技E网</title>
+<link type="text/css" rel="stylesheet" href="/style/style.css" />
+<script type="text/javascript" src="/javascript/jquery.min.js"></script>
+<script type="text/javascript" src="/javascript/jqPaginator.js"></script>
+</head>
+<body>
+<p class="txt">会员</p>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" href="/style/top.css?v=1">
+<div class="header-nav">
+	<div class="w1200">
+		<!-- <p class="navLogo fl"><a href="https://hyzx.ctex.cn"><img src="/images/logo.png" alt=""></a></p> -->
+		<p class="navLogo fl"><a href="https://hyzx.ctex.cn"><h4>中技所会员</h4></a></p>
+		<div class="navBox fl">
+			<ul><li><a href="/">首页</a></li>
+				<li><a href="/article/fwzx/">资讯公告</a></li>
+				<!-- <li><a href="/article/tzgg/">通知公告</a></li> -->
+				<li><a href="/article/fwjg/">会员</a></li>
+				<li><a href="/article/fwal/">服务案例</a></li>
+				<li><a href="/article/xzzx/">下载中心</a></li>
+				<li><a href="/article/gywm/">关于平台</a></li>
+			</ul>
+		</div>
+		<div class="phoneCall fr">
+			<p>+010 6267 9675 </br>+010 6267 9697</p>
+			<span>如有问题，欢迎拨打电话咨询</span>
+		</div>
+	</div>
+</div>
+<script>
+	var txt=$(".txt").text();
+	$(".navBox ul li").each(function(){
+		if($(this).find("a").text()==txt){
+			$(this).addClass("active")
+		}
+	})
+</script>
+
+<div class="main center">
+	  <div class="loc">
+		<script>
+var colname='会员';
+var ecolname='fwjg';
+var colCommentFlag = '0';
+var siteId='hyzx';
+</script>
+当前位置：<a href='/'>首页</a><span>></span> <a  href='/article\fwjg/'>会员</a>
+
+	  </div>
+	  <div class="sys_middle">
+		<div class="dev">会员</div>
+		<!--主体内容开始-->
+		<div class="sys_main">
+			<div id="searchForm1">
+				<div class="searchForm">
+					<select id="fwjgtype" onchange="doValue(this);">
+						<option value="">--请选择--</option>
+						<option value="trade">交易会员</option>
+						<option value="profession">专业会员</option>
+						
+					</select>
+					<div class="inputFrom">
+						<input type="text" placeholder="请输入关键词" id="fwjgname">
+						<input type="submit"  onclick="searchSubmit()" value="">
+					</div>
+				</div>
+			</div>
+			<ul id="li_container"></ul>
+		</div>
+		<!--主体内容结束-->
+		<div class="pageBox"><div id="pages" class="pagination"></div><span class="pageNum"></span></div>
+	</div>
+</div>
+<div class="footInfo">
+	<div class="w1200">
+		<p>京ICP备09093569号   中国技术交易所有限公司 版权所有</p>
+		<p>Copyright©2020,China Technology Exchange Information Service Platform,All Rights Reserved.</p>
+	</div>
+</div> 
+<script type="text/javascript">
+	$(document).ready(function(){
+		var fwjgTypes = GetQueryString('fwjgType');
+		if(fwjgTypes=='1'){
+			$("#fwjgtype").val("trade");
+		}else if(fwjgTypes=='2'){
+			$("#fwjgtype").val("profession");
+		}
+		
+		
+		getData(); 
+	});
+	function doValue(obj){ 
+		if(obj.value=='trade'){
+			$("#fwjgtype").val("trade");
+		}else if(obj.value=='profession'){
+			$("#fwjgtype").val("profession");
+		}else if(obj.value==''){
+			$("#fwjgtype").val("");
+		} 
+		getData(obj.value); 
+	}
+	//页面取参
+	function GetQueryString(name) {
+		let reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)')
+		let r = window.location.search.substr(1).match(reg) // search,查询？后面的参数，并匹配正则
+		if (r != null) {
+			return unescape(r[2])
+		}
+		return null
+	}
+	
+	function getData(obj){ 
+		
+		var pageSize=15;
+		$.ajax({
+			type: "POST",//方法类型
+			dataType: "json",//预期服务器返回的数据类型
+			async:false,
+			data:{"memname":$("#fwjgname").val(),"mtype":obj},
+			url: "https://member.ctex.cn/admin/mem/memSearchfwjg?auditstatus=1",//url,
+			success: function (result) {
+			console.log(result);
+				var total = result.total;
+				if(total != 0 || total >0){
+					$("#pages").jqPaginator({
+					totalCounts:result.total,
+					totalPages:result.total/15,
+					currentPage: 1,
+					pageSize:15,
+					visiblePages:4,
+					onPageChange: function (pNo) {
+							var pageNo=pNo;
+							var texts_html = "";
+							$.each(result.rows,function(index,value){
+							
+								if((pageNo-1)*pageSize-1<index&&index<pageNo*pageSize){
+									if(result.rows[index].memlogo == null){
+										
+										var list="<li><a href='/sys/detail.shtml?id="+result.rows[index].id+"'><i class='memlogo'>"+result.rows[index].memname+"</i><p>"+result.rows[index].memname+"</p><span>"+result.rows[index].memname+"</span></a></li>" 
+									}else{
+										
+										var list="<li><a href='/sys/detail.shtml?id="+result.rows[index].id+"'><i><img src='"+result.rows[index].memlogo+"'/></i><p>"+result.rows[index].memname+"</p><span>"+result.rows[index].memname+"</span></a></li>" 
+									}
+									
+
+									texts_html += list;	
+								}
+							});
+							$("#li_container").html(texts_html);
+							}
+					});
+				}	
+				$(".pageNum").text("共"+Math.ceil(result.total/15)+"页")
+			},
+			error : function() {
+				console.log("异常！");
+			}
+		});
+	}
+	
+	
+	function searchSubmit(){
+		getData();
+	}
+</script>
+</body>
+
+</html>

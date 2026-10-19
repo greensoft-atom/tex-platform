@@ -20,8 +20,9 @@ export class TenantScopeError extends Error {
 }
 
 const QUERY_HOOKS = [
-  'count', 'countDocuments', 'distinct', 'find', 'findOne', 'findOneAndDelete', 'findOneAndRemove',
-  'findOneAndUpdate', 'deleteOne', 'deleteMany', 'remove', 'replaceOne', 'update', 'updateOne', 'updateMany',
+  'count', 'countDocuments', 'distinct', 'estimatedDocumentCount', 'find', 'findOne', 'findOneAndDelete',
+  'findOneAndRemove', 'findOneAndReplace', 'findOneAndUpdate', 'deleteOne', 'deleteMany', 'remove', 'replaceOne',
+  'update', 'updateOne', 'updateMany',
 ];
 const SCOPED = Symbol('tenantScoped');
 
@@ -47,6 +48,10 @@ export function tenantScopePlugin(schema: Schema<any>, opts: { fields: string[] 
     const query = this as Query<unknown, unknown> & { [SCOPED]?: boolean };
     if (query[SCOPED]) return;                                    // re-executed query: already scoped
     const options = query.getOptions() as TenantScopeOptions;
+    // estimatedDocumentCount() ignores filters, so it cannot be scoped: staff only (use countDocuments otherwise).
+    if ((query as unknown as { op: string }).op === 'estimatedDocumentCount' && !options.crossTenant) {
+      throw new TenantScopeError(`${query.model.modelName}: estimatedDocumentCount cannot be tenant-scoped; use countDocuments`);
+    }
     const filter = scopeFilter(query.model.modelName, opts.fields, options);
     if (filter) query.and([filter]);
     delete options.tenant;                                        // never forwarded to the driver

@@ -118,7 +118,7 @@ The supporting network and the licensed partners are outside the platform. The p
 | --- | --- | --- | --- |
 | **Discovery marketplace** | Publish, search and match technologies and demands; controlled introductions | Qualified opportunities | R1 |
 | **Transfer management** | Confidentiality, diligence, negotiation, contracts, deal coordination | Completed technology deals | R2 |
-| **Exchange and commercialization** | Venue-routed formal listing, bidding and certificates (as the venue's registered agent); payment-partner integration; pilots | Trusted transactions and deployed technologies | R3 |
+| **Exchange and commercialization** | Venue-routed formal listing, bidding and certificates (as the venue's registered agent); payment integration through one adapter ([06 §6.11](06-implementation-design-v1.md)); pilots | Trusted transactions and deployed technologies | R3 |
 
 All three layers **share** one identity system, one technology registry, one organization model, one permissions framework and one deal record. They must not be built as three disconnected products.
 
@@ -790,7 +790,7 @@ The platform therefore supports **configurable completion criteria per deal type
 
 **Venue-routed deals (R3).** When a transfer must be sold through formal listing, bidding, auction or tender, the platform does not run the binding steps itself. As the venue's registered agent, it prepares the submission (`venue_submissions`), registers buyers on behalf of clients and tracks the venue's timeline (for example, disclosure for at least 5 working days on STEX). The venue runs the competitive method and third-party settlement and issues the certificates; the platform records the results and certificate numbers on the deal ([10 §3.10](10-product-requirements.md)).
 
-**Deal status on the venue route.** The deal stays `negotiation` while the venue lists and discloses the technology and runs buyer registration and price discovery. It moves to `contract_draft` when the venue confirms the buyer and price, then through `approval` to `signed` (contract within 5 WD), and stays `conditions_pending` until venue settlement is confirmed and the transaction certificate (交易凭证) is recorded: both are completion conditions of a venue-routed deal. The venue's own steps are tracked on `venue_submissions`, not as extra deal statuses.
+**Deal status on the venue route.** The deal stays `negotiation` while the venue lists and discloses the technology and runs buyer registration and price discovery. It moves to `contract_draft` when the venue confirms the buyer and price, then through `approval` to `signed` (contract within the period the listing sets), and stays `conditions_pending` until settlement is confirmed and the transaction certificate (交易凭证) is recorded: both are completion conditions of a venue-routed deal. Settlement means the venue's confirmation (on-exchange) or the seller's evidenced receipt of the price (off-exchange, [09 §2.3](09-reference-platform-features.md)). The venue's own steps are tracked on `venue_submissions`, not as extra deal statuses.
 
 ### 7.6 Workflow F: managed technology scouting (service engagement)
 
@@ -893,7 +893,7 @@ sequenceDiagram
     participant POL as Policy engine
     participant DB as MongoDB
     participant CON as Contract service
-    participant FIN as Payment partner (via worker)
+    participant FIN as Payment provider (via worker)
     Buyer->>DEAL: Propose terms
     DEAL->>POL: Check party access and authority
     POL-->>DEAL: Authorized
@@ -912,7 +912,7 @@ sequenceDiagram
     DEAL->>DB: Record state transition and audit event
 ```
 
-The contract service keeps the **exact document version and execution evidence**. The payment partner (a bank or licensed payment institution) reports **authoritative** payment status; an operator can never mark an unverified payment as successful. Until the payment integration exists (R3), payment status is recorded from verified evidence, such as a bank receipt checked by a finance officer.
+The contract service keeps the **exact document version and execution evidence**. The payment provider reports **authoritative** payment status through verified events: the owner's payment testing platform first, and a bank or licensed payment institution for live money ([06 §6.11](06-implementation-design-v1.md)). An operator can never mark an unverified payment as successful. Until the payment integration exists (R3), payment status is recorded from verified evidence, such as a bank receipt checked by a finance officer.
 
 ---
 
@@ -1406,7 +1406,7 @@ The transition table:
 - Timeout and exception handling.
 - Versioned workflow definitions, so old cases continue under their original rules.
 
-State machines implemented in the application and persisted in MongoDB (status + `rev` + `workflow_transitions`, changed in one transaction) are enough for the first release. Timers (review deadlines, reminders, demand expiry) run as scheduled jobs in the worker. Consider a dedicated engine such as **Temporal** only after the runtime upgrade, and only when workflows become long-running, distributed, timer-heavy and dependent on reliable retries across many systems.
+State machines implemented in the application and persisted in MongoDB (status + `rev` + `workflow_transitions`, changed in one transaction) are enough for the first release. Timers (review deadlines, reminders, demand expiry) run as scheduled jobs in the worker. The detailed designs are in [06 §6.6–§6.10](06-implementation-design-v1.md): offers, review cases (with SLA pause, maker-checker and escalation), the publishing service, leased jobs with retries and dead letters, and the working-day calendar. Consider a dedicated engine such as **Temporal** only after the runtime upgrade, and only when workflows become long-running, distributed, timer-heavy and dependent on reliable retries across many systems.
 
 ---
 
@@ -1590,7 +1590,7 @@ flowchart LR
 | **0 — Business and domain validation** (before development) | Business model and target market · Target jurisdictions and compliance boundaries · Stakeholder interviews and journey maps · Domain glossary and ER model · Workflow state machines · Information architecture and wireframes · Security and confidentiality requirements · Monetization experiments and cost model · PRD | The team can explain how a technology moves from submission to completed transfer, who is responsible at each stage, and what a completed deal is |
 | **1 — Marketplace foundation** | Registration and authentication · Organizations, memberships, permissions · Technology registration and versioning · Publication review · Search, filters, detail pages · Demand registration · Basic matching and shortlists · Admin queues and audit logs · Private document storage and notifications | Suppliers publish reviewed technologies, buyers submit demands, and both sides discover and manage opportunities securely |
 | **2 — Transfer operations** | Introduction requests · NDA workflow and controlled disclosure · Restricted deal rooms · Broker assignments and expert tasks · Due-diligence cases · Deal pipeline and negotiation records · Contract versions and approvals · Milestones, reminders and exception handling | A qualified opportunity can be managed through diligence and negotiation with a complete history |
-| **3 — Commercial transaction infrastructure** | Configurable transaction types · Licensing and assignment workflows · Contract-execution integrations · Payment-partner integration, invoicing and reconciliation · Fee calculation and revenue reporting · Completion evidence · Disputes, refunds, audit controls · Venue-routed listing, bidding, auction and tender, as the venue's registered agent | The platform records and coordinates a transaction, including financial and contractual conditions, without confusing contract value with platform revenue |
+| **3 — Commercial transaction infrastructure** | Configurable transaction types · Licensing and assignment workflows · Contract-execution integrations · Payment integration (one adapter), invoicing and reconciliation · Fee calculation and revenue reporting · Completion evidence · Disputes, refunds, audit controls · Venue-routed listing, bidding, auction and tender, as the venue's registered agent | The platform records and coordinates a transaction, including financial and contractual conditions, without confusing contract value with platform revenue |
 | **4 — Enterprise intelligence and services** | Enterprise subscriptions · Managed scouting · Advanced multilingual search · AI-assisted matching and evidence extraction · Expert marketplace · Evaluation and valuation services · Enterprise reporting and API · CRM and procurement integrations | Repeatable paid services and recurring enterprise usage, not only sporadic transaction fees |
 | **5 — Commercialization network** | PoC project management · Pilot milestones and validation evidence · Manufacturing and industrial partners · Financing and investment workflows · Regional and international networks · Post-transfer outcome tracking · Advanced analytics and benchmarking | The platform measures deployment and commercial impact, not just transactions |
 
@@ -1732,12 +1732,13 @@ Several business decisions change the detailed design. They were settled step by
 | 3 | Initial users | Suppliers first · buyers first · both | **Both** suppliers and buyers | 06 §1 |
 | 4 | Deployment | Cloud · self-hosted · hybrid · on-premises | **Self-hosted** Linux servers: systemd services behind Nginx; no Docker Compose or Kubernetes. A container with a current Node LTS is only a later upgrade option (11 §11.2) | 06 §3, §11; 11 §9 |
 | 5 | Team size | 1–4 · 5–12 · multiple squads | **1–4 developers** | 06 §13 |
-| 6 | Transactions at launch | Managed introductions and deal records · contracts and payments · formal exchange mechanisms | Managed introductions and deal tracking first ([06](06-implementation-design-v1.md)); later **all deal types with provider-backed conditional funds handling** ([08](08-china-operating-model.md)) and venue-routed listing sales (R3) | 06, 07, 08, 10 §9 |
+| 6 | Transactions at launch | Managed introductions and deal records · contracts and payments · formal exchange mechanisms | Managed introductions and deal tracking first ([06](06-implementation-design-v1.md)); later **all deal types**, with payments through one adapter (the owner's payment testing platform first; D-02) and venue-routed listing sales (R3) | 06 §6.11, 07, 08, 10 §9, 12 |
 | 7 | Technology scope | All industries · deep tech · specific industries | **Broad, cross-industry** | 06 §1 |
 | 8 | Backend stack | Python + PostgreSQL · NestJS 8 · Node.js + Express + MongoDB | **Express 4 modular monolith on the given servers: Node 12.4, MongoDB 4.4 / 5.0.** NestJS 8 rejected (end-of-life, pins an older Express) | 06 §3, 11 §3 |
-| 9 | Data access | Native driver with repositories · Mongoose ODM | **Mongoose 5.13** schemas, models and Document API, with tenant-scope and immutability plugins; database validators kept as a safety net. The move to Mongoose 6.13 with Node 12.22.12 is open decision D-08 | 06 §4, 11 §5.2, §11.2 |
+| 9 | Data access | Native driver with repositories · Mongoose ODM | **Mongoose 5.13** schemas, models and Document API, with tenant-scope and immutability plugins; database validators kept as a safety net. The move to Mongoose 6.13 with Node 12.22.12 is decision D-08 (proposed: in R0, [12](12-decision-record.md)) | 06 §4, 11 §5.2, §11.2 |
 | 10 | Search | MongoDB text index · Elasticsearch 7.17 + IK · Meilisearch | **Meilisearch**, fed from the outbox; MongoDB 4.4 / 5.0 cannot search Chinese text | 06 §10, 11 §6 |
-| 11 | Background work | Redis + `bull` · MongoDB outbox and leased jobs | **Transactional outbox and leased jobs in MongoDB**, one worker process; no Redis at launch | 06 §3, 11 §3 |
+| 11 | Background work | Redis + `bull` · MongoDB outbox and leased jobs | **Transactional outbox and leased jobs in MongoDB**, one worker process; no Redis at launch | 06 §3, §6.9, 11 §3 |
+| 12 | Open business decisions D-01 … D-08 | See the decision record | Proposed resolutions for each, D-02 (payments) decided by the owner | [12](12-decision-record.md), 10 §12 |
 
 ### Final architectural recommendation
 

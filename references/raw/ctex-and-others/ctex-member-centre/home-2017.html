@@ -1,0 +1,275 @@
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1,minmum-scale=1,maxmum-scale=1,user-scalable=no">  
+<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+<!--加载meta IE兼容文件-->  
+<!--[if lt IE 9]>  
+<script src="js/html5shiv.js"></script>  
+<script src="js/respond.min.js"></script>  
+<![endif]--> 
+<title>会员中心_技E网</title>
+<link href="css/index.css" rel="stylesheet">
+<base target="_blank" />
+<script src="js/jquery.min.js" type="text/javascript"></script>
+<script>
+
+$(document).ready(function() {
+	if(!browserRedirect()){
+		window.location.href="wap/";
+		return;
+	}
+});
+  function browserRedirect() {
+      var sUserAgent = navigator.userAgent.toLowerCase();
+      var bIsIpad = sUserAgent.match(/ipad/i) == "ipad";
+      var bIsIphoneOs = sUserAgent.match(/iphone os/i) == "iphone os";
+      var bIsMidp = sUserAgent.match(/midp/i) == "midp";
+      var bIsUc7 = sUserAgent.match(/rv:1.2.3.4/i) == "rv:1.2.3.4";
+      var bIsUc = sUserAgent.match(/ucweb/i) == "ucweb";
+      var bIsAndroid = sUserAgent.match(/android/i) == "android";
+      var bIsCE = sUserAgent.match(/windows ce/i) == "windows ce";
+      var bIsWM = sUserAgent.match(/windows mobile/i) == "windows mobile";
+      if (bIsIpad || bIsIphoneOs || bIsMidp || bIsUc7 || bIsUc || bIsAndroid || bIsCE || bIsWM) {
+        return false;
+      } else {
+        return true;
+      }
+    }
+</script>
+</head>
+<body>
+<div class="wrap" id="wrap">
+	<div class="wrapper">
+		<div class="product_wp">
+			<div class="page_wp">
+				<div class="page_box page_1 grid_1 show">
+					<div class="content">
+						<div class="product_box product_1">
+							<div class="cont_box">
+								<div class="bg_box" data-width="1920" data-height="1080">
+									<img src="img/page.jpg">
+								</div>
+								
+								<div class="zoom_wp">
+									<div class="tb_box">
+										<div class="tb_cont">
+											<p class="txt_video hide_txt png"></p>
+											<div class="txt_index">
+												<a href="http://us.ctex.cn/" class="technology"><img src="img/us.png" alt=""></a>
+												<a href="http://ctex.cn/" class="network"><img src="img/ctex.png" alt=""></a>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="page_box page_1 grid_1">
+					<div class="content">
+						<div class="product_box product_1">
+							<div class="cont_box">
+								<div class="bg_box" data-width="1920" data-height="1080" style="background: url(img/page2.png) no-repeat center bottom #fff;"></div>
+								
+								<div class="zoom_wp">
+									<div class="tb_box">
+										<div class="tb_cont">
+											<p class="txt_tit"><img src="img/tit.png" alt=""></p>
+											<p class="txt_con"><img src="img/count2.png" alt="" width="1200"></p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="page_box page_1 grid_1">
+					<div class="content">
+						<div class="product_box product_1">
+							<div class="cont_box">
+								<div class="bg_box" data-width="1920" data-height="1080">
+									<img src="img/page3.jpg">
+								</div>
+								
+								<div class="zoom_wp">
+									<div class="tb_box">
+										<div class="tb_cont">
+											<p class="txt_tit"><img src="img/tit2.png" alt=""></p>
+											<div class="txt_con">
+												<div class="w1000 hydw">
+													<div class="w376 fl mb">
+														<img src="img/step.png" alt="">
+														<h4>渠道会员</h4>
+														<a href="/article/qdhy/">了解更多》</a>
+													</div>
+													<div class="w376 fr mb" >
+														<img src="img/step2.png" alt="">
+														<h4>能力会员</h4>
+														<a href="/article/nlhy/">了解更多》</a>
+													</div>
+													<div class="w376 fl clear">
+														<img src="img/step3.png" alt="">
+														<h4>服务会员</h4>
+														<a href="/article/fwhy/">了解更多》</a>
+													</div>
+													<div class="w376 fr">
+														<img src="img/step4.png" alt="">
+														<h4>技术经理人</h4>
+														<a href="/article/jsjlr/">了解更多》</a>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="page_box page_1 grid_1">
+					<div class="content">
+						<div class="product_box product_1">
+							<div class="cont_box">
+								<div class="bg_box" data-width="1920" data-height="1080" style="background: url(img/page4.png) no-repeat center bottom #fff;"></div>
+								<div class="video_box">
+									<video src="" id="video"></video>
+									<embed id="video_emb" style="display: none;">
+								</div>
+								<div class="zoom_wp">
+									<div class="tb_box">
+										<div class="tb_cont">
+											<p class="txt_tit"><img src="img/tit3.png" alt=""></p>
+											<p class="txt_con"><img src="img/count3.png" alt="" width="1200"></p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="page_box page_1 grid_1">
+					<div class="content">
+						<div class="product_box product_1">
+							<div class="cont_box">
+								<div class="bg_box" data-width="1920" data-height="1080">
+									<img src="img/page4.jpg">
+								</div>
+								
+								<div class="zoom_wp">
+									<div class="tb_box">
+										<div class="tb_cont">
+											<p class="txt_tit"><img src="img/tit4.png" alt=""></p>
+											<div class="txt_con">
+												<div class="w1200 zcwj-box">
+													
+													<!--include virtual="/article/zlxz/ini_1.html"
+													<script>
+														console.log(pics);
+														console.log(links);
+														console.log(texts);
+														var w3_texts="";
+														pics=pics.split("|");
+														links=links.split("|");
+														texts=texts.split("|");
+														$.each(pics,function(index,obj){
+															if(index>0){
+															w3_texts+="<div class=w33><img src="+obj+" /><h3>"+texts[index]+"</h3><div class=cover_bg><h6>"+texts[index]+"</h6><a href="+links[index]+"><img src=img/more.png ></a></div></div>"
+															}
+														});
+														$(".zlxz").html(w3_texts);-->
+														
+														
+   <li><a class="prolink" href="/article/zlxz/201711/20171100046880.shtml" target="_blank" title="2-4中国技术交易所技术经理人退会申请表">2-4中国技术交易所技术经理人退会申请表</a></li><li><a class="prolink" href="/article/zlxz/201711/20171100046879.shtml" target="_blank" title="2-4中国技术交易所技术经理人退会申请表">2-4中国技术交易所技术经理人退会申请表</a></li><li><a class="prolink" href="/article/zlxz/201711/20171100046878.shtml" target="_blank" title="2-3中国技术交易所技术经理人年度认证申请表">2-3中国技术交易所技术经理人年度认证申请表</a></li><li><a class="prolink" href="/article/zlxz/201711/20171100046877.shtml" target="_blank" title="2-2中国技术交易所技术经理人申请表">2-2中国技术交易所技术经理人申请表</a></li><li><a class="prolink" href="/article/zlxz/201711/20171100046876.shtml" target="_blank" title="2-1中国技术交易所技术经理人管理办法（试行）">2-1中国技术交易所技术经理人管理办法（试行）</a></li><li><a class="prolink" href="/article/zlxz/201711/20171100046875.shtml" target="_blank" title="1-6中国技术交易所机构会员退会申请表">1-6中国技术交易所机构会员退会申请表</a></li><li><a class="prolink" href="/article/zlxz/201711/20171100046874.shtml" target="_blank" title="1-5中国技术交易所机构会员年度评议表">1-5中国技术交易所机构会员年度评议表</a></li><li><a class="prolink" href="/article/zlxz/201711/20171100046873.shtml" target="_blank" title="1-4中国技术交易所机构会员申请表（能力会员）">1-4中国技术交易所机构会员申请表（能力会员）</a></li><li><a class="prolink" href="/article/zlxz/201711/20171100046872.shtml" target="_blank" title="1-3中国技术交易所机构会员申请表（经纪会员）">1-3中国技术交易所机构会员申请表（经纪会员）</a></li><li><a class="prolink" href="/article/zlxz/201711/20171100046871.shtml" target="_blank" title="1-2中国技术交易所机构会员申请表（服务会员）">1-2中国技术交易所机构会员申请表（服务会员）</a></li><li><a class="prolink" href="/article/zlxz/201711/20171100046870.shtml" target="_blank" title="1-1中国技术交易所机构会员管理办法（试行）">1-1中国技术交易所机构会员管理办法（试行）</a></li>
+
+													
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="page_box page_1 grid_1">
+					<div class="content">
+						<div class="product_box product_1">
+							<div class="cont_box">
+								<div class="bg_box" data-width="1920" data-height="1080">
+									<img src="img/page5.jpg">
+								</div>
+							
+								<div class="zoom_wp">
+									<div class="tb_box">
+										<div class="tb_cont">
+											<p class="txt_tit"><img src="img/tit5.png" alt=""></p>
+											<div class="txt_con">
+												<div id="bottom">
+												    <div class="bot_cont">
+												        <div class="bot_l">
+												            <p>Copyright(C)2014,China Technology Exchange Information Service platform,All rights reserved. </p>
+												            <p>版权所有：中国技术交易所有限公司 │ 业务洽谈：010-62679601/010-62679507 </p>
+												           <p>
+																<a href="http://ctex.cn/article/about/gywm/" target=" _blank">关于技E网</a> | 
+																<a href="https://us.ctex.cn" target="_blank">中国技术交易所</a> │  
+																<a href="http://ctex.cn/article/about/wzsm/" target="_blank">网站声明</a> │  
+																<a href="http://ctex.cn/article/about/wzdt/" target="_blank">网站地图</a> │  
+																<a href="http://ctex.cn/article/about/lxwm/" target="_blank">联系我们</a> │  
+																<a href="http://ctex.cn/article/about/jrwm/" target="_blank">加入我们</a> │  
+																<a href="http://ctex.cn/article/fwdt/yfzt/kjcgfw/201404/20140400001092.shtml" target="_blank">广告投放</a> │  
+																<a href="http://ctex.cn/j/web/comment_for_web.jsp" target="_blank">网站留言</a> │
+																<a href="http://new.cnzz.com/v1/login.php?siteid=1253274599" target="_blank" title="站长统计">站长统计</a>
+															</p>
+												            <p>京ICP备09093569号</p>
+												        </div>
+												        <div class="bot_r">
+												            <div class="service"></div>
+												            <div class="erweim">
+												                <p>
+												                    <img src="img/tu3.jpg" width="92"><span>中技所微信公众号</span>
+												                </p>
+												                <p>
+												                    <img src="img/erweima2.jpg" width="92"><span>技E网微信公众号</span>
+												                </p>
+												            </div>
+												        </div>
+												    </div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- 侧边导航-->
+			<div class="page_btns">
+				<div class="btns_box">
+					<a href="javascript:;" class="cur"></a>
+					<a href="javascript:;"></a>
+					<a href="javascript:;"></a>
+					<a href="javascript:;"></a>
+					<a href="javascript:;"></a>
+					<a href="javascript:;"></a>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!--[if IE 6]>
+<script type="text/javascript" src="js/DD_PNG_min.js"></script>
+<script type="text/javascript">
+	var links=document.getElementsByTagName("a");
+	for(var i=0,l=links.length;i<l;i++){
+		links[i].setAttribute("hideFocus",true);
+	}
+</script>
+<![endif]-->
+<script type="text/javascript" src="js/iplookup.php-format=js"></script>
+<script type="text/javascript" src="js/lib.js" ></script>
+<script type="text/javascript" src="js/index.js"></script>
+</body>
+</html>

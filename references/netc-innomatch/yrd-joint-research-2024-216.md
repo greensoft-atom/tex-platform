@@ -9,7 +9,7 @@ url: "https://stcsm.sh.gov.cn/cmsres/5f/5fd536284aa144548dc876f9cf2b45cc/38732fb
 archived: "none"
 retrieved: "2026-10-19T00:29Z (curl download; file mtime, UTC)"
 cited_by: "09 §3.5 (same thresholds as 2025); not listed in 09 Sources"
-raw: "raw/netc-innomatch/yrd-joint-research-2024-huke-216/doc.pdf; raw/netc-innomatch/yrd-joint-research-2024-huke-216/doc.txt"
+raw: "raw/netc-innomatch/yrd-joint-research-2024-huke-216/doc.txt"
 official_text: "official-texts/yrd-joint-research-2024-huke-216.txt"
 ---
 
@@ -29,3 +29,4 @@ STCSM's 2024 notice for the same programme as [沪科合〔2025〕5号](yrd-join
    > 企业用于对外揭榜资金投入不低于项目总投入 30%，且不低于200 万元。
 
    *Translation:* "The firm's funding for the external bounty is not less than 30% of total project investment and not less than ¥2 million."
+- **Privacy (2026-10-19):** the source PDF names contact persons with mobile numbers, so it is kept outside the public repository; the text copy in `raw/` has the mobile numbers (and nearby e-mail addresses) replaced by `[手机号已删除]` / `[邮箱已删除]`. Nothing the docs use was removed.
