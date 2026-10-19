@@ -199,7 +199,8 @@ The target servers run **Node.js 12.4** and **MongoDB 4.4 / 5.0**. The stack bel
 | Public pages | Pre-rendered static HTML on publication + sitemap | Search-engine indexing (Baidu) without a server-rendering framework |
 | Backend | Node.js + TypeScript (compiled to ES2019), Express 4, modular monolith | Runs on the given Node 12 runtime; one language across the stack |
 | Validation | zod schemas shared by API and frontend | One definition for input checks, forms and the OpenAPI document |
-| Primary database | MongoDB replica set (4.4 / 5.0), native driver 3.7 | Given target; multi-document transactions, validators, flexible technical attributes |
+| Primary database | MongoDB replica set (4.4 / 5.0) | Given target; multi-document transactions, validators, flexible technical attributes |
+| Data access | Mongoose 5.13 (driver 3.7): schemas, models and the Document API | Newest ODM for Node 12.4; one schema per collection for types, validation, defaults, indexes and plugins |
 | Search | Meilisearch | Chinese word segmentation, facets, typo tolerance; MongoDB 4.4/5.0 cannot search Chinese text |
 | Vector search | Later phase: Meilisearch hybrid search, or MongoDB Vector Search after an upgrade to 8.2+ | Not needed to prove the core business |
 | File storage | Storage adapter: encrypted volume, S3-compatible store or Aliyun OSS | Large documents, versioning, retention, private files |
@@ -1038,7 +1039,7 @@ These epics are an initial backlog, not a substitute for acceptance tests coveri
 
 ## 11. Database and data architecture
 
-The system of record is **MongoDB** (target servers run 4.4 / 5.0; see [11](11-target-runtime-node12-mongodb.md)). MongoDB is schemaless, so the design adds the discipline a technology exchange needs: validators, explicit indexes, immutable versions, transactions and least-privilege roles. Search runs in a separate, rebuildable index.
+The system of record is **MongoDB** (target servers run 4.4 / 5.0; see [11](11-target-runtime-node12-mongodb.md)). MongoDB is schemaless, so the design adds the discipline a technology exchange needs: Mongoose schemas in the application, database validators as a safety net, explicit indexes, immutable versions, transactions and least-privilege roles. Search runs in a separate, rebuildable index.
 
 ### 11.1 Core data conventions
 
@@ -1049,7 +1050,7 @@ Every major business collection has:
 - An organization (tenant) ownership field where applicable.
 - An explicit status, validated as an enum.
 - A `rev` counter for optimistic concurrency, plus an immutable version collection where history matters.
-- A `$jsonSchema` validator and unique indexes for invariants that must hold under concurrency.
+- A Mongoose schema (types, enums, required fields, cross-field rules) plus a `$jsonSchema` validator in the database and unique indexes for invariants that must hold under concurrency.
 - Indexes for its common access patterns.
 - Audit events for sensitive transitions.
 
@@ -1077,18 +1078,18 @@ A technology is split into a small, frequently updated **identity document**, **
   trl: { claimed: 6, assessed: null }, offerTypes: ["license"], badges: ["patent_verified"] }
 ```
 
-The full collection catalogue, validators, indexes, roles and verified code are in [06 §4](06-implementation-design-v1.md).
+The full collection catalogue, Mongoose models, validators, indexes, roles and verified code are in [06 §4](06-implementation-design-v1.md).
 
 **Intentionally deferred.** Payment obligations, provider transactions, payouts, ledger entries and reconciliation ([08 §9](08-china-operating-model.md)) are added when money starts flowing through the platform.
 
-Use **migrations from the beginning** (`migrate-mongo`). Never change validators, indexes or roles manually in production.
+Use **migrations from the beginning** (`migrate-mongo` for validators, roles and data; index sync from the Mongoose schemas at release). Never change validators, indexes or roles manually in production.
 
 ### 11.3 Multi-tenant isolation
 
 When many organizations share the platform, tenant isolation is a first-class security requirement:
 
 1. Every tenant-owned document has an explicit ownership or access relationship.
-2. All tenant data is read and written through a **tenant-scoped repository** that adds the tenant filter to every query (06 §4.8). MongoDB has no row-level security, so this code path is narrow and covered by automated cross-tenant tests.
+2. Every tenant-owned Mongoose model carries a **tenant-scope plugin** that adds the tenant filter to every query, and rejects any query that does not state a tenant or an audited staff reason (06 §4.8). MongoDB has no row-level security, so this rule is enforced in one place and covered by automated cross-tenant tests.
 3. The application connects with a **least-privilege role**: CRUD on business collections, insert-only on the audit trail, no schema changes.
 4. Privileged staff access goes through a separate path that requires a case-related reason and writes an audit event.
 5. Background jobs carry and validate their tenant and resource scope.
@@ -1575,16 +1576,17 @@ Several business decisions change the detailed design. They were settled step by
 | 1 | Initial operating region | Global · China · Europe · one region first | One region first ([06](06-implementation-design-v1.md)), then **China** ([08](08-china-operating-model.md)) | 06 §1, 08 |
 | 2 | Primary business model | Formal exchange · transfer and brokerage · hybrid exchange + services + SaaS | **Managed technology exchange** (marketplace + managed transfer) | 06 §1 |
 | 3 | Initial users | Suppliers first · buyers first · both | **Both** suppliers and buyers | 06 §1 |
-| 4 | Deployment | Cloud · self-hosted · hybrid · on-premises | **Self-hosted** Linux VMs with Docker Compose | 06 §3, §11 |
+| 4 | Deployment | Cloud · self-hosted · hybrid · on-premises | **Self-hosted** Linux servers: systemd services behind Nginx on the target server (containers optional, see 11 §11.2) | 06 §3, §11; 11 §9 |
 | 5 | Team size | 1–4 · 5–12 · multiple squads | **1–4 developers** | 06 §13 |
 | 6 | Transactions at launch | Managed introductions and deal records · contracts and payments · formal exchange mechanisms | Managed introductions and deal tracking first ([06](06-implementation-design-v1.md)); later **all deal types with provider-backed conditional funds handling** ([08](08-china-operating-model.md)) | 06, 07, 08 |
 | 7 | Technology scope | All industries · deep tech · specific industries | **Broad, cross-industry** | 06 §1 |
 | 8 | Backend stack | Python + PostgreSQL · Node.js + MongoDB | **Node.js + MongoDB on the given servers: Node 12.4, MongoDB 4.4 / 5.0** | 06 §3, 11 |
+| 9 | Data access | Native driver with repositories · Mongoose ODM | **Mongoose 5.13** schemas, models and Document API, with tenant-scope and immutability plugins; database validators kept as a safety net | 06 §4, 11 §5.2 |
 
 ### Final architectural recommendation
 
 Start with the hybrid model: a demand-driven marketplace, rigorous technology records, controlled verification, explainable matching and a complete transfer workflow.
 
-Use a modular Node.js backend, MongoDB as the source of truth (with validators, transactions and least-privilege roles), a dedicated Chinese-capable search index, private document storage, explicit state machines and strong resource-level permissions. Keep **transaction completion, financial records and legal status** as separate, auditable concepts.
+Use a modular Node.js backend, MongoDB as the source of truth (Mongoose models, database validators, transactions and least-privilege roles), a dedicated Chinese-capable search index, private document storage, explicit state machines and strong resource-level permissions. Keep **transaction completion, financial records and legal status** as separate, auditable concepts.
 
 Above all, design the business operations alongside the software. Verification staff, technology brokers, deal managers, finance operators and administrators are not secondary users. They are part of the service that makes the marketplace trustworthy.

@@ -575,7 +575,7 @@ The existing technology, demand, organization, introduction and deal records ([0
 
 ### 9.1 Financial database rules
 
-- Store amounts as `{ currency, amountMinor }` with `amountMinor` as a 64-bit integer (fen for RMB; BSON `long`), and rates as `Decimal128`; never binary floating point. The database validator rejects floating-point amounts (verified).
+- Store amounts as `{ currency, amountMinor }` with `amountMinor` as a 64-bit integer (fen for RMB; BSON `long`, through the strict `Int64` Mongoose type of [06 §4.5](06-implementation-design-v1.md)), and rates as `Decimal128`; never binary floating point. Both the Mongoose schema and the database validator reject fractional or floating-point amounts, and APIs return amounts as decimal strings (verified).
 - Store the currency on every amount.
 - Make external provider transaction and event IDs unique (unique indexes on `provider` + `providerEventId`).
 - Process webhooks idempotently and verify their signatures.

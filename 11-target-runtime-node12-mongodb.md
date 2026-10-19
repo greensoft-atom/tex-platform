@@ -11,10 +11,10 @@
 
 ## Summary
 
-- The design **runs on Node.js 12.4.0 with MongoDB 4.4 and 5.0**. This was verified in a real run: 33 runtime libraries, schema validators, multi-document transactions, the permission policy and Chinese search.
+- The design **runs on Node.js 12.4.0 with MongoDB 4.4 and 5.0**, using **Mongoose 5.13** for data access. This was verified in a real run: 34 runtime libraries, the Mongoose models and their database validators, the Document API in multi-document transactions, tenant isolation, the permission policy and Chinese search (90 database checks per MongoDB version).
 - **"MongoDB 4.5" is not a production release.** Before 5.0, odd minor versions were development builds. Use **4.4.x** (if the CPU lacks AVX or the OS is old) or **5.0.x**. All code targets the 4.4 feature set, so it works on both.
 - Four constraints shape the design:
-  1. The MongoDB driver must stay on **3.7.x**, because driver 4.x needs Node ≥ 12.9.
+  1. Data access uses **Mongoose 5.13.23**, which bundles driver **3.7.4**. Mongoose 6+ (driver 4+) needs Node ≥ 12.9.
   2. MongoDB 4.4/5.0 **cannot search Chinese text**, so search runs on **Meilisearch** (verified).
   3. Node 12 ships **English-only ICU**, so `full-icu` is required for Chinese dates and pinyin sorting (verified).
   4. TypeScript must compile to **ES2019/CommonJS**, with modern built-in APIs banned by lint.
@@ -27,7 +27,7 @@
 | Stated target | What it is | Consequence |
 | --- | --- | --- |
 | Node.js **12.4** | Released June 2019. The Node 12 line reached **end-of-life on 30 April 2022**. Bundles **OpenSSL 1.1.1b** (OpenSSL 1.1.1 is end-of-life since September 2023) | No security patches. Missing modern APIs (§4.3). Only older library versions run |
-| MongoDB **"about 4.5"** | 4.5 was the development series that became 5.0. Production choices: **4.4.x** (EOL Feb 2024) or **5.0.x** (EOL Oct 2024). Tested: **4.4.30** and **5.0.33** | No MongoDB Search (needs 8.2+). Default write concern differs. Driver 3.7 API style |
+| MongoDB **"about 4.5"** | 4.5 was the development series that became 5.0. Production choices: **4.4.x** (EOL Feb 2024) or **5.0.x** (EOL Oct 2024). Tested: **4.4.30** and **5.0.33** | No MongoDB Search (needs 8.2+). Default write concern differs. Mongoose 5 / driver 3.7 API style |
 
 ### 1.1 Server survey: run this first on the target server
 
@@ -62,12 +62,15 @@ The kit in [`verification/node12-mongodb/`](verification/node12-mongodb/README.m
 
 | Check | Node 12.4.0 + MongoDB 4.4.30 | Node 12.4.0 + MongoDB 5.0.33 |
 | --- | --- | --- |
-| 33 runtime libraries load and work | PASS | PASS |
-| Collections, `$jsonSchema` validators, unique/partial/TTL indexes, roles (idempotent migrations) | PASS | PASS |
-| Validators reject bad data (TRL 10, money as float, budget min > max, buyer = supplier, one-party deal…) | PASS | PASS |
-| Multi-document, cross-database transaction with optimistic concurrency and tenant scope | PASS | PASS |
-| Failed transactions leave no partial writes | PASS | PASS |
-| Permission policy (CASL 5) and tenant-scoped repository | PASS (12/12) | PASS (12/12) |
+| 34 runtime libraries load and work (including Mongoose 5.13.23 and `@casl/mongoose` 5.0.0) | PASS | PASS |
+| Release steps: `migrate-mongo up` (validators, roles), index sync from the Mongoose schemas, drift check | PASS | PASS |
+| Mongoose schemas reject bad data before it is sent (TRL 10, money with fractions, unknown state or field, budget min > max, buyer = supplier, one-party deal…) | PASS | PASS |
+| Database validators still reject bad raw writes that bypass Mongoose; unique and TTL indexes hold | PASS | PASS |
+| Money stored as BSON Int64, round-trips exactly, serializes as a string | PASS | PASS |
+| Optimistic concurrency on `save()`; immutable frozen versions and append-only history | PASS | PASS |
+| Document API use cases in cross-database transactions (create, update, submit, revise, discard, list); no partial writes; concurrent edits give one 409 | PASS (25/25) | PASS (25/25) |
+| Permission policy (CASL 5) on plain objects and Mongoose documents, `accessibleBy` filters, tenant-scope plugin on every query type | PASS (25/25) | PASS (25/25) |
+| Login sessions through the Mongoose connection (`connect-mongo` 3) | PASS | PASS |
 | Chinese full-text search with MongoDB text index | **Returns nothing** | (same engine) |
 | Chinese full-text search with Meilisearch v1.11.3 | PASS | — |
 | Chinese date formatting and pinyin sorting with `full-icu` | PASS (fails without it) | — |
@@ -83,11 +86,12 @@ Only these versions may be deployed to the Node 12 runtime. A new dependency is 
 | HTTP server | `express@4.22.3`, `helmet@4.6.0`, `cookie-parser@1.4.7`, `multer@1.4.5-lts.1` | Yes | Express 4 is still an officially supported line |
 | Rate limiting | `express-rate-limit@5.5.1` (+ Nginx `limit_req`) | Yes | Edge limits in Nginx; per-user limits in the app |
 | Input validation | `zod@3.22.4` | Yes | Same schemas shared with the frontend |
-| MongoDB access | `mongodb@3.7.4` (native driver) | Yes | Typed repositories (§5); no ODM |
-| Migrations | `migrate-mongo@8.2.3` | Yes | Validators, indexes, roles, data fixes |
+| MongoDB access (ODM) | **`mongoose@5.13.23`** (bundles `mongodb@3.7.4`) | Yes | Schemas, models, Document API, plugins (§5.2); no direct driver use outside the model files |
+| Authorization filters | `@casl/mongoose@5.0.0` | Yes | `Model.accessibleBy(ability, action)`; version 5 is the last for Mongoose 5 |
+| Migrations | `migrate-mongo@8.2.3` | Yes (CLI `up` and `status` run on 12.4.0) | Validators, roles, data fixes. Bundles driver 4.17, which declares Node ≥ 12.9; it runs only in the release step. Fallback: run migrations from the build machine |
 | Passwords | `bcryptjs@2.4.3` (cost 12) | Yes | Pure JS: no native build; argon2 needs Node 14 |
 | MFA (staff) | `otplib@12.0.1` (TOTP) | Yes | Required for platform staff |
-| Sessions | `express-session@1.18.1` + `connect-mongo@3.2.0` (or own `sessions` collection with TTL) | Yes | HttpOnly, Secure, SameSite cookies |
+| Sessions | `express-session@1.18.1` + `connect-mongo@3.2.0` with `mongooseConnection` and `autoRemove: 'disabled'` | Yes | Shares the Mongoose pool; TTL index on `sessions.expires` comes from a migration. HttpOnly, Secure, SameSite cookies |
 | Authorization | `@casl/ability@5.4.4` | Yes | RBAC + ABAC policies (06 §8.4) |
 | Background jobs | MongoDB outbox + job collection with leases (no Redis); optional `bull@3.29.3` + Redis later | Yes | `bull@4.16.5` **fails** on 12.4 |
 | Scheduling | `node-cron@3.0.3` in the single worker process | Yes | |
@@ -103,7 +107,7 @@ Only these versions may be deployed to the Node 12 runtime. A new dependency is 
 
 **Considered and not selected:** NestJS 8.4.7 runs on 12.4.0. However, it is end-of-life, and `@nestjs/platform-express@8` pins an older Express with known vulnerabilities that npm 6 cannot override (npm 6 has no `overrides`). The backend therefore uses **plain Express with an explicit module structure** (06 §11.4).
 
-**Not usable on Node 12.4.0:** `mongodb` ≥ 4 and `mongoose` ≥ 6 (need Node 12.9+), `bull` 4.16.5 (syntax error at load), `argon2` ≥ 0.28 (Node 14), `minio` ≥ 7.1 (Node 16), `agenda` ≥ 4, NestJS ≥ 10, Next.js ≥ 12, Prisma, recent AWS SDK v3, OpenTelemetry SDK.
+**Not approved on Node 12.4.0:** `mongodb` ≥ 4 and `mongoose` ≥ 6 (driver 4 declares Node ≥ 12.9; a basic Mongoose 6.13 transaction test does run on 12.4.0, but outside the declared range; it becomes the next step after the Node 12.22.12 upgrade, §11.2), `@casl/mongoose` ≥ 6 (needs Mongoose 6), `mongoose-long` (works, but silently truncates fractional amounts; a strict `Int64` type is used instead), `bull` 4.16.5 (syntax error at load), `argon2` ≥ 0.28 (Node 14), `minio` ≥ 7.1 (Node 16), `agenda` ≥ 4, NestJS ≥ 10, Next.js ≥ 12, Prisma, recent AWS SDK v3, OpenTelemetry SDK.
 
 ---
 
@@ -152,7 +156,8 @@ flowchart LR
 }
 ```
 
-- Use `@types/node@12` and `@types/mongodb@3.6`, so the compiler rejects APIs that do not exist at runtime.
+- Use `@types/node@12`, so the compiler rejects Node APIs that do not exist at runtime. Mongoose 5.13 ships its own typings (they pull in `@types/mongodb@3.6`). They have small gaps, such as missing query hook names, `SchemaType.path` and `Aggregate.model()`; the kit shows the narrow casts used for each.
+- 64-bit integers: `BigInt` exists in Node 12 but is ES2020, so the ES2019 lint rejects it. Use the driver's `Long` (`mongoose.mongo.Long`) through the `Int64` schema type.
 - TypeScript **down-levels syntax** (`?.`, `??`), but it does **not** add missing built-ins such as `Promise.allSettled`. Enforce this with ESLint `eslint-plugin-es-x` and its `plugin:es-x/restrict-to-es2019` config. CI also runs every unit test on `node:12.4.0`.
 - CommonJS only. ES modules are experimental in Node 12.
 - No native add-ons (`bcrypt`, `argon2`, `sharp`…), so artifacts are portable across server OS and glibc versions.
@@ -190,18 +195,29 @@ flowchart LR
 mongodb://tex_app:<password>@db1:27017,db2:27017,db3:27017/tex?replicaSet=rs0&authSource=admin&w=majority&retryWrites=true&readPreference=primary
 ```
 
-  Pass `{ useUnifiedTopology: true }` to the 3.7 driver. **`w=majority` is mandatory on 4.4**, whose default is `w:1`.
+  Driver options (`useUnifiedTopology`, `useNewUrlParser`…) are set globally in `mongoose-settings.ts` ([06 §4.5](06-implementation-design-v1.md)); `connect()` gets only the URI, pool size and timeouts. **`w=majority` is mandatory on 4.4**, whose default is `w:1`.
 - Enable authentication (SCRAM-SHA-256), bind `mongod` to private interfaces only, and use TLS when the application and the database run on different hosts.
-- Users: `tex_migrator` (schema changes), `tex_app` (`texApp` role: CRUD, audit insert-only), `tex_backup` (backup role), `tex_readonly` (reporting).
+- Users: `tex_migrator` (migrations and index sync), `tex_app` (`texApp` role: CRUD, audit insert-only, **no index creation**), `tex_backup` (backup role), `tex_readonly` (reporting).
 
-### 5.2 Driver 3.7 differences that matter
+### 5.2 Mongoose 5.13 rules
 
-| Topic | Driver 3.7 (this project) | Current drivers (after upgrade) |
+Mongoose 5.13.23 is the newest Mongoose that runs on Node 12.4. It differs from current Mongoose (8.x) in ways that matter for correctness and security. Each rule below is applied in the kit and checked by its tests.
+
+| Topic | Mongoose 5.13 (this project) | Current Mongoose (after the upgrade) |
 | --- | --- | --- |
-| `findOneAndUpdate` result | `{ value: doc }`; option `returnOriginal: false` | Returns the document; option `returnDocument: 'after'` |
-| `session.withTransaction(fn)` | Resolves to the **commit result**: capture your own result in a variable | Driver 6 resolves to the callback's result |
-| Topology option | `useUnifiedTopology: true` required | Default |
-| Typings | `@types/mongodb@3.6` | Bundled with the driver |
+| Driver options | `useNewUrlParser`, `useUnifiedTopology`, `useCreateIndex: true`, `useFindAndModify: false`, set **globally** with `mongoose.set()` | Removed; these are the defaults |
+| Where settings apply | Global settings must be loaded **before any model compiles**. A `useDb()` connection created before `connect()` (the audit database) does not inherit `connect()` options. Verified: it built its own indexes with the deprecated `ensureIndex` | Same advice |
+| Unknown fields and filter paths | `strict: 'throw'` and `strictQuery: 'throw'`. The 5.x default keeps unknown filter paths; `true` silently drops them, so `{ ownerOrgId: x }` would match every document | Set explicitly in every version (the default changed in 6 and again in 7) |
+| Validation on update queries | Off by default. Set `runValidators: true`. Cross-field validators receive no document there, so they use `crossField()` and the database `$expr` validator covers updates | Same |
+| Query injection | No `sanitizeFilter` (added in 6.0). Build filters only from **zod-parsed** values; never pass `req.body` or `req.query` objects into a filter. `sanitizeProjection: true` is set | `sanitizeFilter` and `mongoose.trusted()` available |
+| 64-bit integers (money) | No built-in type; the project's strict `Int64` schema type stores BSON `long` and serializes to a JSON string | Re-evaluate the built-in `BigInt` schema type of recent versions |
+| `findOneAndUpdate` | `{ new: true }` returns the updated document (Mongoose unwraps the driver's `{ value }`) | `{ new: true }` or `returnDocument: 'after'` |
+| Transactions | `session.withTransaction()` resolves to the **commit result**; the `inTransaction()` helper captures the callback's result. `connection.transaction()` is not used: in 5.13 it never ends its session | Driver 6 resolves to the callback's result; re-evaluate `connection.transaction()` |
+| Sessions on documents | A document loaded with `.session(s)` saves in that session; `Model.create()` takes a session only in the array form | Same |
+| Optimistic concurrency | `versionKey: 'rev'` + `optimisticConcurrency: true` (available since 5.10) | Same |
+| Index management | `Model.diffIndexes()` + `createIndexes()` at release; `autoIndex` off; **never** `syncIndexes()` in production | Same |
+| Callbacks, `remove()` | Use promises and `deleteOne()` / `deleteMany()` only | Callbacks and `remove()` removed in 7 |
+| Typings | Bundled, with gaps (narrow casts documented in the kit) | Much better inference (`HydratedDocument`, `InferSchemaType`) |
 
 ### 5.3 Features to avoid (not in 4.4)
 
@@ -209,9 +225,9 @@ mongodb://tex_app:<password>@db1:27017,db2:27017,db3:27017/tex?replicaSet=rs0&au
 
 ### 5.4 Validation, transactions and indexes
 
-- Database validators (`$jsonSchema`) are the **safety net**. `zod` in the API produces the user-facing error messages, because 4.4 reports only "Document failed validation".
-- Keep transactions **short** (well under a second; hard limit 60 s) and **small** (hundreds of documents, not thousands). Use `withTransaction` so transient errors are retried. Read concern `snapshot`, write concern `majority`.
-- Create indexes only through migrations, run by `tex_migrator`. Check every new query with `explain()`.
+- **Mongoose schemas are the primary definition**; database validators (`$jsonSchema`) are the **safety net** for writes that bypass Mongoose. The test that saves documents through every model into the validated collections keeps the two in step. `zod` in the API produces the user-facing error messages, because 4.4 reports only "Document failed validation".
+- Keep transactions **short** (well under a second; hard limit 60 s) and **small** (hundreds of documents, not thousands). Run them through `inTransaction()` ([06 §4.7](06-implementation-design-v1.md)): `withTransaction` retries transient errors, with read concern `snapshot` and write concern `majority`.
+- Declare indexes in the Mongoose schemas. The release step creates them with `npm run db:indexes` as `tex_migrator`, and CI runs `npm run db:indexes:check`. Check every new query with `explain()`.
 
 ### 5.5 Backup and restore
 
@@ -419,14 +435,14 @@ server {
 flowchart LR
     A["CI: build, test on node:12.4.0,<br/>package api-YYYYMMDD-sha.tar.gz"] --> B["Upload to server<br/>/srv/tex/api/releases/&lt;id&gt;"]
     B --> C["Back up DB<br/>(mongodump --oplog)"]
-    C --> D["Run migrations<br/>as tex_migrator"]
+    C --> D["Run migrations, then index sync<br/>(db:migrate, db:indexes) as tex_migrator"]
     D --> E["Switch symlink<br/>current → releases/&lt;id&gt;"]
     E --> F["Restart tex-api@3001,<br/>health check, then @3002"]
     F --> G["Restart tex-worker,<br/>smoke tests"]
     G -->|"Problem"| R["Point symlink at previous release<br/>and restart (migrations are additive)"]
 ```
 
-Migrations follow **expand-and-contract**: add fields and indexes first; remove old ones only in a later release, once no running code needs them. That keeps rollback a symlink switch.
+Migrations follow **expand-and-contract**: add fields and indexes first; remove old ones only in a later release, once no running code needs them. That keeps rollback a symlink switch. Index sync only **creates** missing indexes, so the previous release's schemas still find theirs after a rollback; dropping an index is a separate migration in a later release.
 
 ---
 
@@ -436,7 +452,8 @@ Migrations follow **expand-and-contract**: add fields and indexes first; remove 
 - [ ] Node upgraded to at least 12.22.12, or the risk formally accepted.
 - [ ] `full-icu` installed and `NODE_ICU_DATA` set for every Node process.
 - [ ] Replica set initiated; `w=majority` in the connection string; authentication and private binding enabled.
-- [ ] `tex_app` uses the `texApp` role (audit insert-only); migrations use `tex_migrator`.
+- [ ] `tex_app` uses the `texApp` role (audit insert-only, no index creation); migrations and index sync use `tex_migrator`.
+- [ ] `npm run db:indexes:check` reports no differences after each release; no deprecation warnings in the API log at start-up (a warning means a Mongoose setting is missing).
 - [ ] Meilisearch running with a master key; the API uses a search-only key; rebuild command tested.
 - [ ] Nightly `mongodump --oplog` copied off-server; monthly restore test scheduled.
 - [ ] CI runs `verification/node12-mongodb/run.sh` (or the project's own equivalent) on every dependency change.
@@ -451,6 +468,7 @@ Migrations follow **expand-and-contract**: add fields and indexes first; remove 
 | --- | --- | --- |
 | Node.js 12 is end-of-life (no security fixes since April 2022); OpenSSL 1.1.1b | Unpatched runtime vulnerabilities; findings in a classified-protection (等保) assessment | Upgrade to 12.22.12 now; terminate TLS in a current Nginx; Node listens on localhost only; strict input limits; WAF rules; dependency scanning; plan the move to a supported runtime |
 | MongoDB 4.4 / 5.0 end-of-life | Unpatched database vulnerabilities | No public exposure; authentication + TLS; least-privilege roles; network ACLs; tested backups |
+| Mongoose 5 end-of-life (1 March 2024; last release 5.13.23) | No fixes for ODM bugs or advisories | Strict global settings (§5.2); filters built only from zod-parsed input; database validators as a second layer; move to Mongoose 6.13 together with Node 12.22.12 (§11.2) |
 | Old library versions (e.g. aws-sdk v2 reached end-of-support; the 0.x axios line only receives selected fixes) | Known vulnerabilities, fewer fixes | Pin the latest patched release of each line (axios 0.34.0, Express 4.22.3); prefer local or OSS storage over aws-sdk; review advisories monthly |
 | Smaller ecosystem (many libraries need Node 14–18+) | Slower development, hand-written utilities | Approved-library list (§3) and smoke-test admission rule |
 | `bcryptjs` is slower than native hashing | Higher CPU at login peaks | Cost 12; login rate limits; separate auth throttling |
@@ -463,13 +481,13 @@ flowchart LR
     N0["Node 12.4.0"] --> N1["Node 12.22.12<br/>(drop-in, same major)"]
     N1 --> N2["Node 16 on glibc 2.17 servers,<br/>or Node 20/22 LTS in Docker"]
     M0["MongoDB 4.4"] --> M1["5.0"] --> M2["6.0"] --> M3["7.0"] --> M4["8.0 / 8.2+"]
-    D0["Driver 3.7"] --> D1["Driver 4.17<br/>(needs Node ≥ 12.9)"] --> D2["Driver 6.x<br/>(needs Node ≥ 16)"]
+    D0["Mongoose 5.13<br/>(driver 3.7)"] --> D1["Mongoose 6.13<br/>(driver 4.17, Node ≥ 12.9)"] --> D2["Mongoose 8 / 9<br/>(driver 6, current Node LTS)"]
     M4 --> S["Optional: MongoDB Search replaces<br/>Meilisearch"]
 ```
 
 - **Node:** 12.22.12 is a drop-in step. If the server allows Docker, run the API and worker in a container with a current LTS Node. The host's Node version then no longer matters.
 - **MongoDB:** upgrade one major version at a time, setting `featureCompatibilityVersion` after each step, and take a backup before each one.
-- **Driver 3.7 → 6.x code changes:** the `findOneAndUpdate` result shape and option name, the `withTransaction` return value, and removal of `useUnifiedTopology`. The repository layer isolates these changes to a few files.
+- **Mongoose:** Mongoose 6 is in limited maintenance (security patches) and its driver 4.17 declares Node ≥ 12.9, so it pairs with the Node 12.22.12 step. A basic test (connect, transaction, optimistic concurrency) passed with Mongoose 6.13.11 on Node 12.22.12; the full kit has not yet been ported. Expected changes: remove the four driver options from `mongoose-settings.ts`, set `strictQuery` explicitly (its default changed), `@casl/mongoose` 6+, and typing adjustments. Mongoose 7 removes callbacks and `remove()`, which the code already avoids. Because services use only models and the `inTransaction()` helper, never the driver, these changes stay inside `core/db` and the model typings.
 
 ---
 
@@ -481,4 +499,7 @@ flowchart LR
 - MongoDB Search language analyzers (`lucene.smartcn`): <https://www.mongodb.com/docs/search/index/analyzers/language/>
 - Meilisearch language support (Chinese segmentation): <https://www.meilisearch.com/docs/learn/configuration/language>
 - Express version support: <https://expressjs.com/en/support>
+- Mongoose version support (5.x end-of-life 1 March 2024; 6.x limited maintenance): <https://mongoosejs.com/docs/version-support.html>
+- Mongoose 5 guides: transactions <https://mongoosejs.com/docs/5.x/docs/transactions.html>, optimistic concurrency <https://mongoosejs.com/docs/5.x/docs/guide.html#optimisticConcurrency>, `strictQuery` <https://mongoosejs.com/docs/5.x/docs/guide.html#strictQuery>, update validators <https://mongoosejs.com/docs/5.x/docs/validation.html#update-validators>
+- CASL Mongoose integration: <https://casl.js.org/v5/en/package/casl-mongoose>
 - Verification kit and results: [`verification/node12-mongodb/`](verification/node12-mongodb/README.md)

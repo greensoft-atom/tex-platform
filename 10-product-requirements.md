@@ -546,7 +546,7 @@ A technology exchange fails if it opens empty. These operational requirements ar
 | D-05 | MLPS (等保) grading level and assessor | Security investment and launch readiness | R1 launch |
 | D-06 | E-signature provider; SMS provider; e-invoice service | Introductions, contracts, invoices | R2 |
 | D-07 | Fee schedule (benchmarks in [09 §2.6](09-reference-platform-features.md)) and plan pricing | Revenue and client contracts | R2 |
-| D-08 | Node.js 12.4 → 12.22.12 upgrade (or accepted risk), and MongoDB 4.4 vs 5.0 ([11 §1](11-target-runtime-node12-mongodb.md)) | Security baseline | R0 |
+| D-08 | Node.js 12.4 → 12.22.12 upgrade (or accepted risk), with Mongoose 5.13 → 6.13 (Mongoose 5 is end-of-life), and MongoDB 4.4 vs 5.0 ([11 §1, §11](11-target-runtime-node12-mongodb.md)) | Security baseline | R0 |
 
 ## Traceability
 

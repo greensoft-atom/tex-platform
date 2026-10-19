@@ -1,6 +1,6 @@
 'use strict';
 // Node 12: MongoDB text index vs Meilisearch (HTTP API via axios) for Chinese search.
-const { MongoClient } = require('mongodb');
+const { MongoClient } = require('mongoose').mongo;          // the driver bundled with Mongoose (3.7.4)
 const axios = require('axios');
 const docs = [
   { _id: 't1', title: '锂电池极片缺陷在线检测技术', summary: '基于机器视觉的锂离子电池电极缺陷实时检测，准确率超过99%' },

@@ -11,7 +11,7 @@ Design documentation for a technology exchange and technology-transfer platform.
 | 03 | [Business models and revenue](03-business-models-and-revenue.md) | Verified financials, revenue streams, profit pools, lessons for our pricing | Founders, business planning |
 | 04 | [Product strategy](04-product-strategy.md) | What to copy, what to do differently, demand-first design, TRL, verification, scouting, strategic stages | Founders, product, architects |
 | 05 | [System design blueprint](05-system-design-blueprint.md) | Target architecture: domain model, roles, workflows, sequence diagrams, data, APIs, AI, security, roadmap, KPIs | Product, architects, engineering leads |
-| 06 | [Implementation-level design v1.0](06-implementation-design-v1.md) | Verified MongoDB collections, validators, indexes, roles and transactions; API catalogue; state machines; UI specs; permissions (CASL); search; deployment; sprint plan | Engineers, tech lead |
+| 06 | [Implementation-level design v1.0](06-implementation-design-v1.md) | Verified Mongoose models, database validators, indexes, roles, transactions and Document API patterns; tenant-scope plugin; API catalogue; state machines; UI specs; permissions (CASL); search; deployment; sprint plan | Engineers, tech lead |
 | 07 | [Real-world roles, workflows and money movement](07-roles-workflows-and-money.md) | User groups and authority, workflows per role, action vocabulary, disclosure ladder, payment lifecycle, deal types | Product, operations, architects |
 | 08 | [China operating model](08-china-operating-model.md) | Legal map, authority model, deal-type catalogue, transitions, cross-border and university rules, funds handling, disputes, launch checklist | Founders, compliance, finance, counsel |
 | 09 | [Reference platform features](09-reference-platform-features.md) | What STEX, NETC/InnoMatch, CTEX and other Chinese platforms actually provide: modules, rules, flows, architecture hints, gap analysis | Product, business analysts |
@@ -54,7 +54,8 @@ flowchart LR
 | Deal types | All types in the data model; three implementation tiers (standardized, legal review, specialist-only) | [08 §3](08-china-operating-model.md) |
 | Money | Funds held and released only by a licensed bank or payment institution; the platform coordinates conditions and records verified events | [08 §1, §6](08-china-operating-model.md) |
 | Target runtime | **Node.js 12.4 + MongoDB 4.4 / 5.0** replica set ("4.5" is a development series); verified with real binaries | [11](11-target-runtime-node12-mongodb.md), [`verification/`](verification/node12-mongodb/README.md) |
-| Architecture | Express 4 modular monolith (TypeScript → ES2019), MongoDB with validators, transactions and least-privilege roles, Meilisearch for Chinese search, transactional outbox, pre-rendered public pages | [06 §3–§6, §10](06-implementation-design-v1.md) |
+| Architecture | Express 4 modular monolith (TypeScript → ES2019), MongoDB through **Mongoose 5.13** models (with database validators, transactions and least-privilege roles), Meilisearch for Chinese search, transactional outbox, pre-rendered public pages | [06 §3–§6, §10](06-implementation-design-v1.md) |
+| Data access | **Mongoose 5.13** schemas, models and Document API; tenant-scope plugin on every tenant-owned model; database validators as a safety net; indexes from the schemas | [06 §4](06-implementation-design-v1.md), [11 §5.2](11-target-runtime-node12-mongodb.md) |
 | Hosting and team | Self-hosted: Nginx + systemd on the given servers; 1–4 developers | [06 §11, §13](06-implementation-design-v1.md), [11 §9](11-target-runtime-node12-mongodb.md) |
 
 ## Glossary
@@ -84,11 +85,24 @@ All diagrams are standard [Mermaid](https://mermaid.js.org/) code blocks (`flowc
 
 ## Revision notes
 
+### Revision 4 — Mongoose data layer
+
+- Data access moved from the native driver with repositories to **Mongoose 5.13.23** (bundles driver 3.7.4; the newest Mongoose that runs on Node 12.4). All 24 collections are Mongoose models with interfaces, schemas, indexes and plugins. Services use the Document API (`new Model()` + `save()`, `findById()` + `set()` + `save()`, `deleteOne()`, `lean()` lists with `populate()`), always inside transactions.
+- Tenant isolation is a Mongoose plugin: every query on tenant data must name a tenant or an audited staff reason. Version history and audit records are protected by `freezablePlugin` and `appendOnlyPlugin`. CASL rules become query filters through `@casl/mongoose`.
+- Database `$jsonSchema` validators are kept as a safety net under the schemas. Indexes are declared in the schemas and created by a release step (`npm run db:indexes`).
+- Verified on Node 12.4.0 with MongoDB 4.4.30 and 5.0.33: 90 database checks per version, plus 34 library smoke checks. Findings:
+  - global Mongoose settings must load before any model compiles (the audit connection otherwise built its own indexes);
+  - update queries need `runValidators`;
+  - `mongoose-long` silently truncates fractional amounts, so a strict `Int64` type was written;
+  - Mongoose 5.13's `connection.transaction()` never ends its session;
+  - Mongoose 5 has been end-of-life since 1 March 2024; Mongoose 6.13 is the next step with Node 12.22.12.
+- Docs 05, 06, 11, the README and the verification kit were updated.
+
 ### Revision 3 — target stack and strengthened requirements
 
 - Backend changed to **Node.js + MongoDB** on the given target servers (Node 12.4, MongoDB 4.4 / 5.0). Docs 05, 06 and 08 were updated; doc 11 added.
 - All schema definitions and code samples were **verified with real binaries** (Node 12.4.0; MongoDB 4.4.30 and 5.0.33; Meilisearch 1.11.3). The reproducible kit is in [`verification/node12-mongodb/`](verification/node12-mongodb/README.md).
-- Findings from the verification: MongoDB 4.4/5.0 cannot search Chinese text (Meilisearch adopted); Node 12 needs `full-icu` for Chinese dates and pinyin sorting; `bull@4` fails on Node 12.4 despite its declared engines; driver 3.x API differences are documented.
+- Findings from the verification: MongoDB 4.4/5.0 cannot search Chinese text (Meilisearch adopted); Node 12 needs `full-icu` for Chinese dates and pinyin sorting; `bull@4` fails on Node 12.4 despite its declared engines; driver 3.x API differences are documented (superseded by the Mongoose rules in revision 4).
 - Docs 09 (real platform features) and 10 (numbered product requirements for users, clients and administrators) added.
 
 ### Revision 2 — rewrite of the ChatGPT drafts

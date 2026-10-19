@@ -6,7 +6,12 @@ async function check(name, fn) {
   catch (e) { results.push(['FAIL', name + ' -> ' + (e && e.message ? e.message.split('\n')[0] : e)]); }
 }
 (async () => {
-  await check('mongodb@3.7', () => { const { MongoClient, Long } = require('mongodb'); if (!Long.fromNumber(1)) throw 0; });
+  await check('mongoose@5.13 + bundled driver 3.7.4', () => {
+    const mongoose = require('mongoose'); const driver = require('mongodb/package.json').version;
+    if (!/^5\.13\./.test(mongoose.version) || driver !== '3.7.4') throw new Error(mongoose.version + ' / driver ' + driver);
+    new mongoose.Schema({ a: String }, { optimisticConcurrency: true, versionKey: 'rev' }); if (!mongoose.mongo.Long.fromNumber(1)) throw 0;
+  });
+  await check('@casl/mongoose@5 (plugin)', () => { const { accessibleRecordsPlugin } = require('@casl/mongoose'); new (require('mongoose').Schema)({}).plugin(accessibleRecordsPlugin); });
   await check('express@4.22 + helmet@4', () => { const app = require('express')(); app.use(require('helmet')()); });
   await check('@nestjs/core@8', async () => {
     require('reflect-metadata');
@@ -29,7 +34,7 @@ async function check(name, fn) {
   await check('ali-oss@6 (load)', () => { require('ali-oss'); });
   await check('aws-sdk@2 S3 (load)', () => { const AWS = require('aws-sdk'); new AWS.S3({ region: 'x' }); });
   await check('meilisearch@0.25 (load)', () => { require('meilisearch'); });
-  await check('migrate-mongo@8 (load)', () => { require('migrate-mongo'); });
+  await check('migrate-mongo@8 (load; CLI run in step 4)', () => { require('migrate-mongo'); });
   await check('otplib@12', () => { const { authenticator } = require('otplib'); authenticator.generate(authenticator.generateSecret()); });
   await check('pdf-lib (watermark)', async () => { const { PDFDocument } = require('pdf-lib'); const d = await PDFDocument.create(); d.addPage().drawText('CONFIDENTIAL'); await d.save(); });
   await check('exceljs@4', () => { new (require('exceljs').Workbook)().addWorksheet('a'); });
@@ -41,7 +46,7 @@ async function check(name, fn) {
   await check('ejs@3.1.10 render', () => { const h = require('ejs').render('<h1><%= t %></h1>', { t: '锂电池<检测>' }); if (h !== '<h1>锂电池&lt;检测&gt;</h1>') throw new Error(h); });
   await check('@pdf-lib/fontkit (load + register)', async () => { const { PDFDocument } = require('pdf-lib'); const d = await PDFDocument.create(); d.registerFontkit(require('@pdf-lib/fontkit')); });
   await check('@casl/ability@5.4.4 ObjectId conditions', () => {
-    const { AbilityBuilder, Ability, subject } = require('@casl/ability'); const { ObjectId } = require('mongodb');
+    const { AbilityBuilder, Ability, subject } = require('@casl/ability'); const { ObjectId } = require('mongoose').Types;
     const org = new ObjectId(); const { can, build } = new AbilityBuilder(Ability);
     can('update', 'Technology', { ownerOrganizationId: org }); const a = build();
     const same = a.can('update', subject('Technology', { ownerOrganizationId: new ObjectId(org.toHexString()) }));

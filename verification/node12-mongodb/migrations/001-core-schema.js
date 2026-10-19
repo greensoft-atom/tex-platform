@@ -1,5 +1,9 @@
-// migrations/001-core-schema.js — run by migrate-mongo (or any runner that passes a Db).
-// Creates collections with $jsonSchema validators and the indexes the application relies on.
+// migrations/001-core-schema.js — run by migrate-mongo as tex_migrator (or any runner that passes a Db).
+// Creates the core collections with $jsonSchema validators: the database-side safety net under the
+// Mongoose schemas (src/modules/*/*.model.ts), which remain the primary definition. Validators catch
+// writes that bypass Mongoose (scripts, shell sessions, other services) and model/database drift.
+// Indexes are declared in the Mongoose schemas and created by `npm run db:indexes` (src/scripts/sync-indexes.ts);
+// the only index created here is the TTL index of connect-mongo's `sessions` collection.
 
 const STR = { bsonType: 'string' };
 const OID = { bsonType: 'objectId' };
@@ -45,7 +49,7 @@ module.exports = {
         phoneE164: { bsonType: 'string', pattern: '^\\+[1-9][0-9]{6,14}$' },
         displayName: STR,
         authSubject: STR,                                   // subject id at an external IdP, if used
-        passwordHash: STR,                                  // argon2id hash, never plaintext
+        passwordHash: STR,                                  // bcryptjs hash, never plaintext
         status: enumOf('pending', 'active', 'suspended', 'closed'),
         emailVerifiedAt: DATE,
         phoneVerifiedAt: DATE,
@@ -57,11 +61,6 @@ module.exports = {
         ...audit,
       },
     });
-    await db.collection('users').createIndexes([
-      { key: { emailNormalized: 1 }, unique: true, partialFilterExpression: { emailNormalized: { $type: 'string' } } },
-      { key: { phoneE164: 1 }, unique: true, partialFilterExpression: { phoneE164: { $type: 'string' } } },
-      { key: { authSubject: 1 }, unique: true, partialFilterExpression: { authSubject: { $type: 'string' } } },
-    ]);
 
     await ensureCollection(db, 'organizations', {
       bsonType: 'object',
@@ -90,15 +89,6 @@ module.exports = {
         ...audit,
       },
     });
-    await db.collection('organizations').createIndexes([
-      { key: { ref: 1 }, unique: true },
-      {
-        key: { jurisdictionCode: 1, registrationNumber: 1 },
-        unique: true,
-        partialFilterExpression: { registrationNumber: { $type: 'string' } },
-      },
-      { key: { 'verification.status': 1, createdAt: 1 } },
-    ]);
 
     await ensureCollection(db, 'organization_memberships', {
       bsonType: 'object',
@@ -119,20 +109,6 @@ module.exports = {
         updatedAt: DATE,
       },
     });
-    await db.collection('organization_memberships').createIndexes([
-      { key: { organizationId: 1, userId: 1 }, unique: true },
-      { key: { userId: 1, status: 1 } },
-    ]);
-
-    // Delegated authority: who may sign, approve payments, etc. for an organization (see 07 §2, 08 §2.3).
-    await db.collection('organization_authorizations').createIndexes([
-      { key: { organizationId: 1, userId: 1, scope: 1, status: 1 } },
-    ]);
-
-    // Platform staff roles are separate from organization roles.
-    await db.collection('platform_role_assignments').createIndexes([
-      { key: { userId: 1, roleCode: 1 }, unique: true },
-    ]);
 
     // ---------- Technology registry ----------
     await ensureCollection(db, 'technologies', {
@@ -153,12 +129,8 @@ module.exports = {
         ...audit,
       },
     });
-    await db.collection('technologies').createIndexes([
-      { key: { ref: 1 }, unique: true },
-      { key: { ownerOrganizationId: 1, lifecycleStatus: 1 } },
-    ]);
 
-    // Immutable revisions: never updated after `frozen: true` (enforced in the repository layer).
+    // Revisions: immutable once `frozen: true` (enforced by freezablePlugin in the model layer).
     await ensureCollection(db, 'technology_versions', {
       bsonType: 'object',
       required: ['technologyId', 'version', 'title', 'frozen', 'createdBy', 'createdAt'],
@@ -178,20 +150,6 @@ module.exports = {
         createdAt: DATE,
       },
     });
-    await db.collection('technology_versions').createIndexes([
-      { key: { technologyId: 1, version: 1 }, unique: true },
-    ]);
-
-    // Approved public snapshot. The ONLY technology data that MongoDB Search indexes for public search.
-    await db.collection('technology_publications').createIndexes([
-      { key: { technologyId: 1 }, unique: true, partialFilterExpression: { status: 'live' } },
-      { key: { status: 1, industryCodes: 1, 'trl.claimed': 1 } },
-    ]);
-
-    await db.collection('ip_assets').createIndexes([
-      { key: { technologyId: 1 } },
-      { key: { jurisdictionCode: 1, identifier: 1 } },     // duplicate detection across technologies
-    ]);
 
     await ensureCollection(db, 'technology_offers', {
       bsonType: 'object',
@@ -229,11 +187,6 @@ module.exports = {
         ],
       },
     });
-    await db.collection('technology_offers').createIndexes([
-      { key: { ref: 1 }, unique: true },
-      { key: { technologyId: 1, offerStatus: 1 } },
-      { key: { supplierOrganizationId: 1, offerStatus: 1 } },
-    ]);
 
     // ---------- Demands and matching ----------
     await ensureCollection(db, 'demands', {
@@ -254,11 +207,6 @@ module.exports = {
         ...audit,
       },
     });
-    await db.collection('demands').createIndexes([
-      { key: { ref: 1 }, unique: true },
-      { key: { buyerOrganizationId: 1, status: 1 } },
-      { key: { assignedManagerId: 1, status: 1 } },
-    ]);
 
     await ensureCollection(db, 'demand_versions', {
       bsonType: 'object',
@@ -294,9 +242,6 @@ module.exports = {
         ],
       },
     });
-    await db.collection('demand_versions').createIndexes([
-      { key: { demandId: 1, version: 1 }, unique: true },
-    ]);
 
     await ensureCollection(db, 'matches', {
       bsonType: 'object',
@@ -318,12 +263,6 @@ module.exports = {
         createdAt: DATE,
       },
     });
-    await db.collection('matches').createIndexes([
-      // Re-running the same matching job must not create duplicates.
-      { key: { demandId: 1, demandVersion: 1, offerId: 1, rankingVersion: 1 }, unique: true },
-      { key: { demandId: 1, demandVersion: 1, score: -1 } },
-      { key: { offerId: 1 } },
-    ]);
 
     // ---------- Introductions and deals ----------
     await ensureCollection(db, 'introduction_requests', {
@@ -343,12 +282,6 @@ module.exports = {
         ...audit,
       },
     }, { $expr: { $ne: ['$buyerOrganizationId', '$supplierOrganizationId'] } });
-    await db.collection('introduction_requests').createIndexes([
-      { key: { ref: 1 }, unique: true },
-      { key: { supplierOrganizationId: 1, status: 1 } },
-      { key: { buyerOrganizationId: 1, status: 1 } },
-      { key: { matchId: 1 } },
-    ]);
 
     await ensureCollection(db, 'deals', {
       bsonType: 'object',
@@ -362,7 +295,7 @@ module.exports = {
         ),
         status: enumOf(
           'opportunity', 'qualified', 'due_diligence', 'negotiation', 'contract_draft', 'approval',
-          'signed', 'conditions_pending', 'completed', 'on_hold', 'lost', 'disputed',
+          'signed', 'conditions_pending', 'ready_to_complete', 'completed', 'on_hold', 'lost', 'disputed',
         ),
         name: STR,
         parties: {
@@ -386,18 +319,6 @@ module.exports = {
         ...audit,
       },
     });
-    await db.collection('deals').createIndexes([
-      { key: { ref: 1 }, unique: true },
-      // One deal per introduction (idempotent conversion).
-      { key: { introductionRequestId: 1 }, unique: true, partialFilterExpression: { introductionRequestId: { $type: 'objectId' } } },
-      { key: { 'parties.organizationId': 1, status: 1 } },
-      { key: { assignedManagerId: 1, status: 1 } },
-    ]);
-
-    await db.collection('deal_milestones').createIndexes([
-      { key: { dealId: 1, dueDate: 1 } },
-      { key: { status: 1, dueDate: 1 } },
-    ]);
 
     // ---------- Documents and review ----------
     await ensureCollection(db, 'documents', {
@@ -429,16 +350,6 @@ module.exports = {
         createdAt: DATE,
       },
     });
-    await db.collection('documents').createIndexes([
-      { key: { storageKey: 1 }, unique: true },
-      { key: { 'links.resourceType': 1, 'links.resourceId': 1 } },
-      { key: { ownerOrganizationId: 1, createdAt: -1 } },
-    ]);
-
-    await db.collection('document_access_grants').createIndexes([
-      { key: { documentId: 1, granteeOrganizationId: 1 } },
-      { key: { dealId: 1 } },
-    ]);
 
     await ensureCollection(db, 'review_cases', {
       bsonType: 'object',
@@ -461,18 +372,8 @@ module.exports = {
         closedAt: DATE,
       },
     });
-    await db.collection('review_cases').createIndexes([
-      { key: { ref: 1 }, unique: true },
-      { key: { status: 1, priority: 1, dueAt: 1 } },
-      { key: { assignedTo: 1, status: 1 } },
-      { key: { 'resource.type': 1, 'resource.id': 1 } },
-    ]);
 
     // ---------- Workflow infrastructure ----------
-    await db.collection('workflow_transitions').createIndexes([
-      { key: { 'resource.type': 1, 'resource.id': 1, occurredAt: 1 } },
-    ]);
-
     await ensureCollection(db, 'idempotency_keys', {
       bsonType: 'object',
       required: ['actorUserId', 'key', 'requestHash', 'createdAt', 'expiresAt'],
@@ -486,10 +387,6 @@ module.exports = {
         expiresAt: DATE,
       },
     });
-    await db.collection('idempotency_keys').createIndexes([
-      { key: { actorUserId: 1, key: 1 }, unique: true },
-      { key: { expiresAt: 1 }, expireAfterSeconds: 0 },      // TTL: MongoDB deletes expired keys
-    ]);
 
     // Transactional outbox: written in the same transaction as the business change.
     await ensureCollection(db, 'outbox_events', {
@@ -507,12 +404,9 @@ module.exports = {
         publishedAt: DATE,
       },
     });
-    await db.collection('outbox_events').createIndexes([
-      { key: { createdAt: 1 }, partialFilterExpression: { status: 'pending' } },
-    ]);
 
-    // Human-readable references (TEC-000123): one counter document per prefix, incremented atomically.
-    await db.collection('counters').createIndex({ _id: 1 });
+    // Login sessions belong to connect-mongo, not to a Mongoose model, so their TTL index is created here.
+    await db.collection('sessions').createIndex({ expires: 1 }, { expireAfterSeconds: 0 });
 
     // ---------- Audit (separate database, insert-only for the application) ----------
     const auditSchema = {
@@ -530,10 +424,6 @@ module.exports = {
       },
     };
     await ensureCollection(auditDb, 'audit_events', auditSchema);
-    await auditDb.collection('audit_events').createIndexes([
-      { key: { 'resource.type': 1, 'resource.id': 1, occurredAt: -1 } },
-      { key: { 'actor.userId': 1, occurredAt: -1 } },
-    ]);
   },
 
   async down() {

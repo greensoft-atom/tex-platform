@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Reproduces the Node.js 12.4.0 + MongoDB 4.4 / 5.0 verification in throwaway Docker containers.
+# Reproduces the Node.js 12.4.0 + Mongoose 5.13 + MongoDB 4.4 / 5.0 verification in throwaway Docker containers.
 # Requires only Docker. Containers use a private network, publish no ports and are removed on exit.
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -27,7 +27,7 @@ start_mongo() {   # $1 = MongoDB version; starts a single-node replica set (tran
 }
 run_node() {      # runs a command with the target runtime inside the private network
   docker run --rm --network "$NET" -v "$PWD":/work -w /work \
-    -e MONGO_URL="mongodb://texverify-mongo:27017/?replicaSet=rs0&w=majority" \
+    -e MONGO_URL="mongodb://texverify-mongo:27017/tex?replicaSet=rs0&w=majority" \
     -e MEILI_URL="http://texverify-meili:7700" \
     "$NODE_RUNTIME_IMAGE" "$@"
 }
@@ -43,9 +43,14 @@ run_node node tests/smoke.js
 docker run --rm -v "$PWD":/work -w /work -e NODE_ICU_DATA=/work/node_modules/full-icu "$NODE_RUNTIME_IMAGE" node tests/test-icu.js
 
 for v in $MONGO_VERSIONS; do
-  echo "== 4/5 Schema, validators, transactions and policy on MongoDB $v"
+  echo "== 4/5 Release steps, Mongoose models, transactions and policy on MongoDB $v"
   start_mongo "$v"
+  run_node node_modules/.bin/migrate-mongo up             # validators + roles (release step, as tex_migrator)
+  run_node node_modules/.bin/migrate-mongo status
+  run_node node dist/scripts/sync-indexes.js              # indexes declared in the Mongoose schemas
+  run_node node dist/scripts/sync-indexes.js --check      # prints nothing when schemas and database agree
   run_node node tests/test-mongo.js
+  run_node node tests/test-documents.js
   run_node node tests/test-policy.js
   docker rm -f texverify-mongo >/dev/null
 done
